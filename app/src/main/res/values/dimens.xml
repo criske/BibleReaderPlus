@@ -6,4 +6,5 @@
 
 <resources>
     <dimen name="contents_slide">250dp</dimen>
+    <dimen name="item_read_height">50dp</dimen>
 </resources>

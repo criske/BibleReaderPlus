@@ -17,7 +17,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.presentation.util.arch.map
 import kotlin.math.roundToInt
 
 class ReadFragment : Fragment() {
@@ -34,19 +33,10 @@ class ReadFragment : Fragment() {
 
 internal class ReadViewModel : ViewModel() {
 
-    private val scrollReadLiveData: LiveData<Float> = MutableLiveData<Float>()
-        .also { it.value = 0.0f }
+    val scrollReadLiveData: LiveData<ReadKey> = MutableLiveData()
 
-    val scrollPagesLiveData: LiveData<Int> = scrollReadLiveData.map {
-        RangeNormalizer01.deNormalize(1000, it)
-    }
-
-    val scrollContentsLiveData: LiveData<Int> = scrollReadLiveData.map {
-        RangeNormalizer01.deNormalize(100, it)
-    }
-
-    fun scroll(maxSize: Int, scrollValue: Int) {
-        scrollReadLiveData.cast<MutableLiveData<Float>>().value = RangeNormalizer01.normalize(maxSize, scrollValue)
+    fun scrollTo(readKey: ReadKey) {
+        scrollReadLiveData.cast<MutableLiveData<ReadKey>>().value = readKey
     }
 
 }

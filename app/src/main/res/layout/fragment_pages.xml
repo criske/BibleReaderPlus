@@ -8,20 +8,13 @@
              xmlns:tools="http://schemas.android.com/tools"
              android:layout_width="match_parent"
              android:layout_height="match_parent"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
              tools:context=".presentation.read.PagesFragment">
 
-    <Button android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
-            android:text="Read"
-            android:id="@+id/btnReadPage"/>
-
-    <TextView android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:id="@+id/txtReadPage"
-              tools:text="12"
-              android:layout_gravity="center|start"
-              android:textAppearance="@style/TextAppearance.AppCompat.Display2"/>
-
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerPages"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
 
 </FrameLayout>

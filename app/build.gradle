@@ -45,10 +45,14 @@ repositories {
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.0'
 
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.ktCoroutinesVersion"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$rootProject.ktCoroutinesVersion"
+
     implementation "androidx.legacy:legacy-support-v4:$rootProject.legacyVersion"
 
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.constraintLayoutVersion"
-    
+
     implementation "androidx.lifecycle:lifecycle-extensions:$rootProject.lifecycleVersion"
     implementation "android.arch.navigation:navigation-fragment-ktx:$rootProject.navigationVersion"
     implementation "android.arch.navigation:navigation-ui-ktx:$rootProject.navigationVersion"
@@ -56,7 +60,7 @@ dependencies {
     kapt "androidx.room:room-compiler:$rootProject.roomVersion"
     implementation "androidx.core:core-ktx:$rootProject.ktxVersion"
     implementation "androidx.paging:paging-runtime:$rootProject.pagingVersion"
- 
+
     implementation "com.squareup.moshi:moshi:$rootProject.moshiVersion"
     implementation "com.squareup.moshi:moshi-kotlin:$rootProject.moshiVersion"
     implementation "com.squareup.retrofit2:converter-moshi:$rootProject.moshiRetrofit2Version"
@@ -64,7 +68,6 @@ dependencies {
 
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.11.0'
     implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit2Version"
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
 
     implementation 'com.chauthai.swipereveallayout:swipe-reveal-layout:1.4.1'
 
