@@ -19,6 +19,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.arch.*
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
+import com.crskdev.biblereaderplus.presentation.util.system.hideSoftKeyboard
 import kotlinx.android.synthetic.main.fragment_contents.*
 
 
@@ -52,9 +53,14 @@ class ContentsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        textInputLayoutContents?.editText?.setOnFocusChangeListener { v, hasFocus ->
+            if (!hasFocus) activity?.hideSoftKeyboard(v)
+        }
         recyclerContents.apply {
             adapter = ContentsAdapter(LayoutInflater.from(context)) {
-                sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
+                textInputLayoutContents.editText?.clearFocus()
+                val readKey = it.getKey()
+                sharedViewModel.scrollTo(SCROLL_SOURCE, readKey)
             }
             addItemDecoration(object : RecyclerView.ItemDecoration() {
                 override fun getItemOffsets(
@@ -93,36 +99,39 @@ class ContentsViewModel : CoroutineScopedViewModel() {
         value = ReadKey.INITIAL
     }
 
-    private val scrollPositionAndContentsLiveData: LiveData<Pair<Int, List<ReadUI>>> = scrollReadLiveData
-        .combineLatest(dataSourceLiveData)
-        .map { pair ->
-            //TODO go functional with this logic
-            val key = pair.first
-            var position = -1
-            val (b, ch, v) = key
-            var selected = false
-            val source = pair.second
-                .mapIndexed { index, item ->
-                    if (selected)
-                        item
-                    else {
-                        val (ib, ich, iv) = item.getKey()
-                        if ((ib == b && ich == ch)) {
-                            position = index
-                            selected = true
-                            item.setHasScrollPosition(true)
-                        } else {
+    private val scrollPositionAndContentsLiveData: LiveData<Pair<Int, List<ReadUI>>> =
+        scrollReadLiveData
+            .combineLatest(dataSourceLiveData)
+            .map { pair ->
+                //TODO go functional with this logic
+                val key = pair.first
+                var position = -1
+                val (b, ch, v) = key
+                var selected = false
+                val source = pair.second
+                    .mapIndexed { index, item ->
+                        if (selected)
                             item
+                        else {
+                            val (ib, ich, iv) = item.getKey()
+                            if ((ib == b && ich == ch)) {
+                                position = index
+                                selected = true
+                                item.setHasScrollPosition(true)
+                            } else {
+                                item
+                            }
                         }
+
                     }
+                    .toList()
+                position to source
+            }
 
-                }
-                .toList()
-            position to source
-        }
-
-    val scrollPositionLiveData: LiveData<Int> = scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
-    val contentsLiveData: LiveData<List<ReadUI>> = scrollPositionAndContentsLiveData.map { it.second }
+    val scrollPositionLiveData: LiveData<Int> =
+        scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
+    val contentsLiveData: LiveData<List<ReadUI>> =
+        scrollPositionAndContentsLiveData.map { it.second }
 
     fun scrollTo(readKey: ReadKey) {
         scrollReadLiveData.value = readKey

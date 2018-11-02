@@ -21,7 +21,13 @@ val MOCKED_BIBLE_DATA_SOURCE = listOf<ReadUI>(
         "Now the earth was formless and empty, darkness was over the surface of the deep, and the Spirit of God was hovering over the waters"
     ),
     ReadUI.VersetUI(3, 0, 0, 3, "And God said, “Let there be light,” and there was light."),
-    ReadUI.VersetUI(4, 0, 0, 4, "God saw that the light was good, and he separated the light from the darkness."),
+    ReadUI.VersetUI(
+        4,
+        0,
+        0,
+        4,
+        "God saw that the light was good, and he separated the light from the darkness."
+    ),
     ReadUI.VersetUI(
         5,
         0,
@@ -65,7 +71,13 @@ val MOCKED_BIBLE_DATA_SOURCE = listOf<ReadUI>(
         "God called the dry ground “land,” and the gathered waters he called “seas.” And God saw that it was good."
     ),
     ReadUI.ChapterUI(1, 0, "Chapter 2"),
-    ReadUI.VersetUI(11, 0, 1, 1, "Thus the heavens and the earth were completed in all their vast array."),
+    ReadUI.VersetUI(
+        11,
+        0,
+        1,
+        1,
+        "Thus the heavens and the earth were completed in all their vast array."
+    ),
     ReadUI.VersetUI(
         12,
         0,
@@ -94,7 +106,13 @@ val MOCKED_BIBLE_DATA_SOURCE = listOf<ReadUI>(
         5,
         "Now no shrub had yet appeared on the earth[a] and no plant had yet sprung up, for the Lord God had not sent rain on the earth and there was no one to work the ground,"
     ),
-    ReadUI.VersetUI(16, 0, 1, 6, "but streams[b] came up from the earth and watered the whole surface of the ground. "),
+    ReadUI.VersetUI(
+        16,
+        0,
+        1,
+        6,
+        "but streams[b] came up from the earth and watered the whole surface of the ground. "
+    ),
     ReadUI.VersetUI(
         17,
         0,
@@ -121,7 +139,13 @@ val MOCKED_BIBLE_DATA_SOURCE = listOf<ReadUI>(
     ReadUI.VersetUI(1, 1, 2, 2, "Issachar, Zebulun and Benjamin;"),
     ReadUI.VersetUI(1, 1, 2, 3, "Reuben, Simeon, Levi and Judah;"),
     ReadUI.VersetUI(1, 1, 2, 4, "Dan and Naphtali; Gad and Asher."),
-    ReadUI.VersetUI(1, 1, 2, 5, "The descendants of Jacob numbered seventy[a] in all; Joseph was already in Egypt."),
+    ReadUI.VersetUI(
+        1,
+        1,
+        2,
+        5,
+        "The descendants of Jacob numbered seventy[a] in all; Joseph was already in Egypt."
+    ),
     ReadUI.VersetUI(1, 1, 2, 6, "Now Joseph and all his brothers and all that generation died, "),
     ReadUI.VersetUI(
         1,
@@ -130,5 +154,11 @@ val MOCKED_BIBLE_DATA_SOURCE = listOf<ReadUI>(
         7,
         "but the Israelites were exceedingly fruitful; they multiplied greatly, increased in numbers and became so numerous that the land was filled with them."
     ),
-    ReadUI.VersetUI(1, 1, 2, 8, "Then a new king, to whom Joseph meant nothing, came to power in Egypt.")
+    ReadUI.VersetUI(
+        1,
+        1,
+        2,
+        8,
+        "Then a new king, to whom Joseph meant nothing, came to power in Egypt."
+    )
 )

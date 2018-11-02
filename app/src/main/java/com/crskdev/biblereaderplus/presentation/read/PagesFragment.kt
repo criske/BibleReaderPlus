@@ -55,10 +55,8 @@ class PagesFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val smoothScroller = object : LinearSmoothScroller(context) {
-            override fun getVerticalSnapPreference(): Int {
-                return LinearSmoothScroller.SNAP_TO_START
-            }
+        val snapTopSmoothScroller = object : LinearSmoothScroller(context) {
+            override fun getVerticalSnapPreference(): Int = LinearSmoothScroller.SNAP_TO_START
         }
         recyclerPages.apply {
             adapter = PagesAdapter(LayoutInflater.from(context)) {
@@ -66,13 +64,15 @@ class PagesFragment : Fragment() {
             }
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    layoutManager?.cast<LinearLayoutManager>()
-                        ?.findFirstCompletelyVisibleItemPosition()
-                        ?.let { position ->
-                            adapter?.cast<PagesAdapter>()?.getItemAt(position)?.let {
-                                sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
+                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                        layoutManager?.cast<LinearLayoutManager>()
+                            ?.findFirstCompletelyVisibleItemPosition()
+                            ?.let { position ->
+                                adapter?.cast<PagesAdapter>()?.getItemAt(position)?.let {
+                                    sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
+                                }
                             }
-                        }
+                    }
                 }
             })
         }
@@ -82,8 +82,9 @@ class PagesFragment : Fragment() {
                 pagesViewModel.scrollTo(it.readKey)
             })
         pagesViewModel.scrollPositionLiveData.observe(this, Observer {
-            smoothScroller.targetPosition = it
-            recyclerPages.layoutManager?.cast<LinearLayoutManager>()?.startSmoothScroll(smoothScroller)
+            recyclerPages.layoutManager?.cast<LinearLayoutManager>()
+                //?.smoothScrollToPosition(snapTopSmoothScroller, it)
+                ?.scrollToPositionWithOffset(it, 0)
         })
         pagesViewModel.pagesLiveData.observe(this, Observer {
             recyclerPages.adapter?.cast<PagesAdapter>()?.submit(it)

@@ -6,6 +6,7 @@
 package com.crskdev.biblereaderplus.presentation.util.view
 
 import android.view.View
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 /**
@@ -25,4 +26,12 @@ abstract class BindableViewHolder<M>(v: View) : RecyclerView.ViewHolder(v) {
     open fun unbind() {}
 
     abstract fun onBind(model: M)
+}
+
+fun LinearLayoutManager.smoothScrollToPosition(
+    smoothScroller: RecyclerView.SmoothScroller,
+    position: Int
+) {
+    smoothScroller.targetPosition = position
+    this.startSmoothScroll(smoothScroller)
 }
