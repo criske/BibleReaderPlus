@@ -64,7 +64,7 @@ class PagesFragment : Fragment() {
             }
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if (newState == RecyclerView.SCROLL_STATE_SETTLING) {
                         layoutManager?.cast<LinearLayoutManager>()
                             ?.findFirstCompletelyVisibleItemPosition()
                             ?.let { position ->
@@ -83,7 +83,7 @@ class PagesFragment : Fragment() {
             })
         pagesViewModel.scrollPositionLiveData.observe(this, Observer {
             recyclerPages.layoutManager?.cast<LinearLayoutManager>()
-                //?.smoothScrollToPosition(snapTopSmoothScroller, it)
+                // ?.smoothScrollToPosition(snapTopSmoothScroller, it)
                 ?.scrollToPositionWithOffset(it, 0)
         })
         pagesViewModel.pagesLiveData.observe(this, Observer {
