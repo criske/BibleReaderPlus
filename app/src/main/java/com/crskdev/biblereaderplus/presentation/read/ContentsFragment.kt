@@ -7,6 +7,8 @@ package com.crskdev.biblereaderplus.presentation.read
 
 import android.graphics.Rect
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -53,8 +55,22 @@ class ContentsFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        textInputLayoutContents?.editText?.setOnFocusChangeListener { v, hasFocus ->
-            if (!hasFocus) activity?.hideSoftKeyboard(v)
+        textInputLayoutContents?.editText?.apply {
+            addTextChangedListener(object : TextWatcher {
+                override fun afterTextChanged(s: Editable) {
+                    contentsViewModel.search(s.toString())
+                }
+
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) =
+                    Unit
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
+                    Unit
+
+            })
+            setOnFocusChangeListener { v, hasFocus ->
+                if (!hasFocus) activity?.hideSoftKeyboard(v)
+            }
         }
         recyclerContents.apply {
             adapter = ContentsAdapter(LayoutInflater.from(context)) {
@@ -84,16 +100,34 @@ class ContentsFragment : Fragment() {
         contentsViewModel.contentsLiveData.observe(this, Observer {
             recyclerContents.adapter?.cast<ContentsAdapter>()?.submit(it)
         })
-
     }
+
 }
 
 
 class ContentsViewModel : CoroutineScopedViewModel() {
 
-    private val dataSourceLiveData: LiveData<List<ReadUI>> = LiveDataCompanions.just(
-        MOCKED_BIBLE_DATA_SOURCE.filter { it !is ReadUI.VersetUI }
-    )
+    private val searchBookLiveData: MutableLiveData<String> = MutableLiveData<String>()
+        .apply { value = "" }
+
+    private val dataSourceLiveData: LiveData<List<ReadUI>> =
+        searchBookLiveData.switchMap { bookTerm ->
+            val original = MOCKED_BIBLE_DATA_SOURCE.filter { it !is ReadUI.VersetUI }
+            val dataSource = if (bookTerm.isEmpty() || bookTerm.length < 3) {
+                original
+            } else {
+                val candidates = original
+                    .filter { it is ReadUI.BookUI && it.name.contains(bookTerm, true) }
+                    .map { it.cast<ReadUI.BookUI>() }
+                original.filter { read ->
+                    if (read is ReadUI.ChapterUI) {
+                        candidates.any { read.cast<ReadUI.ChapterUI>().bookId == it.id }
+                    } else
+                        candidates.contains(read)
+                }
+            }
+            LiveDataCompanions.just(dataSource)
+        }
 
     private val scrollReadLiveData: MutableLiveData<ReadKey> = MutableLiveData<ReadKey>().apply {
         value = ReadKey.INITIAL
@@ -135,6 +169,11 @@ class ContentsViewModel : CoroutineScopedViewModel() {
 
     fun scrollTo(readKey: ReadKey) {
         scrollReadLiveData.value = readKey
+    }
+
+    fun search(book: String) {
+        //TODO condition here
+        searchBookLiveData.value = book
     }
 
 }
