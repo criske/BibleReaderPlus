@@ -5,10 +5,12 @@
 
 package com.crskdev.biblereaderplus.presentation.read
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.presentation.util.system.getThemeAttribute
 import com.crskdev.biblereaderplus.presentation.util.system.prepInflate
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
 import kotlinx.android.synthetic.main.item_book.view.*
@@ -52,6 +54,10 @@ abstract class ReadVH<R : ReadUI>(v: View, protected val action: (ReadUI) -> Uni
 
 class BookVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.BookUI>(v, action) {
 
+    val defaultColor by lazy { itemView.context.getThemeAttribute(R.attr.background, Color.TRANSPARENT) }
+
+    val selectColor by lazy { itemView.context.getThemeAttribute(R.attr.colorControlHighlight, Color.TRANSPARENT) }
+
     init {
         itemView.setOnClickListener { _ ->
             model?.let {
@@ -64,11 +70,16 @@ class BookVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.BookUI>(v, actio
     override fun onBind(model: ReadUI.BookUI) {
         with(itemView) {
             textBook.text = model.name
+            setBackgroundColor(if (model.hasScrollPosition()) selectColor else defaultColor)
         }
     }
 }
 
 class ChapterVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.ChapterUI>(v, action) {
+
+    val defaultColor by lazy { itemView.context.getThemeAttribute(R.attr.background, Color.TRANSPARENT) }
+
+    val selectColor by lazy { itemView.context.getThemeAttribute(R.attr.colorControlHighlight, Color.TRANSPARENT) }
 
     init {
         itemView.tag = 1
@@ -83,6 +94,9 @@ class ChapterVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.ChapterUI>(v,
     override fun onBind(model: ReadUI.ChapterUI) {
         with(itemView) {
             textChapter.text = model.name
+            setBackgroundColor(
+                if (model.hasScrollPosition()) selectColor else defaultColor
+            )
         }
     }
 

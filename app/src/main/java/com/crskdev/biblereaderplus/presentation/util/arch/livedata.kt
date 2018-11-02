@@ -147,11 +147,7 @@ inline fun <T> LiveData<T>.onNext(crossinline block: (T) -> Unit): LiveData<T> {
 @Suppress("UNCHECKED_CAST")
 inline fun <reified R : Any> LiveData<*>.castLD(): LiveData<R> {
     val mutableLiveData: MediatorLiveData<R> = MediatorLiveData()
-    mutableLiveData.addSource(this, object : Observer<Any> {
-        override fun onChanged(item: Any) {
-            mutableLiveData.value = item as R
-        }
-    })
+    mutableLiveData.addSource(this) { item -> mutableLiveData.value = item as R }
     return mutableLiveData
 }
 
@@ -161,12 +157,40 @@ fun <T, V> LiveData<T>.switchMap(block: (T) -> LiveData<V>): LiveData<V> =
 fun <T, V> LiveData<T>.map(block: (T) -> V): LiveData<V> =
     Transformations.map(this, block)
 
-fun <T> empty() = MutableLiveData<T>()
+inline fun <T, V> LiveData<T>.combineLatest(other: LiveData<*>, crossinline combiner: (T, Any) -> V): LiveData<V> =
+    MediatorLiveData<V>().apply {
+        var lastThis: T? = null
+        var lastOther: Any? = null
+        addSource(this@combineLatest) {
+            if (it == null && value != null)
+                value = null
+            else {
+                lastThis = it
+                if (lastThis != null && lastOther != null) value = combiner(lastThis!!, lastOther!!)
+            }
+        }
+        addSource(other) {
+            if (it == null && value != null) {
+                value = null
+            } else {
+                lastOther = it
+                if (lastThis != null && lastOther != null) value = combiner(lastThis!!, lastOther!!)
+            }
+        }
+    }
 
-fun <T> just(item: T) = MutableLiveData<T>().apply {
-    value = item
+@Suppress("UNCHECKED_CAST")
+fun <T, V> LiveData<T>.combineLatest(other: LiveData<V>): LiveData<Pair<T, V>> =
+    this.combineLatest(other) { l, r -> l to r as V }
+
+object LiveDataCompanions {
+
+    fun <T> empty(): LiveData<T> = MutableLiveData<T>()
+
+    fun <T> just(item: T): LiveData<T> = MutableLiveData<T>().apply {
+        value = item
+    }
 }
-
 
 class SingleLiveEvent<T> : MutableLiveData<T>() {
 

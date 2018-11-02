@@ -17,17 +17,21 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
-import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
+import com.crskdev.biblereaderplus.presentation.util.arch.*
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import kotlinx.android.synthetic.main.fragment_contents.*
 
 
 class ContentsFragment : Fragment() {
 
+    companion object {
+        const val SCROLL_SOURCE = 1
+    }
+
     private lateinit var sharedViewModel: ReadViewModel
 
     private lateinit var contentsViewModel: ContentsViewModel
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,7 +54,7 @@ class ContentsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         recyclerContents.apply {
             adapter = ContentsAdapter(LayoutInflater.from(context)) {
-                sharedViewModel.scrollTo(it.getKey())
+                sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
             }
             addItemDecoration(object : RecyclerView.ItemDecoration() {
                 override fun getItemOffsets(
@@ -64,9 +68,10 @@ class ContentsFragment : Fragment() {
                 }
             })
         }
-        sharedViewModel.scrollReadLiveData.observe(this, Observer {
-            contentsViewModel.scrollTo(it)
-        })
+        sharedViewModel.scrollReadLiveData
+            .observe(this, Observer {
+                contentsViewModel.scrollTo(it.readKey)
+            })
         contentsViewModel.scrollPositionLiveData.observe(this, Observer {
             recyclerContents.smoothScrollToPosition(it)
         })
@@ -80,43 +85,48 @@ class ContentsFragment : Fragment() {
 
 class ContentsViewModel : CoroutineScopedViewModel() {
 
-    val scrollPositionLiveData: LiveData<Int> = MutableLiveData<Int>()
+    private val dataSourceLiveData: LiveData<List<ReadUI>> = LiveDataCompanions.just(
+        MOCKED_BIBLE_DATA_SOURCE.filter { it !is ReadUI.VersetUI }
+    )
 
-    val contentsLiveData: LiveData<List<ReadUI>> = MutableLiveData<List<ReadUI>>().apply {
-        value = MOCKED_BIBLE_DATA_SOURCE.asSequence().filter { it !is ReadUI.VersetUI }.toList()
+    private val scrollReadLiveData: MutableLiveData<ReadKey> = MutableLiveData<ReadKey>().apply {
+        value = ReadKey.INITIAL
     }
+
+    private val scrollPositionAndContentsLiveData: LiveData<Pair<Int, List<ReadUI>>> = scrollReadLiveData
+        .combineLatest(dataSourceLiveData)
+        .map { pair ->
+            //TODO go functional with this logic
+            val key = pair.first
+            var position = -1
+            val (b, ch, v) = key
+            var selected = false
+            val source = pair.second
+                .mapIndexed { index, item ->
+                    if (selected)
+                        item
+                    else {
+                        val (ib, ich, iv) = item.getKey()
+                        if ((ib == b && ich == ch)) {
+                            position = index
+                            selected = true
+                            item.setHasScrollPosition(true)
+                        } else {
+                            item
+                        }
+                    }
+
+                }
+                .toList()
+            position to source
+        }
+
+    val scrollPositionLiveData: LiveData<Int> = scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
+    val contentsLiveData: LiveData<List<ReadUI>> = scrollPositionAndContentsLiveData.map { it.second }
 
     fun scrollTo(readKey: ReadKey) {
-        val pages = contentsLiveData.value
-        pages?.indexOfFirst { it.getKey() == readKey }
-            ?.takeIf { it != -1 }
-            ?.let { scrollPositionLiveData.cast<MutableLiveData<Int>>().value = it }
+        scrollReadLiveData.value = readKey
     }
 
 }
 
-class ContentsAdapter(
-    private val inflater: LayoutInflater,
-    private val action: (ReadUI) -> Unit
-) : RecyclerView.Adapter<ReadVH<*>>() {
-
-    private val items = mutableListOf<ReadUI>()
-
-    fun submit(newItems: List<ReadUI>) {
-        items.clear()
-        items.addAll(newItems)
-        notifyDataSetChanged()
-    }
-
-    override fun getItemViewType(position: Int): Int =
-        ReadAdapterHelper.getItemViewType(items[position])
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReadVH<*> =
-        ReadAdapterHelper.onCreateViewHolder(inflater, parent, viewType, action)
-
-    override fun getItemCount(): Int = items.size
-
-    override fun onBindViewHolder(holder: ReadVH<*>, position: Int) =
-        ReadAdapterHelper.onBindViewHolder(holder, items[position])
-
-}

@@ -15,14 +15,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
+import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
+import com.crskdev.biblereaderplus.presentation.util.arch.filter
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import kotlinx.android.synthetic.main.fragment_pages.*
 
+
 class PagesFragment : Fragment() {
+
+    companion object {
+        const val SCROLL_SOURCE = 2
+    }
 
     private lateinit var sharedViewModel: ReadViewModel
 
@@ -47,29 +55,35 @@ class PagesFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val smoothScroller = object : LinearSmoothScroller(context) {
+            override fun getVerticalSnapPreference(): Int {
+                return LinearSmoothScroller.SNAP_TO_START
+            }
+        }
         recyclerPages.apply {
             adapter = PagesAdapter(LayoutInflater.from(context)) {
 
             }
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
-                    if (newState == RecyclerView.SCROLL_STATE_IDLE) {
-                        layoutManager?.cast<LinearLayoutManager>()
-                            ?.findFirstCompletelyVisibleItemPosition()
-                            ?.let { position ->
-                                adapter?.cast<PagesAdapter>()?.getItemAt(position)?.let {
-                                    sharedViewModel.scrollTo(it.getKey())
-                                }
+                    layoutManager?.cast<LinearLayoutManager>()
+                        ?.findFirstCompletelyVisibleItemPosition()
+                        ?.let { position ->
+                            adapter?.cast<PagesAdapter>()?.getItemAt(position)?.let {
+                                sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
                             }
-                    }
+                        }
                 }
             })
         }
-        sharedViewModel.scrollReadLiveData.observe(this, Observer {
-            pagesViewModel.scrollTo(it)
-        })
+        sharedViewModel.scrollReadLiveData
+            .filter { it?.source != SCROLL_SOURCE }//not interested of own scroll events
+            .observe(this, Observer {
+                pagesViewModel.scrollTo(it.readKey)
+            })
         pagesViewModel.scrollPositionLiveData.observe(this, Observer {
-            recyclerPages.layoutManager?.cast<LinearLayoutManager>()?.scrollToPositionWithOffset(it, 0)
+            smoothScroller.targetPosition = it
+            recyclerPages.layoutManager?.cast<LinearLayoutManager>()?.startSmoothScroll(smoothScroller)
         })
         pagesViewModel.pagesLiveData.observe(this, Observer {
             recyclerPages.adapter?.cast<PagesAdapter>()?.submit(it)
@@ -80,7 +94,7 @@ class PagesFragment : Fragment() {
 
 class PagesViewModel : CoroutineScopedViewModel() {
 
-    val scrollPositionLiveData: LiveData<Int> = MutableLiveData<Int>()
+    val scrollPositionLiveData: LiveData<Int> = SingleLiveEvent<Int>()
 
     val pagesLiveData: LiveData<List<ReadUI>> = MutableLiveData<List<ReadUI>>().apply {
         value = MOCKED_BIBLE_DATA_SOURCE
@@ -90,37 +104,10 @@ class PagesViewModel : CoroutineScopedViewModel() {
         val pages = pagesLiveData.value
         pages?.indexOfFirst { it.getKey() == readKey }
             ?.takeIf { it != -1 }
-            ?.let { scrollPositionLiveData.cast<MutableLiveData<Int>>().value = it }
+            ?.let {
+                scrollPositionLiveData.cast<MutableLiveData<Int>>().value = it
+            }
     }
-
-}
-
-
-class PagesAdapter(
-    private val inflater: LayoutInflater,
-    private val action: (ReadUI) -> Unit
-) : RecyclerView.Adapter<ReadVH<*>>() {
-
-    private val items = mutableListOf<ReadUI>()
-
-    fun submit(newItems: List<ReadUI>) {
-        items.clear()
-        items.addAll(newItems)
-        notifyDataSetChanged()
-    }
-
-    override fun getItemViewType(position: Int): Int =
-        ReadAdapterHelper.getItemViewType(items[position])
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReadVH<*> =
-        ReadAdapterHelper.onCreateViewHolder(inflater, parent, viewType, action)
-
-    override fun getItemCount(): Int = items.size
-
-    override fun onBindViewHolder(holder: ReadVH<*>, position: Int) =
-        ReadAdapterHelper.onBindViewHolder(holder, items[position])
-
-    fun getItemAt(position: Int): ReadUI? = items.getOrNull(position)
 
 }
 
