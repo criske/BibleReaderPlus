@@ -133,39 +133,43 @@ class ContentsViewModel : CoroutineScopedViewModel() {
         value = ReadKey.INITIAL
     }
 
-    private val scrollPositionAndContentsLiveData: LiveData<Pair<Int, List<ReadUI>>> =
+    private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI>>) -> (IntToListReadUI) =
+        { pair ->
+            //TODO go functional with this logic
+            val key = pair.first
+            var position = -1
+            val (b, ch, v) = key
+            var selected = false
+            val source = pair.second
+                .mapIndexed { index, item ->
+                    if (selected)
+                        item
+                    else {
+                        val (ib, ich, iv) = item.getKey()
+                        if ((ib == b && ich == ch)) {
+                            position = index
+                            selected = true
+                            item.setHasScrollPosition(true)
+                        } else {
+                            item
+                        }
+                    }
+
+                }
+                .toList()
+            position to source
+        }
+
+    private val scrollPositionAndContentsLiveData: LiveData<IntToListReadUI> =
         scrollReadLiveData
             .combineLatest(dataSourceLiveData)
-            .map { pair ->
-                //TODO go functional with this logic
-                val key = pair.first
-                var position = -1
-                val (b, ch, v) = key
-                var selected = false
-                val source = pair.second
-                    .mapIndexed { index, item ->
-                        if (selected)
-                            item
-                        else {
-                            val (ib, ich, iv) = item.getKey()
-                            if ((ib == b && ich == ch)) {
-                                position = index
-                                selected = true
-                                item.setHasScrollPosition(true)
-                            } else {
-                                item
-                            }
-                        }
-
-                    }
-                    .toList()
-                position to source
-            }
+            .map(positionAndSelectionMapping)
 
     val scrollPositionLiveData: LiveData<Int> =
         scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
     val contentsLiveData: LiveData<List<ReadUI>> =
         scrollPositionAndContentsLiveData.map { it.second }
+
 
     fun scrollTo(readKey: ReadKey) {
         scrollReadLiveData.value = readKey
@@ -177,4 +181,7 @@ class ContentsViewModel : CoroutineScopedViewModel() {
     }
 
 }
+
+typealias IntToListReadUI = Pair<Int, List<ReadUI>>
+
 
