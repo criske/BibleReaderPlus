@@ -18,8 +18,8 @@ class MainActivity : DaggerAppCompatActivity() {
         setContentView(R.layout.activity_main)
         dynamicallyLoadNavGraph(
             R.id.container,
-            R.id.setupFragment,
             R.navigation.main_nav_graph,
+            R.id.setupFragment,
             supportFragmentManager,
             savedInstanceState
         )
