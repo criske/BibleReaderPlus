@@ -7,11 +7,10 @@ package com.crskdev.biblereaderplus.di.modules.presentation.setup
 
 import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
-import com.crskdev.biblereaderplus.presentation.setup.AuthStepFragment
-import com.crskdev.biblereaderplus.presentation.setup.DownloadStepFragment
-import com.crskdev.biblereaderplus.presentation.setup.FinishedStepFragment
-import com.crskdev.biblereaderplus.presentation.setup.SetupFragment
+import com.crskdev.biblereaderplus.presentation.setup.*
+import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 
 /**
@@ -29,6 +28,13 @@ abstract class SetupModule {
         ]
     )
     abstract fun setupFragmentInjector(): SetupFragment
+
+    @Provides
+    @PerFragment
+    fun provideViewModel(container: SetupFragment): SetupViewModel =
+        viewModelFromProvider(container) {
+            SetupViewModel()
+        }
 }
 
 @Module
