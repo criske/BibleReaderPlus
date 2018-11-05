@@ -11,6 +11,14 @@ package com.crskdev.biblereaderplus.common.util
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> Any.cast(): T = this as T
 
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> Any.castIf(): T? =
+    try {
+        this as T
+    } catch (ex: Exception) {
+        null
+    }
+
 infix fun Any?.ifNull(block: () -> Unit) {
     if (this == null) block()
 }
