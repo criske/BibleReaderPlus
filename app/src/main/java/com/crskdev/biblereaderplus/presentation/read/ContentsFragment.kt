@@ -13,8 +13,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import dagger.android.support.DaggerFragment
+import javax.inject.Inject
 
 class ContentsFragment : DaggerFragment() {
 
@@ -25,3 +27,8 @@ class ContentsFragment : DaggerFragment() {
     }
 
 }
+
+class ContentsViewModel @Inject constructor() : ViewModel() {
+
+}
+

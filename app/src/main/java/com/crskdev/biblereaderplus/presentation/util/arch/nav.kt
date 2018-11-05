@@ -17,8 +17,8 @@ import androidx.navigation.fragment.NavHostFragment
  * Created by Cristian Pela on 05.11.2018.
  */
 fun dynamicallyLoadNavGraph(@IdRes containerId: Int,
-                            @IdRes startDestination: Int,
                             @NavigationRes graphId: Int,
+                            @IdRes startDestination: Int,
                             fragmentManager: FragmentManager,
                             savedInstanceState: Bundle?,
                             arguments: Bundle? = null): NavHostFragment {

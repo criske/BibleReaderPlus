@@ -7,10 +7,7 @@ package com.crskdev.biblereaderplus.di.modules.presentation.read
 
 import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
-import com.crskdev.biblereaderplus.presentation.read.ContentsFragment
-import com.crskdev.biblereaderplus.presentation.read.PagesFragment
-import com.crskdev.biblereaderplus.presentation.read.ReadFragment
-import com.crskdev.biblereaderplus.presentation.read.ReadViewModel
+import com.crskdev.biblereaderplus.presentation.read.*
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
 import dagger.Provides
@@ -23,33 +20,50 @@ import dagger.android.ContributesAndroidInjector
 @Module
 abstract class ReadModule {
 
-    @PerFragment
-    @ContributesAndroidInjector(modules = [ContentsModule::class, PagesModule::class])
-    internal abstract fun readFragmentInjector(): ReadFragment
+    @PerChildFragment
+    @ContributesAndroidInjector(modules = [ContentsModule::class])
+    abstract fun contentsFragmentInjector(): ContentsFragment
 
-    @PerFragment
+    @PerChildFragment
+    @ContributesAndroidInjector(modules = [PagesModule::class])
+    abstract fun pagesFragmentInjector(): PagesFragment
+
+    @Module
+    companion object {
+        @JvmStatic
+        @PerFragment
+        @Provides
+        fun provideViewModel(container: ReadFragment): ReadViewModel =
+            viewModelFromProvider(container) {
+                ReadViewModel()
+            }
+
+    }
+
+
+}
+
+@Module
+class ContentsModule {
+
+    @PerChildFragment
     @Provides
-    fun provideViewModel(container: ReadFragment): ReadViewModel =
+    fun provideViewModel(container: ReadFragment): ContentsViewModel =
         viewModelFromProvider(container) {
-            ReadViewModel()
+            ContentsViewModel()
         }
 
-
 }
 
 @Module
-abstract class ContentsModule {
+class PagesModule {
 
     @PerChildFragment
-    @ContributesAndroidInjector(modules = [])
-    internal abstract fun contentsFragmentInjector(): ContentsFragment
-}
+    @Provides
+    fun provideViewModel(container: ReadFragment): PagesViewModel =
+        viewModelFromProvider(container) {
+            PagesViewModel()
+        }
 
-@Module
-abstract class PagesModule {
-
-    @PerChildFragment
-    @ContributesAndroidInjector(modules = [])
-    internal abstract fun readFragmentInjector(): PagesFragment
 
 }

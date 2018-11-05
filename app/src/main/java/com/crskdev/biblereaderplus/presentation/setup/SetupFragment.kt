@@ -11,8 +11,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.presentation.util.arch.dynamicallyLoadNavGraph
 import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.fragment_scaffold_mock.*
 import javax.inject.Inject
 
 /**
@@ -26,16 +26,21 @@ class SetupFragment : DaggerFragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scaffold_mock, container, false)
+        return inflater.inflate(R.layout.fragment_setup, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        textScaffoldMock.text = setupViewModel.hello
+        //TODO load graph base on step provided by setup view model
+        dynamicallyLoadNavGraph(
+            R.id.containerSetup, R.navigation.setup_nav_graph,
+            R.id.downloadStepFragment,
+            childFragmentManager,
+            savedInstanceState
+        )
     }
 }
 
 class SetupViewModel @Inject constructor() : ViewModel() {
 
     val hello = "Hello from SetupViewModel"
-
 }

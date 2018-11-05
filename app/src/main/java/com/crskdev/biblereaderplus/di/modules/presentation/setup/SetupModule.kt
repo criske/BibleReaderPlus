@@ -19,47 +19,59 @@ import dagger.android.ContributesAndroidInjector
 @Module
 abstract class SetupModule {
 
-    @PerFragment
-    @ContributesAndroidInjector(
-        modules = [
-            DownloadStepModule::class,
-            AuthStepModule::class,
-            FinishedModule::class
-        ]
-    )
-    abstract fun setupFragmentInjector(): SetupFragment
+    @PerChildFragment
+    @ContributesAndroidInjector(modules = [DownloadStepModule::class])
+    abstract fun downloadFragmentInjector(): DownloadStepFragment
 
+    @PerChildFragment
+    @ContributesAndroidInjector(modules = [AuthStepModule::class])
+    abstract fun authFragmentInjector(): AuthStepFragment
+
+    @PerChildFragment
+    @ContributesAndroidInjector(modules = [FinishedModule::class])
+    abstract fun finishedFragmentInjector(): FinishedStepFragment
+
+    @Module
+    companion object {
+        @JvmStatic
+        @Provides
+        @PerFragment
+        fun provideViewModel(container: SetupFragment): SetupViewModel =
+            viewModelFromProvider(container) {
+                SetupViewModel()
+            }
+    }
+
+}
+
+@Module
+class DownloadStepModule {
     @Provides
-    @PerFragment
-    fun provideViewModel(container: SetupFragment): SetupViewModel =
+    @PerChildFragment
+    fun provideViewModel(container: SetupFragment): DownloadStepViewModel =
         viewModelFromProvider(container) {
-            SetupViewModel()
+            DownloadStepViewModel()
         }
 }
 
 @Module
-abstract class DownloadStepModule {
-
+class AuthStepModule {
+    @Provides
     @PerChildFragment
-    @ContributesAndroidInjector
-    abstract fun downloadFragmentInjector(): DownloadStepFragment
+    fun provideViewModel(container: SetupFragment): AuthStepViewModel =
+        viewModelFromProvider(container) {
+            AuthStepViewModel()
+        }
 
 }
 
 @Module
-abstract class AuthStepModule {
-
+class FinishedModule {
+    @Provides
     @PerChildFragment
-    @ContributesAndroidInjector
-    abstract fun authFragmentInjector(): AuthStepFragment
-
-}
-
-@Module
-abstract class FinishedModule {
-
-    @PerChildFragment
-    @ContributesAndroidInjector
-    abstract fun finishedFragmentInjector(): FinishedStepFragment
+    fun provideViewModel(container: SetupFragment): FinishedStepViewModel =
+        viewModelFromProvider(container) {
+            FinishedStepViewModel()
+        }
 
 }

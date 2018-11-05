@@ -12,13 +12,19 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import dagger.android.support.DaggerFragment
+import kotlinx.android.synthetic.main.fragment_scaffold_mock.*
+import javax.inject.Inject
 
 /**
  * Created by Cristian Pela on 05.11.2018.
  */
 class AuthStepFragment : DaggerFragment() {
+
+    @Inject
+    lateinit var authStepViewModel: AuthStepViewModel
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -26,4 +32,13 @@ class AuthStepFragment : DaggerFragment() {
         return inflater.inflate(R.layout.fragment_scaffold_mock, container, false)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        textScaffoldMock.text = authStepViewModel.hello
+    }
+}
+
+
+class AuthStepViewModel : ViewModel() {
+
+    val hello = "Hello from AuthStepViewModel"
 }
