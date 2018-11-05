@@ -3,8 +3,7 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-package com.crskdev.biblereaderplus.presentation.read
-
+package com.crskdev.biblereaderplus.presentation.setup
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +12,10 @@ import android.view.ViewGroup
 import com.crskdev.biblereaderplus.R
 import dagger.android.support.DaggerFragment
 
-class ReadFragment : DaggerFragment() {
+/**
+ * Created by Cristian Pela on 05.11.2018.
+ */
+class SetupFragment : DaggerFragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {

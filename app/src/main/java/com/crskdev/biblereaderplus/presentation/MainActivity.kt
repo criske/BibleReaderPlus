@@ -5,12 +5,11 @@
 package com.crskdev.biblereaderplus.presentation
 
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.di.Injectable
+import dagger.android.support.DaggerAppCompatActivity
 
 
-class MainActivity : AppCompatActivity(), Injectable {
+class MainActivity : DaggerAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
