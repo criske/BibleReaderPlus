@@ -5,26 +5,14 @@
 package com.crskdev.biblereaderplus.presentation
 
 import android.os.Bundle
-import androidx.navigation.findNavController
+import androidx.appcompat.app.AppCompatActivity
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.presentation.util.arch.dynamicallyLoadNavGraph
-import dagger.android.support.DaggerAppCompatActivity
 
 
-class MainActivity : DaggerAppCompatActivity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        dynamicallyLoadNavGraph(
-            R.id.container,
-            R.navigation.main_nav_graph,
-            R.id.readFragment,
-            supportFragmentManager,
-            savedInstanceState
-        )
     }
-
-    override fun onSupportNavigateUp() = findNavController(R.id.container).navigateUp()
-
 }
