@@ -10,7 +10,10 @@ import com.crskdev.biblereaderplus.di.scopes.PerFragment
 import com.crskdev.biblereaderplus.presentation.read.ContentsFragment
 import com.crskdev.biblereaderplus.presentation.read.PagesFragment
 import com.crskdev.biblereaderplus.presentation.read.ReadFragment
+import com.crskdev.biblereaderplus.presentation.read.ReadViewModel
+import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
+import dagger.Provides
 import dagger.android.ContributesAndroidInjector
 
 
@@ -24,6 +27,14 @@ abstract class ReadModule {
     @ContributesAndroidInjector(modules = [ContentsModule::class, PagesModule::class])
     internal abstract fun readFragmentInjector(): ReadFragment
 
+    @PerFragment
+    @Provides
+    fun provideViewModel(container: ReadFragment): ReadViewModel =
+        viewModelFromProvider(container) {
+            ReadViewModel()
+        }
+
+
 }
 
 @Module
@@ -32,7 +43,6 @@ abstract class ContentsModule {
     @PerChildFragment
     @ContributesAndroidInjector(modules = [])
     internal abstract fun contentsFragmentInjector(): ContentsFragment
-
 }
 
 @Module
