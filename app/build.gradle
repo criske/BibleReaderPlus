@@ -1,7 +1,6 @@
 /*
- * Created by Pela Cristian on 31.10.2018 13:40.
  * License: MIT
- * Copyright (c) 2018.
+ * Copyright (c)  Pela Cristian 2018.
  */
 
 apply plugin: 'com.android.application'
@@ -67,7 +66,11 @@ dependencies {
     implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit2Version"
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
 
-    implementation 'com.chauthai.swipereveallayout:swipe-reveal-layout:1.4.1'
+    //implementation 'com.chauthai.swipereveallayout:swipe-reveal-layout:1.4.1'
+
+    implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
+    implementation "com.google.dagger:dagger-android-support:$rootProject.daggerVersion"
+    kapt "com.google.dagger:dagger-compiler:$rootProject.daggerVersion"
 
     // Testing dependencies
     androidTestImplementation 'androidx.annotation:annotation:1.0.0'

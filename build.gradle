@@ -1,7 +1,6 @@
 /*
- * Created by Pela Cristian on 31.10.2018 13:40.
  * License: MIT
- * Copyright (c) 2018.
+ * Copyright (c)  Pela Cristian 2018.
  */
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
@@ -41,6 +40,8 @@ buildscript {
         crashlyticsVersion='2.9.5'
         legacyVersion='1.0.0'
         firebaseMessaging='17.3.4'
+
+        daggerVersion ='2.15'
     }
     repositories {
         google()
