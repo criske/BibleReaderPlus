@@ -1,12 +1,12 @@
 /*
- * Created by Pela Cristian on 31.10.2018 13:40.
  * License: MIT
- * Copyright (c) 2018.
+ * Copyright (c)  Pela Cristian 2018.
  */
-package com.crskdev.biblereaderplus
+package com.crskdev.biblereaderplus.presentation
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.crskdev.biblereaderplus.R
 
 
 class MainActivity : AppCompatActivity() {

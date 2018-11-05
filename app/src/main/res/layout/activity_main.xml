@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  ~ Created by Pela Cristian on 31.10.2018 13:40.
   ~ License: MIT
-  ~ Copyright (c) 2018.
+  ~ Copyright (c)  Pela Cristian 2018.
   -->
 
 <androidx.constraintlayout.widget.ConstraintLayout
@@ -11,7 +10,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+    tools:context=".presentation.MainActivity">
 
     <TextView
             android:layout_width="wrap_content"
