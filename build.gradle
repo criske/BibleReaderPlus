@@ -42,6 +42,7 @@ buildscript {
         firebaseMessaging='17.3.4'
 
         daggerVersion ='2.15'
+        coroutinesVersion ='1.0.0'
     }
     repositories {
         google()
