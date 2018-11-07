@@ -5,16 +5,22 @@
 
 package com.crskdev.biblereaderplus.domain.interactors.setup
 
+import com.crskdev.biblereaderplus.domain.entity.DeviceAccountCredential
+import com.crskdev.biblereaderplus.domain.gateway.AuthService
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
+import com.crskdev.biblereaderplus.testutil.TestDispatchers
 import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.impl.annotations.MockK
+import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.take
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.toCollection
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -34,47 +40,91 @@ class SetupInteractorTest {
     @MockK
     lateinit var docRepository: DocumentRepository
 
+    @MockK
+    lateinit var authService: AuthService
+
+    lateinit var setupInteractor: SetupInteractor
+
     @Before
-    fun setup() = MockKAnnotations.init(this, relaxUnitFun = true)
+    fun setup() {
+        MockKAnnotations.init(this, relaxUnitFun = true)
+        setupInteractor = SetupInteractor(
+            TestDispatchers,
+            setupService,
+            authService,
+            downloadDocService,
+            docRepository
+        )
+    }
 
     @Test
     fun `when request check should return none`() {
 
         runBlocking {
 
-            val setupInteractor =
-                SetupInteractor(MockSetupCheckService(), downloadDocService, docRepository)
+            every { setupService.getStep() } returns SetupCheckService.Step.Uninitialized
 
-            val responses = setupInteractor
-                .request(SetupInteractor.Request.Check)
-                .take(1)
-                .toCollection(mutableListOf())
+            val responseChannel = Channel<SetupInteractor.Response>()
+            launch {
+                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
+            }
 
             assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare(100)
-                ), responses
+                listOf(SetupInteractor.Response.DownloadStep.Prepare),
+                responseChannel.toCollection(mutableListOf())
             )
+
+            verify { setupService.next(SetupCheckService.Step.DownloadStep) }
         }
-
-
-    }
-}
-
-class MockSetupCheckService : SetupCheckService {
-
-    var currentStep: SetupCheckService.Step = SetupCheckService.Step.None
-
-    override suspend fun getStep(): SetupCheckService.Step = coroutineScope {
-        currentStep
     }
 
-    override suspend fun next(step: SetupCheckService.Step): SetupCheckService.Step =
-        coroutineScope {
-            currentStep = step
-            currentStep
+    @Test
+    fun `when on auth step and no permission should return need permission then provide credentials`() {
+
+        runBlocking {
+            every { setupService.getStep() } returns SetupCheckService.Step.AuthStep
+            every { authService.hasPermission() } returns false
+            coEvery { authService.authenticate(any()) } returns Pair<Error?, Boolean>(null, true)
+            coEvery { authService.authenticateWithPermissionGranted() } returns Pair<Error?, Boolean>(
+                null,
+                true
+            )
+
+            var responseChannel = Channel<SetupInteractor.Response>()
+            launch {
+                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
+            }
+            assertEquals(
+                listOf(
+                    SetupInteractor.Response.AuthStep.Prepare,
+                    SetupInteractor.Response.AuthStep.NeedPermission
+                ),
+                responseChannel.toCollection(mutableListOf())
+            )
+            verify { authService.requestPermission() }
+
+            responseChannel = Channel()
+            launch {
+                setupInteractor.request(
+                    SetupInteractor.Request.AuthPrompt(
+                        DeviceAccountCredential.AuthorizationPayload(
+                            Unit
+                        ), responseChannel
+                    )
+                )
+            }
+            assertEquals(
+                listOf(
+                    SetupInteractor.Response.AuthStep.Prepare,
+                    SetupInteractor.Response.AuthStep.Authenticating,
+                    SetupInteractor.Response.AuthStep.Done,
+                    SetupInteractor.Response.Finished
+                ),
+                responseChannel.toCollection(mutableListOf())
+            )
+
 
         }
 
-
+    }
 }

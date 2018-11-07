@@ -10,16 +10,16 @@ package com.crskdev.biblereaderplus.domain.gateway
  */
 interface SetupCheckService {
 
-    suspend fun getStep(): Step
+    fun getStep(): Step
 
-    suspend fun next(step: Step): Step
+    fun next(step: Step)
 
     sealed class Step {
-        object None : Step()
+        object Initialized : Step()
         object Uninitialized : Step()
         object DownloadStep : Step()
         object AuthStep : Step()
         object Finished : Step()
-        object Initialized : Step()
+        class Error(val err: Throwable) : Step()
     }
 }
