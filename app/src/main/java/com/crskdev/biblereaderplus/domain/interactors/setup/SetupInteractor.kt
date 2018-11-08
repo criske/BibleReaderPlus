@@ -24,50 +24,57 @@ class SetupInteractor @Inject constructor(
 
     suspend fun request(request: Request) = coroutineScope {
         when (request) {
-            is Request.Check -> {
-                val existentStep = withContext(dispatchers.DEFAULT) { setupCheckService.getStep() }
-                when (existentStep) {
-                    is SetupCheckService.Step.Uninitialized -> {
-                        resumeFromUninitialized(request.responseChannel)
-                    }
-                    is SetupCheckService.Step.DownloadStep -> {
-                        resumeFromDownload(request.responseChannel)
-                    }
-                    is SetupCheckService.Step.AuthStep -> {
-                        resumeFromAuth(
-                            DeviceAccountCredential.Unauthorized,
-                            request.responseChannel
-                        )
-                    }
-                    is SetupCheckService.Step.Finished -> {
-                        resumeFromFinished(request.responseChannel)
-                    }
-                    is SetupCheckService.Step.Initialized -> {
-                        resumeFromInitialized(request.responseChannel)
-                    }
-                    is SetupCheckService.Step.Error -> {
-                        sendErrorResponse(
-                            request.responseChannel,
-                            Response.Error(existentStep.err.message)
-                        )
-                    }
-                }
-            }
-            is Request.AuthPrompt -> {
-                resumeFromAuth(request.deviceAccountCredential, request.responseChannel)
-            }
-            else -> throw Error()
+            is Request.Check,
+            is Request.Retry ->
+                handleRequestCheckRetry(request.responseChannel)
+            is Request.AuthPrompt ->
+                handleRequestAuthPrompt(request.deviceAccountCredential, request.responseChannel)
         }
+        request.responseChannel.close()
+    }
+
+    private suspend fun handleRequestCheckRetry(channel: Channel<Response>) {
+        val existentStep = withContext(dispatchers.DEFAULT) {
+            setupCheckService.getStep()
+        }
+        when (existentStep) {
+            is SetupCheckService.Step.Uninitialized -> {
+                resumeFromUninitialized(channel)
+            }
+            is SetupCheckService.Step.DownloadStep -> {
+                resumeFromDownload(channel)
+            }
+            is SetupCheckService.Step.AuthStep -> {
+                resumeFromAuth(
+                    DeviceAccountCredential.Unauthorized,
+                    channel
+                )
+            }
+            is SetupCheckService.Step.Finished -> {
+                resumeFromFinished(channel)
+            }
+            is SetupCheckService.Step.Initialized -> {
+                resumeFromInitialized(channel)
+            }
+            is SetupCheckService.Step.Error -> {
+                sendErrorResponse(
+                    channel,
+                    Response.Error(existentStep.err.message)
+                )
+            }
+        }
+    }
+
+    private suspend fun handleRequestAuthPrompt(credential: DeviceAccountCredential, channel: Channel<Response>) {
+        resumeFromAuth(credential, channel)
     }
 
     private suspend fun sendErrorResponse(channel: Channel<Response>, err: Response.Error) {
         channel.send(err)
-        channel.close()
     }
 
     private suspend fun resumeFromInitialized(channel: Channel<Response>) {
         channel.send(Response.Initialized)
-        channel.close()
     }
 
     private suspend fun resumeFromFinished(channel: Channel<Response>) {
@@ -75,62 +82,93 @@ class SetupInteractor @Inject constructor(
         withContext(dispatchers.DEFAULT) {
             setupCheckService.next(SetupCheckService.Step.Initialized)
         }
-        channel.close()
     }
 
-    private suspend fun resumeFromDownload(channel: Channel<Response>) {
-        withContext(dispatchers.DEFAULT) {
-            setupCheckService.next(SetupCheckService.Step.AuthStep)
+    private suspend fun resumeFromDownload(channel: Channel<Response>) =
+        coroutineScope {
+            channel.send(Response.DownloadStep.Prepare)
+
+            val documentResponse = withContext(dispatchers.IO) {
+                downloadDocumentService.download()
+            }
+
+            when (documentResponse) {
+                is DownloadDocumentService.Response.ErrorResponse -> {
+                    val err = documentResponse.error
+                    when (err) {
+                        is DownloadDocumentService.Error.Http -> {
+                            val code = err.code
+                            when (code) {
+                                404 -> channel.send(Response.DownloadStep.Error.NotFound)
+                                408 -> channel.send(Response.DownloadStep.Error.Timeout)
+                                else -> channel.send(Response.DownloadStep.Error.Other(err.message))
+                            }
+                        }
+                        is DownloadDocumentService.Error.Network -> {
+                            channel.send(Response.DownloadStep.Error.Network)
+                        }
+                        is DownloadDocumentService.Error.Conversion,
+                        is DownloadDocumentService.Error.Unexpected -> {
+                            channel.send(Response.DownloadStep.Error.Other(err.message))
+                        }
+                    }
+                }
+                is DownloadDocumentService.Response.OKResponse -> {
+                    channel.send(Response.DownloadStep.Persist)
+                    withContext(dispatchers.DEFAULT) {
+                        documentRepository.save(documentResponse.document)
+                        //transition to auth state
+                        setupCheckService.next(SetupCheckService.Step.AuthStep)
+                    }
+                    channel.send(Response.DownloadStep.Done)
+                }
+            }
+
         }
-        channel.close()
-    }
 
-    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: Channel<Response>) {
-        channel.send(Response.AuthStep.Prepare)
-        when (deviceAccountCredential) {
-            is DeviceAccountCredential.Unauthorized -> {
-                if (!authService.hasPermission()) {
-                    channel.send(Response.AuthStep.NeedPermission)
-                    authService.requestPermission()
-                    channel.close()
-                } else {
+    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: Channel<Response>) =
+        coroutineScope {
+            channel.send(Response.AuthStep.Prepare)
+            when (deviceAccountCredential) {
+                is DeviceAccountCredential.Unauthorized -> {
+                    if (!authService.hasPermission()) {
+                        channel.send(Response.AuthStep.NeedPermission)
+                        authService.requestPermission()
+                    } else {
+                        channel.send(Response.AuthStep.Authenticating)
+                        val (error, success) = withContext(dispatchers.DEFAULT) {
+                            authService.authenticateWithPermissionGranted()
+                        }
+                        if (success) {
+                            channel.send(Response.AuthStep.Done)
+                            resumeFromFinished(channel)
+                        } else {
+                            channel.send(Response.AuthStep.Error(error?.message))
+                        }
+                    }
+                }
+                is DeviceAccountCredential.AuthorizationPayload -> {
                     channel.send(Response.AuthStep.Authenticating)
                     val (error, success) = withContext(dispatchers.DEFAULT) {
-                        authService.authenticateWithPermissionGranted()
+                        authService.authenticate(deviceAccountCredential.credentialData)
                     }
                     if (success) {
                         channel.send(Response.AuthStep.Done)
                         resumeFromFinished(channel)
                     } else {
                         channel.send(Response.AuthStep.Error(error?.message))
-                        channel.close()
                     }
                 }
-
-            }
-            is DeviceAccountCredential.AuthorizationPayload -> {
-                channel.send(Response.AuthStep.Authenticating)
-                val (error, success) = withContext(dispatchers.DEFAULT) {
-                    authService.authenticate(deviceAccountCredential.credentialData)
-                }
-                if (success) {
-                    channel.send(Response.AuthStep.Done)
-                    resumeFromFinished(channel)
-                } else {
-                    channel.send(Response.AuthStep.Error(error?.message))
-                    channel.close()
-                }
             }
         }
-    }
 
-    private suspend fun resumeFromUninitialized(channel: Channel<Response>) {
-        channel.send(SetupInteractor.Response.DownloadStep.Prepare)
-        withContext(dispatchers.DEFAULT) {
-            setupCheckService.next(SetupCheckService.Step.DownloadStep)
+    private suspend fun resumeFromUninitialized(channel: Channel<Response>) =
+        coroutineScope {
+            channel.send(SetupInteractor.Response.DownloadStep.Prepare)
+            withContext(dispatchers.DEFAULT) {
+                setupCheckService.next(SetupCheckService.Step.DownloadStep)
+            }
         }
-        channel.close()
-    }
 
     sealed class Request(val responseChannel: Channel<Response>) {
         class Check(responseChannel: Channel<Response>) : Request(responseChannel)
@@ -146,9 +184,14 @@ class SetupInteractor @Inject constructor(
         object Initialized : Response(), Step
         sealed class DownloadStep : Response() {
             object Prepare : DownloadStep(), Step
-            data class Progress(val position: Long, val total: Long) : DownloadStep(), StepState
             object Persist : DownloadStep(), StepState
             object Done : DownloadStep(), StepState
+            sealed class Error : DownloadStep(), StepState {
+                object Network : Error()
+                object Timeout : Error()
+                object NotFound : Error()
+                class Other(val message: String?) : Error()
+            }
         }
 
         sealed class AuthStep : Response() {
