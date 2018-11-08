@@ -12,6 +12,24 @@ import com.crskdev.biblereaderplus.domain.entity.Document
  */
 interface DownloadDocumentService {
 
-    fun download(): Document
+    companion object {
+        private val EMPTY_DOCUMENT = Document(emptyList())
+    }
+
+    suspend fun download(): DownloadDocumentService.Response
+
+    sealed class Error(val message: String?) {
+        object None : Error(null)
+        class Conversion(message: String?) : Error(message)
+        class Http(val code: Int, message: String?) : Error(message)
+        class Network(message: String?) : Error(message)
+        class Unexpected(message: String?) : Error(message)
+    }
+
+    sealed class Response(val error: DownloadDocumentService.Error, val document: Document) {
+        class ErrorResponse(error: DownloadDocumentService.Error) : Response(error, EMPTY_DOCUMENT)
+        class OKResponse(document: Document) :
+            Response(DownloadDocumentService.Error.None, document)
+    }
 
 }
