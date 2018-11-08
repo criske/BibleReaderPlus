@@ -17,6 +17,7 @@ import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.channels.toCollection
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -61,18 +62,18 @@ class SetupInteractorTest {
         runBlocking {
             every { setupService.getStep() } returns SetupCheckService.Step.Initialized
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(SetupInteractor.Response.Initialized),
+                    channel.toCollection(mutableListOf())
+                )
+                verify(exactly = 0) { setupService.next(SetupCheckService.Step.DownloadStep) }
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
-            assertEquals(
-                listOf(SetupInteractor.Response.Initialized),
-                responseChannel.toCollection(mutableListOf())
-            )
 
-            //not called
-            verify(exactly = 0) { setupService.next(SetupCheckService.Step.DownloadStep) }
         }
     }
 
@@ -82,17 +83,18 @@ class SetupInteractorTest {
         runBlocking {
             every { setupService.getStep() } returns SetupCheckService.Step.Uninitialized
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(SetupInteractor.Response.DownloadStep.Prepare),
+                    channel.toCollection(mutableListOf())
+                )
+                verify { setupService.next(SetupCheckService.Step.DownloadStep) }
+
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
-            assertEquals(
-                listOf(SetupInteractor.Response.DownloadStep.Prepare),
-                responseChannel.toCollection(mutableListOf())
-            )
-
-            verify { setupService.next(SetupCheckService.Step.DownloadStep) }
         }
     }
 
@@ -107,19 +109,19 @@ class SetupInteractorTest {
                 null,
                 true
             )
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response> {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.AuthStep.Prepare,
+                        SetupInteractor.Response.AuthStep.NeedPermission
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+                verify { authService.requestPermission() }
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.AuthStep.Prepare,
-                    SetupInteractor.Response.AuthStep.NeedPermission
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
-            verify { authService.requestPermission() }
-
         }
 
     }
@@ -132,7 +134,18 @@ class SetupInteractorTest {
             every { authService.hasPermission() } returns true
             coEvery { authService.authenticate(any()) } returns Pair<Error?, Boolean>(null, true)
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.AuthStep.Prepare,
+                        SetupInteractor.Response.AuthStep.Authenticating,
+                        SetupInteractor.Response.AuthStep.Done,
+                        SetupInteractor.Response.Finished
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+                coVerify { authService.authenticate(any()) }
+            }
             launch {
                 setupInteractor.request(
                     SetupInteractor.Request.AuthPrompt(
@@ -142,16 +155,7 @@ class SetupInteractorTest {
                     )
                 )
             }
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.AuthStep.Prepare,
-                    SetupInteractor.Response.AuthStep.Authenticating,
-                    SetupInteractor.Response.AuthStep.Done,
-                    SetupInteractor.Response.Finished
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
-            coVerify { authService.authenticate(any()) }
+
         }
     }
 
@@ -166,20 +170,23 @@ class SetupInteractorTest {
                 true
             )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.AuthStep.Prepare,
+                        SetupInteractor.Response.AuthStep.Authenticating,
+                        SetupInteractor.Response.AuthStep.Done,
+                        SetupInteractor.Response.Finished
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+                coVerify { authService.authenticateWithPermissionGranted() }
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.AuthStep.Prepare,
-                    SetupInteractor.Response.AuthStep.Authenticating,
-                    SetupInteractor.Response.AuthStep.Done,
-                    SetupInteractor.Response.Finished
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
-            coVerify { authService.authenticateWithPermissionGranted() }
+
+
         }
 
     }
@@ -195,18 +202,20 @@ class SetupInteractorTest {
                         )
                     )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response> {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.DownloadStep.Prepare,
+                        SetupInteractor.Response.DownloadStep.Error.Network
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare,
-                    SetupInteractor.Response.DownloadStep.Error.Network
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
+
         }
     }
 
@@ -222,18 +231,20 @@ class SetupInteractorTest {
                         )
                     )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.DownloadStep.Prepare,
+                        SetupInteractor.Response.DownloadStep.Error.NotFound
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare,
-                    SetupInteractor.Response.DownloadStep.Error.NotFound
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
+
         }
     }
 
@@ -249,18 +260,20 @@ class SetupInteractorTest {
                         )
                     )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response>() {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.DownloadStep.Prepare,
+                        SetupInteractor.Response.DownloadStep.Error.Timeout
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare,
-                    SetupInteractor.Response.DownloadStep.Error.Timeout
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
+
         }
     }
 
@@ -300,22 +313,21 @@ class SetupInteractorTest {
                 document
             )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
+            val responseChannel = actor<SetupInteractor.Response> {
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.DownloadStep.Prepare,
+                        SetupInteractor.Response.DownloadStep.Persist,
+                        SetupInteractor.Response.DownloadStep.Done
+                    ),
+                    channel.toCollection(mutableListOf())
+                )
+                coVerify { setupService.next(SetupCheckService.Step.AuthStep) }
+                coVerify { docRepository.save(document) }
+            }
             launch {
                 setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
-
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare,
-                    SetupInteractor.Response.DownloadStep.Persist,
-                    SetupInteractor.Response.DownloadStep.Done
-                ),
-                responseChannel.toCollection(mutableListOf())
-            )
-
-            coVerify { setupService.next(SetupCheckService.Step.AuthStep) }
-            coVerify { docRepository.save(document) }
         }
     }
 }

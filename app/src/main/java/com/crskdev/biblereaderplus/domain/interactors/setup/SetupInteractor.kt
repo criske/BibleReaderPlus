@@ -8,6 +8,7 @@ package com.crskdev.biblereaderplus.domain.interactors.setup
 import com.crskdev.biblereaderplus.domain.entity.DeviceAccountCredential
 import com.crskdev.biblereaderplus.domain.gateway.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -33,7 +34,7 @@ class SetupInteractor @Inject constructor(
         request.responseChannel.close()
     }
 
-    private suspend fun handleRequestCheckRetry(channel: Channel<Response>) {
+    private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>) {
         val existentStep = withContext(dispatchers.DEFAULT) {
             setupCheckService.getStep()
         }
@@ -65,26 +66,26 @@ class SetupInteractor @Inject constructor(
         }
     }
 
-    private suspend fun handleRequestAuthPrompt(credential: DeviceAccountCredential, channel: Channel<Response>) {
+    private suspend fun handleRequestAuthPrompt(credential: DeviceAccountCredential, channel: SendChannel<Response>) {
         resumeFromAuth(credential, channel)
     }
 
-    private suspend fun sendErrorResponse(channel: Channel<Response>, err: Response.Error) {
+    private suspend fun sendErrorResponse(channel: SendChannel<Response>, err: Response.Error) {
         channel.send(err)
     }
 
-    private suspend fun resumeFromInitialized(channel: Channel<Response>) {
+    private suspend fun resumeFromInitialized(channel: SendChannel<Response>) {
         channel.send(Response.Initialized)
     }
 
-    private suspend fun resumeFromFinished(channel: Channel<Response>) {
+    private suspend fun resumeFromFinished(channel: SendChannel<Response>) {
         channel.send(Response.Finished)
         withContext(dispatchers.DEFAULT) {
             setupCheckService.next(SetupCheckService.Step.Initialized)
         }
     }
 
-    private suspend fun resumeFromDownload(channel: Channel<Response>) =
+    private suspend fun resumeFromDownload(channel: SendChannel<Response>) =
         coroutineScope {
             channel.send(Response.DownloadStep.Prepare)
 
@@ -126,7 +127,7 @@ class SetupInteractor @Inject constructor(
 
         }
 
-    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: Channel<Response>) =
+    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: SendChannel<Response>) =
         coroutineScope {
             channel.send(Response.AuthStep.Prepare)
             when (deviceAccountCredential) {
@@ -162,7 +163,7 @@ class SetupInteractor @Inject constructor(
             }
         }
 
-    private suspend fun resumeFromUninitialized(channel: Channel<Response>) =
+    private suspend fun resumeFromUninitialized(channel: SendChannel<Response>) =
         coroutineScope {
             channel.send(SetupInteractor.Response.DownloadStep.Prepare)
             withContext(dispatchers.DEFAULT) {
@@ -170,9 +171,9 @@ class SetupInteractor @Inject constructor(
             }
         }
 
-    sealed class Request(val responseChannel: Channel<Response>) {
-        class Check(responseChannel: Channel<Response>) : Request(responseChannel)
-        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential, responseChannel: Channel<Response>) :
+    sealed class Request(val responseChannel: SendChannel<Response>) {
+        class Check(responseChannel: SendChannel<Response>) : Request(responseChannel)
+        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential, responseChannel: SendChannel<Response>) :
             Request(responseChannel)
 
         class Retry(responseChannel: Channel<Response>) : Request(responseChannel)
