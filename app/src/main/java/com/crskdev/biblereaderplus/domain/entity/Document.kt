@@ -10,9 +10,11 @@ package com.crskdev.biblereaderplus.domain.entity
  */
 class Document(val books: List<Book>) {
 
-    class Book(val name: String, val chapters: List<Chapter>, val id: Int? = null)
+    class Book(val name: String, val chapters: List<Chapter>, val id: Int? = null) : Read
 
-    class Chapter(val number: Int, val versets: List<Verset>, val bookId: Int? = null)
+    class Chapter(val number: Int, val versets: List<Verset>, val bookId: Int? = null) : Read
 
-    class Verset(val number: Int, val bookId: Int? = null, val chapterId: Int? = null)
+    class Verset(val number: Int, val bookId: Int? = null, val chapterId: Int? = null) : Read
 }
+
+interface Read
