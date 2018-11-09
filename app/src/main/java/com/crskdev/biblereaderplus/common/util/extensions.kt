@@ -22,3 +22,5 @@ inline fun <reified T> Any.castIf(): T? =
 infix fun Any?.ifNull(block: () -> Unit) {
     if (this == null) block()
 }
+
+fun Any.println() = println(this)
