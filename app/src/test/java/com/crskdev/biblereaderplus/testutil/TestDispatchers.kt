@@ -24,5 +24,17 @@ object TestDispatchers : GatewayDispatchers {
 
     override fun custom(): CoroutineDispatcher = Dispatchers.Unconfined
 
+}
+
+@ExperimentalCoroutinesApi
+object RealDispatchers : GatewayDispatchers {
+
+    override val IO: CoroutineDispatcher = Dispatchers.IO
+
+    override val DEFAULT: CoroutineDispatcher = Dispatchers.Default
+
+    override val MAIN: CoroutineDispatcher = Dispatchers.Main
+
+    override fun custom(): CoroutineDispatcher = Dispatchers.Unconfined
 
 }
