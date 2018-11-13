@@ -18,10 +18,8 @@ import javax.inject.Inject
  * Created by Cristian Pela on 08.11.2018.
  */
 class ReadInteractor @Inject constructor(
-
     private val documentRepository: DocumentRepository) {
-
-
+    
     suspend fun request(request: Request) = coroutineScope {
 
     }

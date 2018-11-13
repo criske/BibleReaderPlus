@@ -22,7 +22,6 @@ class SetupInteractor @Inject constructor(
     private val documentRepository: DocumentRepository) {
 
     suspend fun request(request: Request) = coroutineScope {
-
         request.responseChannel.close()
     }
 
