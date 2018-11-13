@@ -111,7 +111,7 @@ class MockedRepository(
     override suspend fun read(reader: (PagedList<Read>) -> Unit) = coroutineScope {
         factory
             .setupPagedListBuilder {
-                configDSL(3) {
+                config(3) {
                     enablePlaceholders = false
                 }
                 fetchDispatcher = dispatchers.DEFAULT
