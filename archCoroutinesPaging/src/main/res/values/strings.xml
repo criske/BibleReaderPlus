@@ -1,0 +1,8 @@
+<!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<resources>
+    <string name="app_name">arch-coroutines-paging</string>
+</resources>

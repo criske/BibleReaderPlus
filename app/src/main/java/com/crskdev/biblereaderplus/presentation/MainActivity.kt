@@ -12,16 +12,15 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.paging.DataSource
 import androidx.paging.PagedListAdapter
-import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import com.crskdev.arch.coroutines.paging.dataSourceFactory
+import com.crskdev.arch.coroutines.paging.onPaging
+import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
-import com.crskdev.biblereaderplus.common.util.pagedlist.dataSourceFactory
-import com.crskdev.biblereaderplus.common.util.pagedlist.onPaging
-import com.crskdev.biblereaderplus.common.util.pagedlist.setupPagedListBuilder
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main_pagedlist_test.*
 import kotlinx.coroutines.*
@@ -89,14 +88,13 @@ class MainActivity : DaggerAppCompatActivity(), CoroutineScope {
 
     @SuppressLint("RestrictedApi")
     class TestAdapter : PagedListAdapter<String, VH>(
-        AsyncDifferConfig.Builder<String>(object : DiffUtil.ItemCallback<String>() {
+        object : DiffUtil.ItemCallback<String>() {
             override fun areItemsTheSame(oldItem: String, newItem: String): Boolean =
                 oldItem == newItem
 
             override fun areContentsTheSame(oldItem: String, newItem: String): Boolean =
                 oldItem == newItem
-        }).build()
-    ) {
+        }) {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH =
             VH(
                 LayoutInflater.from(parent.context).inflate(
