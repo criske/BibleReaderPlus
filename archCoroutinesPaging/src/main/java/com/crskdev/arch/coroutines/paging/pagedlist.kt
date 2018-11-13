@@ -3,16 +3,18 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-package com.crskdev.biblereaderplus.common.util.pagedlist
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
+package com.crskdev.arch.coroutines.paging
 
 import android.annotation.SuppressLint
 import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.paging.DataSource
 import androidx.paging.PagedList
 import androidx.paging.PagedList.Config.MAX_SIZE_UNBOUNDED
-import com.crskdev.biblereaderplus.common.util.println
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
+import kotlin.coroutines.CoroutineContext
 
 
 /**
@@ -26,7 +28,10 @@ inline fun <Key, Value> dataSourceFactory(crossinline block: () -> DataSource<Ke
 
 fun <Key, Value> DataSource.Factory<Key, Value>.setupPagedListBuilder(block: PagedListBuilderDSL<Value>.() -> Unit):
         ReadyPagedListBuilder<Key, Value> =
-    ReadyPagedListBuilder.createWith(this, PagedListBuilderDSL<Value>().apply(block))
+    ReadyPagedListBuilder.createWith(
+        this,
+        PagedListBuilderDSL<Value>().apply(block)
+    )
 
 fun <Key, Value> DataSource.Factory<Key, Value>.setupPagedListBuilder(pageSize: Int):
         ReadyPagedListBuilder<Key, Value> =
@@ -40,7 +45,6 @@ fun <Key, Value> DataSource.Factory<Key, Value>.setupPagedListBuilder(pageSize: 
 @ObsoleteCoroutinesApi
 suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.onPaging(consumer: (PagedList<Value>) -> Unit) =
     coroutineScope {
-
         val sendChannel = actor<PagedList<Value>> {
             for (page in channel) {
                 consumer(page)
@@ -51,11 +55,10 @@ suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.onPaging(consumer: (P
             override fun onInvalidated() {
                 val dis = this
                 runBlocking(coroutineContext + fetchDispatcher) {
-                    Thread.currentThread().println()
                     val lastKey = lastPage?.lastKey as? Key
                     do {
                         lastPage?.dataSource?.removeInvalidatedCallback(dis)
-                        lastPage = recreate(lastKey).build().apply {
+                        lastPage = recreate(lastKey).build(coroutineContext).apply {
                             dataSource.addInvalidatedCallback(dis)
                         }
                     } while (lastPage?.isDetached == true)
@@ -64,27 +67,22 @@ suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.onPaging(consumer: (P
                 }
             }
         }
-
-        sendChannel.send(build().apply {
+        sendChannel.send(build(coroutineContext).apply {
             lastPage = this
             lastPage?.dataSource?.addInvalidatedCallback(invalidatedCallback)
         })
     }
 
 @SuppressLint("RestrictedApi")
-internal suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.build(): PagedList<Value> =
-    coroutineScope {
-        val pagedList = builder
-            .setNotifyExecutor(ArchTaskExecutor.getMainThreadExecutor())
-            .setFetchExecutor {
-                runBlocking(coroutineContext + fetchDispatcher) {
-                    it.run()
-                }
-            }
-            .setBoundaryCallback(boundaryCallback)
-            .build()
-        pagedList
-    }
+internal fun <Key, Value> ReadyPagedListBuilder<Key, Value>.build(coroutineContext: CoroutineContext):
+        PagedList<Value> =
+    builder
+        .setNotifyExecutor(ArchTaskExecutor.getMainThreadExecutor())
+        .setFetchExecutor {
+            runBlocking(coroutineContext + fetchDispatcher) { it.run() }
+        }
+        .setBoundaryCallback(boundaryCallback)
+        .build()
 
 
 class ConfigDSL {
@@ -101,7 +99,8 @@ class ConfigDSL {
 }
 
 class PagedListBuilderDSL<Value> {
-    var config: ConfigDSL = ConfigDSL()
+    var config: ConfigDSL =
+        ConfigDSL()
     var boundaryCallback: PagedList.BoundaryCallback<Value>? = null
     var fetchDispatcher: CoroutineDispatcher = Dispatchers.Default
     internal var notifyDispatcher: CoroutineDispatcher = Dispatchers.Main

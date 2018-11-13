@@ -3,4 +3,4 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-include ':app'
+include ':app', ':archCoroutinesPaging'
