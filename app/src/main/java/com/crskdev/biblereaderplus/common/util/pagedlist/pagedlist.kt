@@ -5,11 +5,15 @@
 
 package com.crskdev.biblereaderplus.common.util.pagedlist
 
+import android.annotation.SuppressLint
+import androidx.arch.core.executor.ArchTaskExecutor
 import androidx.paging.DataSource
 import androidx.paging.PagedList
 import androidx.paging.PagedList.Config.MAX_SIZE_UNBOUNDED
+import com.crskdev.biblereaderplus.common.util.println
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.actor
+
 
 /**
  * Created by Cristian Pela on 12.11.2018.
@@ -23,6 +27,13 @@ inline fun <Key, Value> dataSourceFactory(crossinline block: () -> DataSource<Ke
 fun <Key, Value> DataSource.Factory<Key, Value>.setupPagedListBuilder(block: PagedListBuilderDSL<Value>.() -> Unit):
         ReadyPagedListBuilder<Key, Value> =
     ReadyPagedListBuilder.createWith(this, PagedListBuilderDSL<Value>().apply(block))
+
+fun <Key, Value> DataSource.Factory<Key, Value>.setupPagedListBuilder(pageSize: Int):
+        ReadyPagedListBuilder<Key, Value> =
+    setupPagedListBuilder {
+        config(pageSize)
+        fetchDispatcher = Dispatchers.Default
+    }
 
 @Suppress("UNCHECKED_CAST")
 @ExperimentalCoroutinesApi
@@ -40,6 +51,7 @@ suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.onPaging(consumer: (P
             override fun onInvalidated() {
                 val dis = this
                 runBlocking(coroutineContext + fetchDispatcher) {
+                    Thread.currentThread().println()
                     val lastKey = lastPage?.lastKey as? Key
                     do {
                         lastPage?.dataSource?.removeInvalidatedCallback(dis)
@@ -59,21 +71,14 @@ suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.onPaging(consumer: (P
         })
     }
 
+@SuppressLint("RestrictedApi")
 internal suspend fun <Key, Value> ReadyPagedListBuilder<Key, Value>.build(): PagedList<Value> =
     coroutineScope {
         val pagedList = builder
-            .setNotifyExecutor {
-                runBlocking {
-                    withContext(coroutineContext + notifyDispatcher) {
-                        it.run()
-                    }
-
-                }
-            }.setFetchExecutor {
-                runBlocking {
-                    withContext(coroutineContext + fetchDispatcher) {
-                        it.run()
-                    }
+            .setNotifyExecutor(ArchTaskExecutor.getMainThreadExecutor())
+            .setFetchExecutor {
+                runBlocking(coroutineContext + fetchDispatcher) {
+                    it.run()
                 }
             }
             .setBoundaryCallback(boundaryCallback)
@@ -96,10 +101,10 @@ class ConfigDSL {
 }
 
 class PagedListBuilderDSL<Value> {
-    var configDSL: ConfigDSL = ConfigDSL()
+    var config: ConfigDSL = ConfigDSL()
     var boundaryCallback: PagedList.BoundaryCallback<Value>? = null
     var fetchDispatcher: CoroutineDispatcher = Dispatchers.Default
-    var notifyDispatcher: CoroutineDispatcher = Dispatchers.Main
+    internal var notifyDispatcher: CoroutineDispatcher = Dispatchers.Main
 }
 
 
@@ -116,11 +121,11 @@ class ReadyPagedListBuilder<Key, Value> internal constructor(
                                              pagedListDSL: PagedListBuilderDSL<Value>): ReadyPagedListBuilder<Key, Value> {
             val dataSource = factory.create()
             val config = PagedList.Config.Builder()
-                .setEnablePlaceholders(pagedListDSL.configDSL.enablePlaceholders)
-                .setInitialLoadSizeHint(pagedListDSL.configDSL.initialLoadSizeHint)
-                .setPageSize(pagedListDSL.configDSL.pageSize)
-                .setMaxSize(pagedListDSL.configDSL.maxSize)
-                .setPrefetchDistance(pagedListDSL.configDSL.prefetchDistance)
+                .setEnablePlaceholders(pagedListDSL.config.enablePlaceholders)
+                .setInitialLoadSizeHint(pagedListDSL.config.initialLoadSizeHint)
+                .setPageSize(pagedListDSL.config.pageSize)
+                .setMaxSize(pagedListDSL.config.maxSize)
+                .setPrefetchDistance(pagedListDSL.config.prefetchDistance)
                 .build()
 
             val builder = PagedList.Builder<Key, Value>(dataSource, config)
@@ -159,5 +164,3 @@ class ReadyPagedListBuilder<Key, Value> internal constructor(
         )
     }
 }
-
-        
