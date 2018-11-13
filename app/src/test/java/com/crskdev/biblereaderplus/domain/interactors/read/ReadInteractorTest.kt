@@ -5,22 +5,28 @@
 
 package com.crskdev.biblereaderplus.domain.interactors.read
 
+import androidx.paging.DataSource
 import androidx.paging.PagedList
-import androidx.paging.PositionalDataSource
 import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.common.util.pagedlist.dataSourceFactory
+import com.crskdev.biblereaderplus.common.util.pagedlist.onPaging
+import com.crskdev.biblereaderplus.common.util.pagedlist.setupPagedListBuilder
 import com.crskdev.biblereaderplus.common.util.println
 import com.crskdev.biblereaderplus.domain.entity.Document
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
+import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
+import com.crskdev.biblereaderplus.testutil.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.testutil.RealDispatchers
+import com.crskdev.biblereaderplus.testutil.TestDispatchers
 import io.mockk.MockKAnnotations
-import io.mockk.coEvery
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.actor
 import org.junit.Before
 import org.junit.Test
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 
 /**
  * Created by Cristian Pela on 08.11.2018.
@@ -37,141 +43,83 @@ class ReadInteractorTest {
         MockKAnnotations.init(this, relaxUnitFun = true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun request() {
         runBlocking {
 
-            val data = listOf(
-                Document.Book("Foo", emptyList()),
-                Document.Book("Bar", emptyList()),
-                Document.Book("War", emptyList()),
-                Document.Book("Far", emptyList()),
-                Document.Book("Dar", emptyList()),
-                Document.Book("Qar", emptyList())
-            )
-
-            coEvery { docRepository.read(any()) } coAnswers {
-                coroutineScope {
-
-
-                    val pagingJob = Job()
-                    val sendChannel = arg<SendChannel<PagedList<Read>>>(0)
-
-                    val ds = object : PositionalDataSource<Read>() {
-                        override fun loadRange(params: LoadRangeParams, callback: LoadRangeCallback<Read>) {
-                            val endPosition =
-                                (params.startPosition + params.loadSize).coerceAtMost(data.size)
-                            val subList = data.subList(params.startPosition, endPosition)
-                            callback.onResult(subList)
-                        }
-
-                        override fun loadInitial(params: LoadInitialParams, callback: LoadInitialCallback<Read>) {
-                            val totalCount = data.size
-                            val firstLoadPosition =
-                                PositionalDataSource.computeInitialLoadPosition(
-                                    params,
-                                    totalCount
-                                )
-                            val firstLoadSize =
-                                PositionalDataSource.computeInitialLoadSize(
-                                    params,
-                                    firstLoadPosition,
-                                    totalCount
-                                )
-                            callback.onResult(
-                                data.subList(firstLoadPosition, firstLoadSize),
-                                firstLoadPosition,
-                                firstLoadSize
-                            )
-                        }
-                    }
-
-                    val builder = PagedList
-                        .Builder(
-                            ds, PagedList.Config.Builder()
-                                .setPageSize(1)
-                                .setEnablePlaceholders(false)
-                                .build()
-                        )
-                        .setNotifyExecutor {
-                            //launch(Dispatchers.IO + pagingJob) {
-                            it.run()
-                            //}
-                        }
-                        .setFetchExecutor {
-                            // launch(Dispatchers.Default + pagingJob) {
-                            it.run()
-                            // }
-                        }
-
-
-                    var lastPage: PagedList<Read>? = null
-                    ds.addInvalidatedCallback {
-                        launch(pagingJob) {
-                            val lastKey = lastPage?.lastKey?.cast<Int>()
-                            sendChannel.send(builder.setInitialKey(lastKey).build().apply {
-                                lastPage = this
-                            })
-                        }
-                    }
-
-                    sendChannel.send(builder.setInitialKey(null).build().apply {
-                        lastPage = this
-                    })
-
-                    sendChannel.invokeOnClose {
-                        pagingJob.cancel()
+            val data = CopyOnWriteArrayList(
+                (1..101).fold(mutableListOf<Read>()) { acc, curr ->
+                    acc.apply {
+                        acc.add(Document.Book("Book$curr", emptyList()))
                     }
                 }
-            }
+            )
 
-            //note if  I'm using the test dispatchers it hangs
-            val interactor = ReadInteractor(RealDispatchers, docRepository)
+            val factory = dataSourceFactory {
+                InMemoryPagedListDataSource(data)
+            }
 
             val job = Job()
 
+            val interactor =
+                ReadInteractor(TestDispatchers, MockedRepository(RealDispatchers, factory))
+
+            var page: PagedList<Read>? = null
+
+            val displayJob = Job()
+
             val sendChannel = actor<ReadInteractor.Response>(job) {
-                //                val receive = channel.receive()
-//                assertTrue(receive is ReadInteractor.Response.Paged)
-//                val page = receive.cast<ReadInteractor.Response.Paged>()
-//                page.list.snapshot().apply {
-//                    println(this.map { it.cast<Document.Book>().name })
-//                    assertEquals(3, size)
-//                    assertTrue(first() is Document.Book)
-//                    assertEquals("Foo", first().cast<Document.Book>().name)
-//                }
-//                page.list.dataSource.invalidate()
-//                page.list.snapshot().apply {
-//                    println(this.map { it.cast<Document.Book>().name })
-////                    assertEquals(6, size)
-////                    assertTrue(first() is Document.Book)
-////                    assertEquals("Qar", last().cast<Document.Book>().name)
-//                }
-
-                channel.receive().cast<ReadInteractor.Response.Paged>().list.apply {
-                    Thread.currentThread().println()
-
-                    map { it.cast<Document.Book>().name }.println()
-                    loadAround(lastIndex)
-                    map { it.cast<Document.Book>().name }.println()
-                    loadAround(lastIndex)
-                    map { it.cast<Document.Book>().name }.println()
-                    loadAround(lastIndex)
-                    map { it.cast<Document.Book>().name }.println()
-                    loadAround(lastIndex)
-                    map { it.cast<Document.Book>().name }.println()
+                for (response in channel) {
+                    response.cast<ReadInteractor.Response.Paged>().list.apply {
+                        page = this
+                        displayJob.cancelChildren()
+                        launch(displayJob) {
+                            while (snapshot().isNotEmpty()) {
+                                snapshot().map { it.cast<Document.Book>().name }.println()
+                                loadAround(lastIndex)
+                                delay(1000)
+                            }
+                        }
+                    }
                 }
+            }
 
-            }
-            launch {
-                delay(1000)
-                job.cancel()
-            }
 
             launch(job) {
                 interactor.request(ReadInteractor.Request(sendChannel))
             }
 
+            launch(Executors.newSingleThreadExecutor().asCoroutineDispatcher()) {
+                delay(6000)
+                page?.dataSource?.invalidate()
+                delay(7878000)
+                job.cancel()
+            }
+
         }
     }
+}
+
+
+class MockedRepository(
+    private val dispatchers: GatewayDispatchers,
+    private val factory: DataSource.Factory<Int, Read>) : DocumentRepository {
+
+    @ObsoleteCoroutinesApi
+    @ExperimentalCoroutinesApi
+    override suspend fun read(reader: (PagedList<Read>) -> Unit) = coroutineScope {
+        factory
+            .setupPagedListBuilder {
+                configDSL(3) {
+                    enablePlaceholders = false
+                }
+                fetchDispatcher = dispatchers.DEFAULT
+                notifyDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+            }
+            .onPaging(reader)
+    }
+
+    override fun save(document: Document) = TODO()
+
 }
