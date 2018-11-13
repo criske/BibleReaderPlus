@@ -12,8 +12,6 @@ import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import kotlinx.coroutines.channels.SendChannel
-import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,19 +23,16 @@ class ReadInteractor @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val documentRepository: DocumentRepository) {
 
-
     suspend fun request(request: Request) = coroutineScope {
-        val sendChannel = actor<PagedList<Read>> {
-            channel.consumeEach {
+        request.responseChannel.invokeOnClose {
+            throw it ?: Error("Unknown closed exception")
+        }
+        documentRepository.read {
+            launch(dispatchers.MAIN) {
                 request.responseChannel.send(Response.Paged(it))
             }
         }
-        launch {
-            documentRepository.read(sendChannel)
-        }
-
     }
-
 
     sealed class Response {
         class Paged(val list: PagedList<Read>) : Response()
