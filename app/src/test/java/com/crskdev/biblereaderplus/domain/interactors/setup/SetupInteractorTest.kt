@@ -38,7 +38,7 @@ class SetupInteractorTest {
     @Before
     fun setup() {
         MockKAnnotations.init(this, relaxUnitFun = true)
-        setupInteractor = SetupInteractor(
+        setupInteractor = SetupInteractorImpl(
             TestDispatchers,
             setupService,
             authService,
