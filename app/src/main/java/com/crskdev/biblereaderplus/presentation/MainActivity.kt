@@ -16,12 +16,12 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
+import com.crskdev.arch.couroutines.paging.dataSourceFactory
+import com.crskdev.arch.couroutines.paging.onPaging
+import com.crskdev.arch.couroutines.paging.setupPagedListBuilder
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
-import com.crskdev.biblereaderplus.common.util.pagedlist.dataSourceFactory
-import com.crskdev.biblereaderplus.common.util.pagedlist.onPaging
-import com.crskdev.biblereaderplus.common.util.pagedlist.setupPagedListBuilder
 import dagger.android.support.DaggerAppCompatActivity
 import kotlinx.android.synthetic.main.activity_main_pagedlist_test.*
 import kotlinx.coroutines.*
