@@ -6,7 +6,6 @@
 package com.crskdev.biblereaderplus.domain.gateway
 
 import androidx.paging.PagedList
-import com.crskdev.biblereaderplus.domain.entity.Document
 import com.crskdev.biblereaderplus.domain.entity.Read
 import kotlinx.coroutines.channels.SendChannel
 
@@ -15,7 +14,7 @@ import kotlinx.coroutines.channels.SendChannel
  */
 interface DocumentRepository {
 
-    fun save(document: Document)
+    fun save(reads: List<Read>)
 
     suspend fun read(channel: SendChannel<PagedList<Read>>)
 
