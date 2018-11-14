@@ -8,13 +8,16 @@ package com.crskdev.biblereaderplus.domain.entity
 /**
  * Created by Cristian Pela on 07.11.2018.
  */
-class Document(val books: List<Book>) {
+sealed class Read(val id: Int) {
 
-    class Book(val name: String, val chapters: List<Chapter>, val id: Int? = null) : Read
+    sealed class Content(id: Int) : Read(id) {
 
-    class Chapter(val number: Int, val versets: List<Verset>, val bookId: Int? = null) : Read
+        class Book(val name: String, id: Int) : Content(id)
 
-    class Verset(val number: Int, val bookId: Int? = null, val chapterId: Int? = null) : Read
+        class Chapter(id: Int, val bookId: Int, val number: Int) : Content(id)
+
+    }
+
+    class Verset(id: Int, val bookId: Int, val chapterId: Int, val number: Int, val content: String) :
+        Read(id)
 }
-
-interface Read

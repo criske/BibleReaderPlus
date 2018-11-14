@@ -5,7 +5,7 @@
 
 package com.crskdev.biblereaderplus.domain.gateway
 
-import com.crskdev.biblereaderplus.domain.entity.Document
+import com.crskdev.biblereaderplus.domain.entity.Read
 
 /**
  * Created by Cristian Pela on 06.11.2018.
@@ -13,7 +13,7 @@ import com.crskdev.biblereaderplus.domain.entity.Document
 interface DownloadDocumentService {
 
     companion object {
-        private val EMPTY_DOCUMENT = Document(emptyList())
+        private val EMPTY_DOCUMENT = emptyList<Read>()
     }
 
     suspend fun download(): DownloadDocumentService.Response
@@ -26,9 +26,9 @@ interface DownloadDocumentService {
         class Unexpected(message: String?) : Error(message)
     }
 
-    sealed class Response(val error: DownloadDocumentService.Error, val document: Document) {
+    sealed class Response(val error: DownloadDocumentService.Error, val document: List<Read>) {
         class ErrorResponse(error: DownloadDocumentService.Error) : Response(error, EMPTY_DOCUMENT)
-        class OKResponse(document: Document) :
+        class OKResponse(document: List<Read>) :
             Response(DownloadDocumentService.Error.None, document)
     }
 
