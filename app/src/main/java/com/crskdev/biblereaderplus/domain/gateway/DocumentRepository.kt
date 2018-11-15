@@ -15,6 +15,10 @@ interface DocumentRepository {
 
     fun save(reads: List<Read>)
 
-    suspend fun read(reader: (PagedList<Read>) -> Unit)
+    fun read(reader: (PagedList<Read>) -> Unit)
+
+    fun contents(): List<Read.Content>
+
+    fun filter(query: String): List<Read.Content>
 
 }
