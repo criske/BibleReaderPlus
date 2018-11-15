@@ -11,55 +11,60 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
-/**
- * Created by Cristian Pela on 06.11.2018.
- */
-class SetupInteractor @Inject constructor(
-    private val dispatchers: GatewayDispatchers,
-    private val setupCheckService: SetupCheckService,
-    private val authService: AuthService,
-    private val downloadDocumentService: DownloadDocumentService,
-    private val documentRepository: DocumentRepository) {
+interface SetupInteractor {
+    suspend fun request(request: SetupInteractor.Request): Boolean
+    sealed class Request(val responseChannel: Channel<SetupInteractor.Response>) {
+        class Check(responseChannel: Channel<SetupInteractor.Response>) : SetupInteractor.Request(responseChannel)
+        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential, responseChannel: Channel<SetupInteractor.Response>) :
+            SetupInteractor.Request(responseChannel)
 
-    suspend fun request(request: Request) = coroutineScope {
-
-        request.responseChannel.close()
-    }
-
-
-    sealed class Request(val responseChannel: Channel<Response>) {
-        class Check(responseChannel: Channel<Response>) : Request(responseChannel)
-        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential, responseChannel: Channel<Response>) :
-            Request(responseChannel)
-
-        class Retry(responseChannel: Channel<Response>) : Request(responseChannel)
+        class Retry(responseChannel: Channel<SetupInteractor.Response>) : SetupInteractor.Request(responseChannel)
     }
 
     interface StepState
     interface Step
     sealed class Response {
-        object Initialized : Response(), Step
-        sealed class DownloadStep : Response() {
-            object Prepare : DownloadStep(), Step
-            object Persist : DownloadStep(), StepState
-            object Done : DownloadStep(), StepState
-            sealed class Error : DownloadStep(), StepState {
-                object Network : Error()
-                object Timeout : Error()
-                object NotFound : Error()
-                class Other(val message: String?) : Error()
+        object Initialized : SetupInteractor.Response(), SetupInteractor.Step
+        sealed class DownloadStep : SetupInteractor.Response() {
+            object Prepare : SetupInteractor.Response.DownloadStep(), SetupInteractor.Step
+            object Persist : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
+            object Done : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
+            sealed class Error : SetupInteractor.Response.DownloadStep(),
+                SetupInteractor.StepState {
+                object Network : SetupInteractor.Response.DownloadStep.Error()
+                object Timeout : SetupInteractor.Response.DownloadStep.Error()
+                object NotFound : SetupInteractor.Response.DownloadStep.Error()
+                class Other(val message: String?) : SetupInteractor.Response.DownloadStep.Error()
             }
         }
 
-        sealed class AuthStep : Response() {
-            object Prepare : AuthStep(), Step
-            object NeedPermission : AuthStep(), StepState
-            object Authenticating : AuthStep(), StepState
-            object Done : AuthStep(), StepState
-            class Error(val errMessage: String?) : AuthStep(), StepState
+        sealed class AuthStep : SetupInteractor.Response() {
+            object Prepare : SetupInteractor.Response.AuthStep(), SetupInteractor.Step
+            object NeedPermission : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
+            object Authenticating : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
+            object Done : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
+            class Error(val errMessage: String?) : SetupInteractor.Response.AuthStep(),
+                SetupInteractor.StepState
         }
 
-        object Finished : Response(), Step
-        class Error(val errorMessage: String?) : Response()
+        object Finished : SetupInteractor.Response(), SetupInteractor.Step
+        class Error(val errorMessage: String?) : SetupInteractor.Response()
     }
+}
+
+/**
+ * Created by Cristian Pela on 06.11.2018.
+ */
+class SetupInteractorImpl @Inject constructor(
+    private val dispatchers: GatewayDispatchers,
+    private val setupCheckService: SetupCheckService,
+    private val authService: AuthService,
+    private val downloadDocumentService: DownloadDocumentService,
+    private val documentRepository: DocumentRepository) : SetupInteractor {
+
+    override suspend fun request(request: SetupInteractor.Request) = coroutineScope {
+        request.responseChannel.close()
+    }
+
+
 }

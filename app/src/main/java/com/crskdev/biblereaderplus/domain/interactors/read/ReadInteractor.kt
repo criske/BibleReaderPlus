@@ -16,10 +16,21 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+interface ReadInteractor {
+
+    suspend fun request(request: ReadInteractor.Request)
+
+    sealed class Response {
+        class Paged(val list: PagedList<Read>) : ReadInteractor.Response()
+    }
+
+    class Request(val responseChannel: SendChannel<ReadInteractor.Response>)
+}
+
 /**
  * Created by Cristian Pela on 08.11.2018.
  */
-class ReadInteractor @Inject constructor(
+class ReadInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val documentRepository: DocumentRepository) {
 
