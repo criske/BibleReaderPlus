@@ -14,10 +14,18 @@ sealed class Read(val id: Int) {
 
         class Book(id: Int, val name: String) : Content(id)
 
-        class Chapter(id: Int, val bookId: Int, val number: Int) : Content(id)
+        class Chapter(val key: ChapterKey, val bookId: Int, val number: Int) : Content(key.id) {
+            data class Key(val id: Int, val bookId: Int)
+        }
 
     }
 
-    class Verset(id: Int, val bookId: Int, val chapterId: Int, val number: Int, val content: String) :
-        Read(id)
+    class Verset(val key: VersetKey, val number: Int, val content: String) : Read(key.id) {
+        data class Key(val id: Int, val bookId: Int, val chapterId: Int)
+    }
 }
+
+class VersetProps(val key: VersetKey, val isFavorite: Boolean = false, val tags: List<String> = emptyList())
+
+typealias VersetKey = Read.Verset.Key
+typealias ChapterKey = Read.Content.Chapter.Key

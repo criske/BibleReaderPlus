@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.common.util
 
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -35,3 +36,8 @@ suspend fun <T> retry(
     withContext(coroutineContext) { block() } // last attempt
 
 }
+
+suspend fun <T> Deferred<T>.awaitOn(coroutineContext: CoroutineContext): T =
+    withContext(coroutineContext) {
+        this@awaitOn.await()
+    }

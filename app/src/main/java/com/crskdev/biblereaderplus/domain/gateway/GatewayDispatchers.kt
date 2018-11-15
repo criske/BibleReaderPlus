@@ -22,3 +22,13 @@ interface GatewayDispatchers {
 
     fun custom(): CoroutineDispatcher
 }
+
+fun GatewayDispatchers.remap(main: CoroutineDispatcher? = null,
+                             default: CoroutineDispatcher? = null,
+                             io: CoroutineDispatcher? = null): GatewayDispatchers =
+    object : GatewayDispatchers {
+        override val IO: CoroutineDispatcher = io ?: this@remap.IO
+        override val DEFAULT: CoroutineDispatcher = default ?: this@remap.DEFAULT
+        override val MAIN: CoroutineDispatcher = main ?: this@remap.MAIN
+        override fun custom(): CoroutineDispatcher = this@remap.custom()
+    }
