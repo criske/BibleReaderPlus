@@ -12,7 +12,7 @@ sealed class Read(val id: Int) {
 
     sealed class Content(id: Int) : Read(id) {
 
-        class Book(val name: String, id: Int) : Content(id)
+        class Book(id: Int, val name: String) : Content(id)
 
         class Chapter(id: Int, val bookId: Int, val number: Int) : Content(id)
 
