@@ -5,3 +5,7 @@ package com.crskdev.biblereaderplus.domain.interactors.read
  */
 interface SelectVersetInteractor {
 }
+
+class SelectVersetInteractorImpl : SelectVersetInteractor {
+
+}
