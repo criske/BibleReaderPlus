@@ -35,43 +35,46 @@ class SelectVersetInteractorImpl(
 
         coroutineScope {
 
-            println("Send wait from ${Thread.currentThread()}")
-            response(SelectVersetInteractor.Response.Wait)
-
-            val sendChannel = actor<SelectVersetInteractor.Response> {
+            val sender = actor<SelectVersetInteractor.Response> {
                 for (r in channel) {
                     response(r)
                 }
             }
 
-            val errHandler = coroutineContext + CoroutineExceptionHandler { _, throwable ->
-                launch(dispatchers.MAIN) {
-                    when (throwable) {
-                        is ErrorResponseAdapter -> sendChannel.send(throwable.errorResponse)
-                        else -> sendChannel.send(
-                            SelectVersetInteractor.Response.Error.Generic(throwable)
+            sender.send(SelectVersetInteractor.Response.Wait)
+
+            supervisorScope {
+
+                val errHandler = coroutineContext + CoroutineExceptionHandler { ctx, throwable ->
+                    runBlocking(ctx + dispatchers.MAIN) {
+                        when (throwable) {
+                            is ErrorResponseAdapter -> sender.send(throwable.errorResponse)
+                            else -> sender.send(SelectVersetInteractor.Response.Error.Generic(throwable))
+                        }
+                    }
+                    sender.close()
+                }
+
+                launch(errHandler + dispatchers.DEFAULT) {
+
+                    val verset = repository.getVerset(versetKey)
+                        ?: throw ErrorResponseAdapter(SelectVersetInteractor.Response.Error.NotFound)
+
+                    val props = withContext(dispatchers.IO) {
+                        repository.getVersetProps(versetKey)
+                    }
+
+                    with(sender) {
+                        send(
+                            SelectVersetInteractor.Response.OK(
+                                verset.copy(isFavorite = props.isFavorite, tags = props.tags)
+                            )
                         )
+                        close()
+                        Unit
                     }
                 }
-                sendChannel.close()
-            }
-
-            launch(errHandler + dispatchers.DEFAULT) {
-                println("Get verset from ${Thread.currentThread()}")
-                val verset = repository.getVerset(versetKey)
-                    ?: throw ErrorResponseAdapter(SelectVersetInteractor.Response.Error.NotFound)
-                val props = withContext(errHandler + dispatchers.IO) {
-                    println("Get verset props from ${Thread.currentThread()}")
-                    repository.getVersetProps(versetKey)
-                }
-                launch(dispatchers.MAIN) {
-                    println("Send final result from ${Thread.currentThread()}")
-                    sendChannel.send(
-                        SelectVersetInteractor.Response
-                            .OK(verset.copy(isFavorite = props.isFavorite, tags = props.tags))
-                    )
-                    sendChannel.close()
-                }
+                Unit
             }
             Unit
         }
