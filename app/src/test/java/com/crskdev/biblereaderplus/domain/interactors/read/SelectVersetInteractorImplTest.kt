@@ -33,10 +33,9 @@ class SelectVersetInteractorImplTest {
         MockKAnnotations.init(this, relaxUnitFun = true)
         interactor = SelectVersetInteractorImpl(
             RealDispatchers.remap(
-                main = Executors.newSingleThreadExecutor { Thread(it, "MAIN") }.asCoroutineDispatcher(),
+                main = TestDispatchers.MAIN,
                 default = Executors.newSingleThreadExecutor { Thread(it, "DISK") }.asCoroutineDispatcher(),
                 io = Executors.newSingleThreadExecutor { Thread(it, "IO") }.asCoroutineDispatcher()
-
             ),
             repository
         )
@@ -49,13 +48,14 @@ class SelectVersetInteractorImplTest {
         every { repository.getVerset(any()) } returns SelectedVerset(
             key, "Book1", 1, 1, "Foo"
         )
+        //every { repository.getVerset(any()) } returns null
         every { repository.getVersetProps(any()) } returns VersetProps(
             key, true, emptyList()
         )
 
         runBlocking {
             interactor.request(key) {
-               // println("$it")
+                println(it)
             }
         }
     }
