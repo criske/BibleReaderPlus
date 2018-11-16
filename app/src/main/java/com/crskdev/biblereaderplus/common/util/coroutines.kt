@@ -5,10 +5,8 @@
 
 package com.crskdev.biblereaderplus.common.util
 
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.SendChannel
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -17,23 +15,22 @@ import kotlin.coroutines.EmptyCoroutineContext
  */
 suspend fun <T> retry(
     times: Int = Int.MAX_VALUE,
-    coroutineContext: CoroutineContext = EmptyCoroutineContext,
     initialDelay: Long = 100, // 0.1 second
     maxDelay: Long = 1000,    // 1 second
     factor: Double = 2.0,
-    block: suspend () -> T): T = coroutineScope {
+    tracker: (Int, Throwable) -> Unit = { _, _ -> },
+    block: suspend () -> T): T {
     var currentDelay = initialDelay
-    repeat(times - 1) {
+    for (i in 1..times) {
         try {
-            withContext(coroutineContext) { block() }
-        } catch (e: Exception) {
-            // you can log an error here and/or make a more finer-grained
-            // analysis of the cause to see if retry is needed
+            block()
+        } catch (e: java.lang.Exception) {
+            tracker(i, e)
         }
         delay(currentDelay)
         currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
     }
-    withContext(coroutineContext) { block() } // last attempt
+    return block() // last attempt
 
 }
 
@@ -41,3 +38,26 @@ suspend fun <T> Deferred<T>.awaitOn(coroutineContext: CoroutineContext): T =
     withContext(coroutineContext) {
         this@awaitOn.await()
     }
+
+suspend fun <T> SendChannel<T>.sendAndClose(element: T, throwable: Throwable? = null) {
+    with(this) {
+        send(element)
+        close(throwable)
+    }
+}
+
+
+suspend fun CoroutineScope.launchIgnoreThrow(context: CoroutineContext = EmptyCoroutineContext,
+                                             handler: suspend (CoroutineContext, Throwable) -> Unit = { _, _ -> },
+                                             block: suspend CoroutineScope.() -> Unit) =
+    supervisorScope {
+        val ctxWithExceptionHandling = coroutineContext + context + CoroutineExceptionHandler{ ctx, err->
+            launch {
+                handler(ctx, err)
+            }
+        }
+        launch(ctxWithExceptionHandling) {
+            this.block()
+        }
+    }
+
