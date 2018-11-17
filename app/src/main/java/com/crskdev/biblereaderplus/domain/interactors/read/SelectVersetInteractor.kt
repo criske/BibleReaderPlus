@@ -47,7 +47,7 @@ class SelectVersetInteractorImpl(
             }
             sender.send(SelectVersetInteractor.Response.Wait)
 
-            val handler: suspend (CoroutineContext, Throwable) -> Unit = { ctx, err ->
+            val handler: suspend (CoroutineContext, Throwable) -> Unit = { _, err ->
                 sender.sendAndClose(
                     when (err) {
                         is ErrorResponseAdapter -> err.errorResponse
