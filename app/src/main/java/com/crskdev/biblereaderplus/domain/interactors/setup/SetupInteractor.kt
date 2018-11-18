@@ -50,11 +50,13 @@ interface SetupInteractor {
             object Authenticating : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
             object Synchronizing : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
             object Done : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
-            class Error(val errMessage: String?) : SetupInteractor.Response.SynchStep(),
+            @Suppress("unused")
+            class Error(val errMessage: String? = null) : SetupInteractor.Response.SynchStep(),
                 SetupInteractor.StepState
         }
 
         object Finished : SetupInteractor.Response(), SetupInteractor.Step
+        @Suppress("unused")
         class Error(val errorMessage: String?) : SetupInteractor.Response()
     }
 }
@@ -131,9 +133,9 @@ class SetupInteractorImpl @Inject constructor(
         channel.send(Response.Initialized)
     }
 
-    private suspend fun resumeFromFinished(channel: SendChannel<Response>) {
+    private suspend fun resumeFromFinished(channel: SendChannel<Response>) = coroutineScope {
         channel.send(Response.Finished)
-        withContext(dispatchers.DEFAULT) {
+        withContext(coroutineContext + dispatchers.DEFAULT) {
             setupCheckService.next(SetupCheckService.Step.Initialized)
         }
     }
