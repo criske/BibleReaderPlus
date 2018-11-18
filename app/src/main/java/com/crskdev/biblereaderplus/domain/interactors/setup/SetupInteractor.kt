@@ -5,23 +5,26 @@
 
 package com.crskdev.biblereaderplus.domain.interactors.setup
 
+import com.crskdev.biblereaderplus.common.util.retryWhen
 import com.crskdev.biblereaderplus.domain.entity.DeviceAccountCredential
 import com.crskdev.biblereaderplus.domain.gateway.*
-import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor.*
-import kotlinx.coroutines.channels.Channel
+import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor.Request
+import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor.Response
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 interface SetupInteractor {
-    suspend fun request(request: SetupInteractor.Request): Boolean
-    sealed class Request(val responseChannel: Channel<SetupInteractor.Response>) {
-        class Check(responseChannel: Channel<SetupInteractor.Response>) : SetupInteractor.Request(responseChannel)
-        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential, responseChannel: Channel<SetupInteractor.Response>) :
-            SetupInteractor.Request(responseChannel)
+    suspend fun request(request: Request, response: (Response) -> Unit)
+    sealed class Request {
+        object Check : SetupInteractor.Request()
+        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential) :
+            SetupInteractor.Request()
 
-        class Retry(responseChannel: Channel<SetupInteractor.Response>) : SetupInteractor.Request(responseChannel)
+        object Retry : SetupInteractor.Request()
     }
 
     interface StepState
@@ -41,12 +44,13 @@ interface SetupInteractor {
             }
         }
 
-        sealed class AuthStep : SetupInteractor.Response() {
-            object Prepare : SetupInteractor.Response.AuthStep(), SetupInteractor.Step
-            object NeedPermission : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
-            object Authenticating : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
-            object Done : SetupInteractor.Response.AuthStep(), SetupInteractor.StepState
-            class Error(val errMessage: String?) : SetupInteractor.Response.AuthStep(),
+        sealed class SynchStep : SetupInteractor.Response() {
+            object Prepare : SetupInteractor.Response.SynchStep(), SetupInteractor.Step
+            object NeedPermission : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
+            object Authenticating : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
+            object Synchronizing : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
+            object Done : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
+            class Error(val errMessage: String?) : SetupInteractor.Response.SynchStep(),
                 SetupInteractor.StepState
         }
 
@@ -58,23 +62,29 @@ interface SetupInteractor {
 /**
  * Created by Cristian Pela on 06.11.2018.
  */
+@ObsoleteCoroutinesApi
 class SetupInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val setupCheckService: SetupCheckService,
     private val authService: AuthService,
     private val downloadDocumentService: DownloadDocumentService,
-    private val documentRepository: DocumentRepository): SetupInteractor {
+    private val documentRepository: DocumentRepository) : SetupInteractor {
 
-    override suspend fun request(request: SetupInteractor.Request): Boolean {
+    override suspend fun request(request: Request, response: (Response) -> Unit) = coroutineScope {
+        val sendChannel = actor<Response> {
+            for (r in channel) {
+                response(r)
+            }
+        }
         when (request) {
             is Request.Check,
             is Request.Retry ->
-                handleRequestCheckRetry(request.responseChannel)
+                handleRequestCheckRetry(sendChannel)
             is Request.AuthPrompt ->
-                handleRequestAuthPrompt(request.deviceAccountCredential, request.responseChannel)
+                handleRequestAuthPrompt(request.deviceAccountCredential, sendChannel)
         }
-        request.responseChannel.close()
-        return true
+        sendChannel.close()
+        Unit
     }
 
     private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>) {
@@ -132,8 +142,12 @@ class SetupInteractorImpl @Inject constructor(
         coroutineScope {
             channel.send(Response.DownloadStep.Prepare)
 
-            val documentResponse = withContext(dispatchers.IO) {
-                downloadDocumentService.download()
+            val documentResponse = retryWhen(
+                times = 3,
+                retryWhen = { _, r -> r is DownloadDocumentService.Error }) {
+                withContext(coroutineContext + dispatchers.IO) {
+                    downloadDocumentService.download()
+                }
             }
 
             when (documentResponse) {
@@ -159,7 +173,7 @@ class SetupInteractorImpl @Inject constructor(
                 }
                 is DownloadDocumentService.Response.OKResponse -> {
                     channel.send(Response.DownloadStep.Persist)
-                    withContext(dispatchers.DEFAULT) {
+                    withContext(coroutineContext + dispatchers.DEFAULT) {
                         documentRepository.save(documentResponse.document)
                         //transition to auth state
                         setupCheckService.next(SetupCheckService.Step.AuthStep)
@@ -172,35 +186,43 @@ class SetupInteractorImpl @Inject constructor(
 
     private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: SendChannel<Response>) =
         coroutineScope {
-            channel.send(Response.AuthStep.Prepare)
+            channel.send(Response.SynchStep.Prepare)
             when (deviceAccountCredential) {
                 is DeviceAccountCredential.Unauthorized -> {
                     if (!authService.hasPermission()) {
-                        channel.send(Response.AuthStep.NeedPermission)
+                        channel.send(Response.SynchStep.NeedPermission)
                         authService.requestPermission()
                     } else {
-                        channel.send(Response.AuthStep.Authenticating)
-                        val (error, success) = withContext(dispatchers.DEFAULT) {
+                        channel.send(Response.SynchStep.Authenticating)
+                        val (error, success) = withContext(coroutineContext + dispatchers.DEFAULT) {
                             authService.authenticateWithPermissionGranted()
                         }
                         if (success) {
-                            channel.send(Response.AuthStep.Done)
+                            channel.send(Response.SynchStep.Synchronizing)
+                            withContext(coroutineContext + dispatchers.IO) {
+                                documentRepository.synchronize()
+                            }
+                            channel.send(Response.SynchStep.Done)
                             resumeFromFinished(channel)
                         } else {
-                            channel.send(Response.AuthStep.Error(error?.message))
+                            channel.send(Response.SynchStep.Error(error?.message))
                         }
                     }
                 }
                 is DeviceAccountCredential.AuthorizationPayload -> {
-                    channel.send(Response.AuthStep.Authenticating)
-                    val (error, success) = withContext(dispatchers.DEFAULT) {
+                    channel.send(Response.SynchStep.Authenticating)
+                    val (error, success) = withContext(coroutineContext + dispatchers.DEFAULT) {
                         authService.authenticate(deviceAccountCredential.credentialData)
                     }
                     if (success) {
-                        channel.send(Response.AuthStep.Done)
+                        channel.send(Response.SynchStep.Synchronizing)
+                        withContext(coroutineContext + dispatchers.IO) {
+                            documentRepository.synchronize()
+                        }
+                        channel.send(Response.SynchStep.Done)
                         resumeFromFinished(channel)
                     } else {
-                        channel.send(Response.AuthStep.Error(error?.message))
+                        channel.send(Response.SynchStep.Error(error?.message))
                     }
                 }
             }
@@ -209,7 +231,7 @@ class SetupInteractorImpl @Inject constructor(
     private suspend fun resumeFromUninitialized(channel: SendChannel<SetupInteractor.Response>) =
         coroutineScope {
             channel.send(Response.DownloadStep.Prepare)
-            withContext(dispatchers.DEFAULT) {
+            withContext(coroutineContext + dispatchers.DEFAULT) {
                 setupCheckService.next(SetupCheckService.Step.DownloadStep)
             }
         }

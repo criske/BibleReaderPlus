@@ -16,8 +16,8 @@ interface AuthService {
 
     fun requestPermission()
 
-    suspend fun authenticate(deviceAccountCredentials: Any): Pair<Error?, Boolean>
+    fun authenticate(deviceAccountCredentials: Any): Pair<Error?, Boolean>
 
-    suspend fun authenticateWithPermissionGranted(): Pair<Error?, Boolean>
+    fun authenticateWithPermissionGranted(): Pair<Error?, Boolean>
 
 }

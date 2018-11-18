@@ -31,8 +31,27 @@ suspend fun <T> retry(
         currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
     }
     return block() // last attempt
-
 }
+
+suspend fun <T> retryWhen(
+    retryWhen: (Int, T) -> Boolean,
+    times: Int = Int.MAX_VALUE,
+    initialDelay: Long = 100, // 0.1 second
+    maxDelay: Long = 1000,    // 1 second
+    factor: Double = 2.0,
+    block: suspend () -> T): T {
+    var currentDelay = initialDelay
+    for (i in 1..times) {
+        val result = block()
+        if (!retryWhen(i, result)) {
+            return result
+        }
+        delay(currentDelay)
+        currentDelay = (currentDelay * factor).toLong().coerceAtMost(maxDelay)
+    }
+    return block() // last attempt
+}
+
 
 suspend fun <T> Deferred<T>.awaitOn(coroutineContext: CoroutineContext): T =
     withContext(coroutineContext) {
@@ -51,13 +70,16 @@ suspend fun CoroutineScope.launchIgnoreThrow(context: CoroutineContext = EmptyCo
                                              handler: suspend (CoroutineContext, Throwable) -> Unit = { _, _ -> },
                                              block: suspend CoroutineScope.() -> Unit) =
     supervisorScope {
-        val ctxWithExceptionHandling = coroutineContext + context + CoroutineExceptionHandler{ ctx, err->
-            launch {
-                handler(ctx, err)
+        val ctxWithExceptionHandling =
+            coroutineContext + context + CoroutineExceptionHandler { ctx, err ->
+                launch {
+                    handler(ctx, err)
+                }
             }
-        }
         launch(ctxWithExceptionHandling) {
             this.block()
         }
     }
 
+fun CoroutineScope.withDispatcher(dispatcher: CoroutineDispatcher): CoroutineContext =
+    coroutineContext + dispatcher

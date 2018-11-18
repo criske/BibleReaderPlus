@@ -30,4 +30,6 @@ interface DocumentRepository {
     //remote?
     fun getVersetProps(versetKey: VersetKey): VersetProps
 
+    fun synchronize()
+
 }
