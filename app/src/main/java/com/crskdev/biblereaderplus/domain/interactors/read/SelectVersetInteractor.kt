@@ -65,7 +65,7 @@ class SelectVersetInteractorImpl(
 
                 //remote
                 val firstErrorTracker: (Int, Throwable) -> Unit = { i, ex ->
-                    if (i == 1) {//on first retry, send a partial result based on the local result
+                    if (i == 1) {//on first retry error, send a partial result based on the local result
                         launch {
                             sender.send(SelectVersetInteractor.Response.Partial(verset, ex))
                         }
