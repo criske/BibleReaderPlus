@@ -37,7 +37,6 @@ class SetupInteractorTest {
     lateinit var downloadDocService: DownloadDocumentService
     @MockK
     lateinit var docRepository: DocumentRepository
-
     @MockK
     lateinit var authService: AuthService
 
