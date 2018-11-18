@@ -6,19 +6,18 @@
 package com.crskdev.biblereaderplus.domain.interactors.setup
 
 import com.crskdev.biblereaderplus.domain.entity.DeviceAccountCredential
-import com.crskdev.biblereaderplus.domain.entity.Document
+import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.AuthService
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
 import com.crskdev.biblereaderplus.testutil.TestDispatchers
+import com.crskdev.biblereaderplus.testutil.classesName
+import com.crskdev.biblereaderplus.testutil.collectEmitted
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.channels.toCollection
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -42,7 +41,7 @@ class SetupInteractorTest {
     @MockK
     lateinit var authService: AuthService
 
-    lateinit var setupInteractor: SetupInteractor
+    private lateinit var setupInteractor: SetupInteractor
 
     @Before
     fun setup() {
@@ -55,44 +54,45 @@ class SetupInteractorTest {
             docRepository
         )
     }
-/**
+
     @Test
     fun `when request check step is initialized should respond with initialized`() {
 
         runBlocking {
             every { setupService.getStep() } returns SetupCheckService.Step.Initialized
-
-            val responseChannel = actor<SetupInteractor.Response>() {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(SetupInteractor.Response.Initialized),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
                 verify(exactly = 0) { setupService.next(SetupCheckService.Step.DownloadStep) }
             }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
-            }
-
-
         }
     }
+
 
     @Test
     fun `when request check is uninitialized should respond with download step`() {
 
         runBlocking {
             every { setupService.getStep() } returns SetupCheckService.Step.Uninitialized
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
 
-            val responseChannel = actor<SetupInteractor.Response>() {
+                }
                 assertEquals(
                     listOf(SetupInteractor.Response.DownloadStep.Prepare),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
                 verify { setupService.next(SetupCheckService.Step.DownloadStep) }
-
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
         }
@@ -109,18 +109,20 @@ class SetupInteractorTest {
                 null,
                 true
             )
-            val responseChannel = actor<SetupInteractor.Response> {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
-                        SetupInteractor.Response.AuthStep.Prepare,
-                        SetupInteractor.Response.AuthStep.NeedPermission
+                        SetupInteractor.Response.SynchStep.Prepare,
+                        SetupInteractor.Response.SynchStep.NeedPermission
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
                 verify { authService.requestPermission() }
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
         }
 
@@ -134,56 +136,61 @@ class SetupInteractorTest {
             every { authService.hasPermission() } returns true
             coEvery { authService.authenticate(any()) } returns Pair<Error?, Boolean>(null, true)
 
-            val responseChannel = actor<SetupInteractor.Response>() {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(
+                        SetupInteractor.Request.AuthPrompt(
+                            DeviceAccountCredential.AuthorizationPayload(Unit)
+                        )
+                    ) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
-                        SetupInteractor.Response.AuthStep.Prepare,
-                        SetupInteractor.Response.AuthStep.Authenticating,
-                        SetupInteractor.Response.AuthStep.Done,
+                        SetupInteractor.Response.SynchStep.Prepare,
+                        SetupInteractor.Response.SynchStep.Authenticating,
+                        SetupInteractor.Response.SynchStep.Synchronizing,
+                        SetupInteractor.Response.SynchStep.Done,
                         SetupInteractor.Response.Finished
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
                 coVerify { authService.authenticate(any()) }
-            }
-            launch {
-                setupInteractor.request(
-                    SetupInteractor.Request.AuthPrompt(
-                        DeviceAccountCredential.AuthorizationPayload(
-                            Unit
-                        ), responseChannel
-                    )
-                )
+
             }
 
         }
     }
 
     @Test
-    fun `when request check is auth and already permission granted should authenticate `() {
+    fun `when request check is auth and already permission granted should authenticate and then synchronize with remote database `() {
 
         runBlocking {
             every { setupService.getStep() } returns SetupCheckService.Step.AuthStep
             every { authService.hasPermission() } returns true
-            coEvery { authService.authenticateWithPermissionGranted() } returns Pair<Error?, Boolean>(
+            every { authService.authenticateWithPermissionGranted() } returns Pair<Error?, Boolean>(
                 null,
                 true
             )
-
-            val responseChannel = actor<SetupInteractor.Response>() {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
-                        SetupInteractor.Response.AuthStep.Prepare,
-                        SetupInteractor.Response.AuthStep.Authenticating,
-                        SetupInteractor.Response.AuthStep.Done,
+                        SetupInteractor.Response.SynchStep.Prepare,
+                        SetupInteractor.Response.SynchStep.Authenticating,
+                        SetupInteractor.Response.SynchStep.Synchronizing,
+                        SetupInteractor.Response.SynchStep.Done,
                         SetupInteractor.Response.Finished
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
-                coVerify { authService.authenticateWithPermissionGranted() }
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
+                verify { docRepository.synchronize() }
+                verify { authService.authenticateWithPermissionGranted() }
             }
 
 
@@ -201,18 +208,19 @@ class SetupInteractorTest {
                             null
                         )
                     )
-
-            val responseChannel = actor<SetupInteractor.Response> {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
                         SetupInteractor.Response.DownloadStep.Prepare,
                         SetupInteractor.Response.DownloadStep.Error.Network
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
 
@@ -230,18 +238,19 @@ class SetupInteractorTest {
                             null
                         )
                     )
-
-            val responseChannel = actor<SetupInteractor.Response>() {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
                         SetupInteractor.Response.DownloadStep.Prepare,
                         SetupInteractor.Response.DownloadStep.Error.NotFound
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
 
@@ -260,17 +269,19 @@ class SetupInteractorTest {
                         )
                     )
 
-            val responseChannel = actor<SetupInteractor.Response>() {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
                         SetupInteractor.Response.DownloadStep.Prepare,
                         SetupInteractor.Response.DownloadStep.Error.Timeout
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
             }
 
 
@@ -288,47 +299,52 @@ class SetupInteractorTest {
                         )
                     )
 
-            val responseChannel = Channel<SetupInteractor.Response>()
             launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
-            }
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
+                assertEquals(
+                    listOf(
+                        SetupInteractor.Response.DownloadStep.Prepare::class.simpleName,
+                        SetupInteractor.Response.DownloadStep.Error.Other::class.simpleName
+                    ),
+                    actual.classesName()
+                )
 
-            assertEquals(
-                listOf(
-                    SetupInteractor.Response.DownloadStep.Prepare::class.simpleName,
-                    SetupInteractor.Response.DownloadStep.Error.Other::class.simpleName
-                ),
-                responseChannel.toCollection(mutableListOf()).map { it::class.simpleName }
-            )
+            }
         }
     }
 
-    @Test
-    fun `when request check is download and there is ok should downalod and store document`() {
-        runBlocking {
 
-            val document = Document(emptyList())
+    @Test
+    fun `when request check is download and there is ok should download and store document`() {
+        runBlocking {
+            val document = listOf<Read>(Read.Content.Book(1, "Bookl"))
             every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
             coEvery { downloadDocService.download() } returns DownloadDocumentService.Response.OKResponse(
                 document
             )
-
-            val responseChannel = actor<SetupInteractor.Response> {
+            launch {
+                val actual = collectEmitted<SetupInteractor.Response> {
+                    setupInteractor.request(SetupInteractor.Request.Check) {
+                        add(it)
+                    }
+                }
                 assertEquals(
                     listOf(
                         SetupInteractor.Response.DownloadStep.Prepare,
                         SetupInteractor.Response.DownloadStep.Persist,
                         SetupInteractor.Response.DownloadStep.Done
                     ),
-                    channel.toCollection(mutableListOf())
+                    actual
                 )
                 coVerify { setupService.next(SetupCheckService.Step.AuthStep) }
                 coVerify { docRepository.save(document) }
-            }
-            launch {
-                setupInteractor.request(SetupInteractor.Request.Check(responseChannel))
+
             }
         }
     }
-    */
+
 }
