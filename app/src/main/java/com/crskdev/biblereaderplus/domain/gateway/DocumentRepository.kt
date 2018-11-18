@@ -32,4 +32,6 @@ interface DocumentRepository {
 
     fun synchronize()
 
+    fun favorite(versetKey: VersetKey, add: Boolean)
+
 }
