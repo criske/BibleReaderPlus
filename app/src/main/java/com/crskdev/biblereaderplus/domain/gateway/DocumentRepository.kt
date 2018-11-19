@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.domain.gateway
 
+import androidx.paging.DataSource
 import androidx.paging.PagedList
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.SelectedVerset
@@ -33,5 +34,7 @@ interface DocumentRepository {
     fun synchronize()
 
     fun favorite(versetKey: VersetKey, add: Boolean)
+
+    fun favorites(): DataSource.Factory<Int, Read.Verset>
 
 }

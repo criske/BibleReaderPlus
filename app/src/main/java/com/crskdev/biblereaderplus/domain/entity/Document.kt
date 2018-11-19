@@ -20,13 +20,15 @@ sealed class Read(val id: Int) {
 
     }
 
-    class Verset(val key: VersetKey, val number: Int, val content: String, val isFavorite: Boolean) :
+    class Verset(val key: VersetKey, val number: Int, val content: String, val isFavorite: Boolean, val modifiedAt: ModifiedAt) :
         Read(key.id) {
         data class Key(val id: Int, val bookId: Int, val chapterId: Int)
     }
 }
 
 class VersetProps(val key: VersetKey, val isFavorite: Boolean = false, val tags: List<String> = emptyList())
+
+inline class ModifiedAt(val date: String)
 
 typealias VersetKey = Read.Verset.Key
 typealias ChapterKey = Read.Content.Chapter.Key
