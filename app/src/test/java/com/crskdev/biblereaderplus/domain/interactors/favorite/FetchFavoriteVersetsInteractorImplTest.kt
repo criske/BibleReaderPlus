@@ -50,10 +50,12 @@ class FetchFavoriteVersetsInteractorImplTest {
             val filterChannel = Channel<FavoriteFilter>()
             val mainJob = Job()
             launch(mainJob) {
-                interactor.request(filterChannel) {
-                    println("page: ${it.snapshot().map { v -> "<${v?.key?.id} ${v?.key?.bookId} ${v?.key?.chapterId}>" }}")
-                    it.loadAround(it.snapshot().lastIndex)
-                    println("page: ${it.map { v -> "<${v?.key?.id} ${v?.key?.bookId} ${v?.key?.chapterId}>" }}")
+                interactor.request(filterChannel) { page ->
+                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
+                    page.loadAround(page.indexOfLast { it != null })
+                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
+                    page.loadAround(page.indexOfLast { it != null })
+                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
                 }
             }
             launch {
