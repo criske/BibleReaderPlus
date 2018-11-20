@@ -1,20 +1,14 @@
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.paging.PagedList
-import com.crskdev.arch.coroutines.paging.Detachable
 import com.crskdev.arch.coroutines.paging.onPaging
 import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
 import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
-import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor.Filter
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import javax.inject.Inject
 
@@ -23,46 +17,45 @@ import javax.inject.Inject
  */
 interface FetchFavoriteVersetsInteractor {
 
-    suspend fun request(filter: ReceiveChannel<Filter>, response: (PagedList<Read.Verset>) -> Unit)
-
-    sealed class Filter {
-        sealed class ByLastModified : Filter() {
-            object ASC : ByLastModified()
-            object DESC : ByLastModified()
-        }
-
-        object None : Filter()
-        class Query(val query: String) : Filter()
-        class ByTag(val tag: Tag) : Filter()
-    }
+    suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit)
 
 }
 
+@ExperimentalCoroutinesApi
+@ObsoleteCoroutinesApi
 class FetchFavoriteVersetsInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val repository: DocumentRepository
 ) : FetchFavoriteVersetsInteractor {
 
-    @ExperimentalCoroutinesApi
-    @ObsoleteCoroutinesApi
-    override suspend fun request(filter: ReceiveChannel<Filter>, response: (PagedList<Read.Verset>) -> Unit) =
+    override suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit) =
         coroutineScope {
             val sendChannel = actor<PagedList<Read.Verset>> {
                 for (r in channel) {
                     response(r)
                 }
             }
-            launch(dispatchers.DEFAULT) {
-                var prevSource: Detachable<Read.Verset>? = null
+            launch {
+                var job = Job()
+                var count = 0
                 while (true) {
                     select<Unit> {
                         filter.onReceive {
-                            prevSource?.detach()
-                            prevSource = repository.favorites()
-                                .setupPagedListBuilder(10)
-                                .onPaging {
-                                    launch { sendChannel.send(it) }
-                                }
+                            job.cancel()
+                            job = CoroutineScope(coroutineContext + SupervisorJob()).launch {
+                                repository.favorites()
+                                    .setupPagedListBuilder {
+                                        config(1){
+                                            prefetchDistance = 2
+                                        }
+                                        fetchDispatcher = dispatchers.DEFAULT
+                                    }
+                                    .onPaging { page, _ ->
+                                        count += 1
+                                        println("Count $count filter: ${it.javaClass.canonicalName}")
+                                        launch { sendChannel.send(page) }
+                                    }
+                            }
                         }
                     }
                 }
