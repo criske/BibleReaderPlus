@@ -7,10 +7,7 @@ package com.crskdev.biblereaderplus.domain.gateway
 
 import androidx.paging.DataSource
 import androidx.paging.PagedList
-import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.SelectedVerset
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
-import com.crskdev.biblereaderplus.domain.entity.VersetProps
+import com.crskdev.biblereaderplus.domain.entity.*
 
 /**
  * Created by Cristian Pela on 06.11.2018.
@@ -35,6 +32,6 @@ interface DocumentRepository {
 
     fun favorite(versetKey: VersetKey, add: Boolean)
 
-    fun favorites(): DataSource.Factory<Int, Read.Verset>
+    fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
 
 }

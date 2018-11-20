@@ -3,6 +3,7 @@ package com.crskdev.biblereaderplus.domain.interactors.favorite
 import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.onPaging
 import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
+import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
@@ -16,9 +17,7 @@ import javax.inject.Inject
  * Created by Cristian Pela on 13.11.2018.
  */
 interface FetchFavoriteVersetsInteractor {
-
     suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit)
-
 }
 
 @ExperimentalCoroutinesApi
@@ -37,23 +36,18 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
             }
             launch {
                 var job = Job()
-                var count = 0
-                while (true) {
+                while (isActive) {
                     select<Unit> {
                         filter.onReceive {
                             job.cancel()
-                            job = CoroutineScope(coroutineContext + SupervisorJob()).launch {
-                                repository.favorites()
+                            job = CoroutineScope(this@launch.coroutineContext + SupervisorJob()).launch {
+                                repository.favorites(it)
                                     .setupPagedListBuilder {
-                                        config(1){
-                                            prefetchDistance = 2
-                                        }
+                                        config(10)
                                         fetchDispatcher = dispatchers.DEFAULT
                                     }
                                     .onPaging { page, _ ->
-                                        count += 1
-                                        println("Count $count filter: ${it.javaClass.canonicalName}")
-                                        launch { sendChannel.send(page) }
+                                        sendChannel.offer(page)
                                     }
                             }
                         }
