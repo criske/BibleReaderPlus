@@ -1,6 +1,4 @@
-package com.crskdev.biblereaderplus.domain.interactors.favorite
-
-import com.crskdev.biblereaderplus.domain.entity.Tag
+package com.crskdev.biblereaderplus.domain.entity
 
 sealed class FavoriteFilter {
     sealed class ByLastModified : FavoriteFilter() {

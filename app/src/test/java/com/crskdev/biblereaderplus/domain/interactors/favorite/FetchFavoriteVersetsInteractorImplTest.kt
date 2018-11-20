@@ -1,21 +1,28 @@
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
+import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.dataSourceFactory
+import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.testutil.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.testutil.TestDispatchers
+import com.crskdev.biblereaderplus.testutil.classesName
+import com.crskdev.biblereaderplus.testutil.collectEmitted
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import org.junit.Assert
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.lang.Exception
 
 /**
  * Created by Cristian Pela on 20.11.2018.
@@ -42,30 +49,44 @@ class FetchFavoriteVersetsInteractorImplTest {
     @Test
     fun `should change paging when change filter`() {
         runBlocking {
-            every { repository.favorites() } returns
-                    (1..100).map {
-                        Read.Verset(VersetKey(it, 1, 1), it, "", false, ModifiedAt(""))
-                    }.let { l -> dataSourceFactory { InMemoryPagedListDataSource(l) } }
-
+            every { repository.favorites(any()) } answers {
+                val filter = firstArg<FavoriteFilter>()
+                (1..100)
+                    .map { id ->
+                        Read.Verset(
+                            VersetKey(id, 1, 1),
+                            id,
+                            filter::class.java.simpleName ?: "",
+                            false,
+                            ModifiedAt("")
+                        )
+                    }
+                    .let { l ->
+                        dataSourceFactory { InMemoryPagedListDataSource(l) }
+                    }
+            }
+            val filters = listOf(
+                FavoriteFilter.None,
+                FavoriteFilter.ByLastModified.ASC,
+                FavoriteFilter.ByLastModified.DESC
+            )
             val filterChannel = Channel<FavoriteFilter>()
-            val mainJob = Job()
-            launch(mainJob) {
-                interactor.request(filterChannel) { page ->
-                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
-                    page.loadAround(page.indexOfLast { it != null })
-                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
-                    page.loadAround(page.indexOfLast { it != null })
-                    println("page: ${page.map { v -> "<${v?.key?.id?:"*"} ${v?.key?.bookId?:"*"} ${v?.key?.chapterId?:"*"}>"}}")
+            val mainJob = Job().apply {
+                invokeOnCompletion {
+                    filterChannel.close(it)
                 }
             }
-            launch {
-                listOf(
-                    FavoriteFilter.None,
-                    FavoriteFilter.ByLastModified.ASC,
-                    FavoriteFilter.ByLastModified.DESC
-                ).forEach {
+
+            launch(mainJob) {
+                //pick the filter in content of each paged list batch, then compare
+                interactor.request(filterChannel) {
+                    assertEquals(true, filters.classesName().contains(it.first().content))
+                }
+            }
+            launch{
+                filters.forEach {
                     filterChannel.send(it)
-                    delay(2000)
+                    delay(500)
                 }
                 mainJob.cancel()
             }
