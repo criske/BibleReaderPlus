@@ -43,6 +43,8 @@ buildscript {
 
         daggerVersion = '2.15'
         coroutinesVersion = '1.0.0'
+
+        archTestVersion= "2.0.0-rc01"
     }
     repositories {
         google()

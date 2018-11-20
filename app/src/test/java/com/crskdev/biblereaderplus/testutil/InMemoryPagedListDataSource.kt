@@ -17,7 +17,6 @@ class InMemoryPagedListDataSource<T>(private val list: List<T>) : PositionalData
         val endPosition =
             (params.startPosition + params.loadSize).coerceAtMost(list.size)
         val subList = list.subList(params.startPosition, endPosition)
-            .apply { ("Range ${params.startPosition} $endPosition").println() }
         callback.onResult(subList)
     }
 
@@ -35,10 +34,7 @@ class InMemoryPagedListDataSource<T>(private val list: List<T>) : PositionalData
                 totalCount
             )
         val lastLoadPosition = firstLoadPosition + firstLoadSize
-        val sublist = list.subList(firstLoadPosition, lastLoadPosition).apply {
-            ("Initial $firstLoadPosition load $firstLoadSize $totalCount ${params.requestedStartPosition} ${params.requestedLoadSize} ").println()
-        }
-
+        val sublist = list.subList(firstLoadPosition, lastLoadPosition)
 
         callback.onResult(
             sublist,

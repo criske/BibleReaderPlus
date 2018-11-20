@@ -89,8 +89,9 @@ dependencies {
     testImplementation "junit:junit:$rootProject.junitVersion"
     testImplementation "io.mockk:mockk:1.8.12.kotlin13"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$rootProject.coroutinesVersion"
+    testImplementation "androidx.arch.core:core-testing:$rootProject.archTestVersion"
 
-    implementation 'com.github.criske:ArchCoroutinesPaging:v1.1'
+    implementation 'com.github.criske:ArchCoroutinesPaging:v.1.1.1'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
