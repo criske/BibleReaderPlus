@@ -16,9 +16,9 @@ import androidx.recyclerview.widget.AsyncDifferConfig
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.RecyclerView
-import com.crskdev.arch.couroutines.paging.dataSourceFactory
-import com.crskdev.arch.couroutines.paging.onPaging
-import com.crskdev.arch.couroutines.paging.setupPagedListBuilder
+import com.crskdev.arch.coroutines.paging.dataSourceFactory
+import com.crskdev.arch.coroutines.paging.onPaging
+import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
