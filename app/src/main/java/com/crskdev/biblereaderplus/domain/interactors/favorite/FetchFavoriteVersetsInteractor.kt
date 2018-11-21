@@ -3,6 +3,7 @@ package com.crskdev.biblereaderplus.domain.interactors.favorite
 import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.onPaging
 import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
+import com.crskdev.biblereaderplus.common.util.println
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
