@@ -2,6 +2,7 @@
  * License: MIT
  * Copyright (c)  Pela Cristian 2018.
  */
+
 package com.crskdev.biblereaderplus.presentation.util.arch
 
 import androidx.annotation.CallSuper
@@ -10,12 +11,14 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
-
+/**
+ * Created by Cristian Pela on 05.11.2018.
+ */
 /**
  * Created by Cristian Pela on 31.10.2018.
  */
@@ -36,11 +39,12 @@ inline fun <reified V : ViewModel> viewModelFromProvider(fragment: Fragment, cro
     }).get(V::class.java)
 
 
-open class CoroutineScopedViewModel() : ViewModel(), CoroutineScope {
+abstract class CoroutineScopedViewModel(val mainDispatcher: CoroutineDispatcher) : ViewModel(),
+    CoroutineScope {
 
-    private val job = Job()
+    protected val job = Job()
 
-    override val coroutineContext: CoroutineContext = Dispatchers.Main + job
+    override val coroutineContext: CoroutineContext = job + mainDispatcher
 
     @CallSuper
     override fun onCleared() {
