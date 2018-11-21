@@ -1,3 +1,8 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import com.crskdev.biblereaderplus.common.util.launchIgnoreThrow
@@ -43,7 +48,7 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
                 sendChannel.sendAndClose(FavoriteActionsVersetInteractor.Response.Error(throwable))
             }
             launchIgnoreThrow(dispatchers.IO, errHandler) {
-                repository.favorite(versetKey, addToFavorites)
+                repository.favoriteAction(versetKey, addToFavorites)
                 sendChannel.sendAndClose(FavoriteActionsVersetInteractor.Response.OK)
             }
             Unit

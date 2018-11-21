@@ -7,19 +7,28 @@ package com.crskdev.biblereaderplus.di
 
 import com.crskdev.biblereaderplus.BibleReaderApplication
 import com.crskdev.biblereaderplus.di.modules.AppModule
-import com.crskdev.biblereaderplus.di.modules.presentation.MainActivityModule
+import com.crskdev.biblereaderplus.di.modules.presentation.SingleActivityModule
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
 import dagger.android.support.AndroidSupportInjectionModule
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import javax.inject.Singleton
 
 
 /**
  * Created by Cristian Pela on 05.11.2018.
  */
+@ObsoleteCoroutinesApi
+@ExperimentalCoroutinesApi
 @Singleton
-@Component(modules = [AndroidSupportInjectionModule::class, MainActivityModule::class, AppModule::class])
+@Component(
+    modules = [
+        AndroidSupportInjectionModule::class,
+        SingleActivityModule::class,
+        AppModule::class]
+)
 interface AppComponent : AndroidInjector<BibleReaderApplication> {
 
     @Component.Builder

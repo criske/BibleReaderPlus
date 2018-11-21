@@ -30,7 +30,7 @@ interface DocumentRepository {
 
     fun synchronize()
 
-    fun favorite(versetKey: VersetKey, add: Boolean)
+    fun favoriteAction(versetKey: VersetKey, add: Boolean)
 
     fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
 

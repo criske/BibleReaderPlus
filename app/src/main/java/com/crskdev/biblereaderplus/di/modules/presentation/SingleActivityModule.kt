@@ -20,7 +20,7 @@ import dagger.android.ContributesAndroidInjector
  */
 
 @Module
-abstract class MainActivityModule {
+abstract class SingleActivityModule {
 
     @PerFragment
     @ContributesAndroidInjector(modules = [SetupModule::class])
