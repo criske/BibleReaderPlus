@@ -22,12 +22,14 @@ import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
+import com.crskdev.biblereaderplus.presentation.util.arch.interval
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.launch
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class FavoriteVersetsFragment : DaggerFragment() {
@@ -85,11 +87,11 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                     versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().value = it
                 }
             }
-            filterLiveData.observeForever {
+            //throttled filter
+            filterLiveData.interval(300, TimeUnit.MILLISECONDS).observeForever {
                 launch {
                     filterChannel.send(it)
                 }
-
             }
         }
     }
