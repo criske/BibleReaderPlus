@@ -7,6 +7,7 @@ package com.crskdev.biblereaderplus.di.modules
 
 import android.app.Application
 import android.content.Context
+import com.crskdev.biblereaderplus.di.modules.common.CommonModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.presentation.MainActivity
 import dagger.Binds
@@ -18,7 +19,7 @@ import dagger.android.ContributesAndroidInjector
 /**
  * Created by Cristian Pela on 05.11.2018.
  */
-@Module(includes = [AndroidInjectionModule::class])
+@Module(includes = [AndroidInjectionModule::class, CommonModule::class])
 abstract class AppModule {
 
     @Binds

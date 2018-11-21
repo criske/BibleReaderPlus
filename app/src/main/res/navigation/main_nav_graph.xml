@@ -17,5 +17,10 @@
         android:id="@+id/readFragment"
         android:name="com.crskdev.biblereaderplus.presentation.read.ReadFragment"
         android:label="ReadFragment" />
+    <fragment
+        android:id="@+id/favoriteVersetsFragment"
+        android:name="com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment"
+        android:label="FavoriteVersetsFragment"
+        tools:layout="@layout/fragment_search_favorite" />
 
 </navigation>
