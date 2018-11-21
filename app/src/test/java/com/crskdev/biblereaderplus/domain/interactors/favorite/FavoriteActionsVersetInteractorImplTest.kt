@@ -1,3 +1,8 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
@@ -11,7 +16,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -36,7 +41,7 @@ class FavoriteActionsVersetInteractorImplTest {
 
     @Test
     fun `should response with error when not add or remove favorite`() {
-        every { repository.favorite(any(), any()) } throws Error("Oops")
+        every { repository.favoriteAction(any(), any()) } throws Error("Oops")
         runBlocking {
             val actual = collectEmitted<FavoriteActionsVersetInteractor.Response> {
                 interactor.request(versetKey, true) {
@@ -57,7 +62,7 @@ class FavoriteActionsVersetInteractorImplTest {
             }.classesName()
             assertEquals(listOf("Wait", "OK"), actual)
 
-            verify { repository.favorite(versetKey, true) }
+            verify { repository.favoriteAction(versetKey, true) }
         }
     }
 
@@ -71,7 +76,7 @@ class FavoriteActionsVersetInteractorImplTest {
             }.classesName()
             assertEquals(listOf("Wait", "OK"), actual)
 
-            verify { repository.favorite(versetKey, false) }
+            verify { repository.favoriteAction(versetKey, false) }
         }
     }
 }

@@ -1,3 +1,8 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.presentation.favorite
 
 
@@ -5,11 +10,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.paging.PagedList
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.common.util.ifNull
+import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
+import com.crskdev.biblereaderplus.domain.entity.Read
+import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 class FavoriteVersetsFragment : DaggerFragment() {
@@ -24,14 +42,59 @@ class FavoriteVersetsFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        favHello.text = viewModel.hello
+        viewModel.versetsLiveData.observe(this, Observer {
+            favHello.text = it.map { it?.content.toString() }.toString()
+        })
+        button.setOnClickListener {
+            viewModel.filter(
+                listOf(
+                    FavoriteFilter.ByLastModified.ASC,
+                    FavoriteFilter.ByLastModified.DESC,
+                    FavoriteFilter.None,
+                    FavoriteFilter.ByTag(Tag("foo")),
+                    FavoriteFilter.Query("foo")
+                ).random()
+            )
+        }
+        savedInstanceState ifNull {
+            viewModel.filter()
+        }
     }
 
 }
 
-class FavoriteVersetsViewModel(mainDispatcher: CoroutineDispatcher) :
-    CoroutineScopedViewModel(mainDispatcher) {
+interface FavoriteVersetsViewModel {
+    val versetsLiveData: LiveData<PagedList<Read.Verset>>
+    fun filter(filter: FavoriteFilter = FavoriteFilter.None)
+}
 
+@ObsoleteCoroutinesApi
+class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
+                                   private val interactor: FetchFavoriteVersetsInteractor) :
+    CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
 
-    val hello = "Hello"
+    override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
+        MutableLiveData<PagedList<Read.Verset>>()
+
+    private val filterLiveData: MutableLiveData<FavoriteFilter> = MutableLiveData()
+
+    init {
+        launch {
+            val filterChannel = actor<FavoriteFilter> {
+                interactor.request(channel) {
+                    versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().value = it
+                }
+            }
+            filterLiveData.observeForever {
+                launch {
+                    filterChannel.send(it)
+                }
+
+            }
+        }
+    }
+
+    override fun filter(filter: FavoriteFilter) {
+        filterLiveData.value = filter
+    }
 }

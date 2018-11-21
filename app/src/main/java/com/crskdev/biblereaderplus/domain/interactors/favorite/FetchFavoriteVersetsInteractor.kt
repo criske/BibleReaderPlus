@@ -1,9 +1,13 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.onPaging
 import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
-import com.crskdev.biblereaderplus.common.util.println
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
@@ -25,8 +29,7 @@ interface FetchFavoriteVersetsInteractor {
 @ObsoleteCoroutinesApi
 class FetchFavoriteVersetsInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
-    private val repository: DocumentRepository
-) : FetchFavoriteVersetsInteractor {
+    private val repository: DocumentRepository) : FetchFavoriteVersetsInteractor {
 
     override suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit) =
         coroutineScope {

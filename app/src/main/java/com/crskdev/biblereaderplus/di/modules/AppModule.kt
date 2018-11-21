@@ -8,18 +8,31 @@ package com.crskdev.biblereaderplus.di.modules
 import android.app.Application
 import android.content.Context
 import com.crskdev.biblereaderplus.di.modules.common.CommonModule
+import com.crskdev.biblereaderplus.di.modules.data.DataModule
+import com.crskdev.biblereaderplus.di.modules.domain.interactors.InteractorsModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.presentation.MainActivity
 import dagger.Binds
 import dagger.Module
 import dagger.android.AndroidInjectionModule
 import dagger.android.ContributesAndroidInjector
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 
 /**
  * Created by Cristian Pela on 05.11.2018.
  */
-@Module(includes = [AndroidInjectionModule::class, CommonModule::class])
+@ExperimentalCoroutinesApi
+@ObsoleteCoroutinesApi
+@Module(
+    includes = [
+        AndroidInjectionModule::class,
+        CommonModule::class,
+        DataModule::class,
+        InteractorsModule::class
+    ]
+)
 abstract class AppModule {
 
     @Binds
