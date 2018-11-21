@@ -1,8 +1,8 @@
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.dataSourceFactory
+import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.Read
@@ -11,18 +11,15 @@ import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.testutil.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.testutil.TestDispatchers
 import com.crskdev.biblereaderplus.testutil.classesName
-import com.crskdev.biblereaderplus.testutil.collectEmitted
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import org.junit.Assert
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.lang.Exception
 
 /**
  * Created by Cristian Pela on 20.11.2018.
@@ -80,7 +77,7 @@ class FetchFavoriteVersetsInteractorImplTest {
             launch(mainJob) {
                 //pick the filter in content of each paged list batch, then compare
                 interactor.request(filterChannel) {
-                    assertEquals(true, filters.classesName().contains(it.first().content))
+                    assertEquals(true, filters.classesName().contains(it.first().content.cast<String>()))
                 }
             }
             launch{
