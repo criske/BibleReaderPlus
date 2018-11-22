@@ -6,6 +6,7 @@
 package com.crskdev.biblereaderplus.presentation.favorite
 
 
+import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -14,12 +15,14 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
+import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.ifNull
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
@@ -44,8 +47,21 @@ class FavoriteVersetsFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        val favoritesAdapter = FavoriteVersetsAdapter(LayoutInflater.from(context)) {
+
+        }
+        recyclerFavorites.apply {
+            adapter = favoritesAdapter
+            addItemDecoration(object : RecyclerView.ItemDecoration() {
+                override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+                    outRect.bottom = 20
+                    super.getItemOffsets(outRect, view, parent, state)
+                }
+            })
+        }
+
         viewModel.versetsLiveData.observe(this, Observer {
-            favHello.text = it.map { it?.content.toString() }.toString()
+            favoritesAdapter.submitList(it)
         })
         button.setOnClickListener {
             viewModel.filter(
@@ -97,7 +113,13 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
         }
     }
 
+    private fun toVersetUI(verset: Read.Verset): VersetUI {
+        return VersetUI(verset.key, verset.content, verset.isFavorite)
+    }
+
     override fun filter(filter: FavoriteFilter) {
         filterLiveData.value = filter
     }
 }
+
+data class VersetUI(val versetKey: VersetKey, val content: CharSequence, val isFavorite: Boolean)
