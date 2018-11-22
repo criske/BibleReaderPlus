@@ -65,6 +65,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
 }
 
+
 interface FavoriteVersetsViewModel {
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
     fun filter(filter: FavoriteFilter = FavoriteFilter.None)
