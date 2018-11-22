@@ -10,30 +10,37 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
-import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.fragment_scaffold_mock.*
-import javax.inject.Inject
+import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.presentation.util.arch.distinctUntilChanged
 
-class ReadFragment : DaggerFragment() {
+class ReadFragment : Fragment() {
 
-    @Inject
-    lateinit var readViewModel: ReadViewModel
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
-                              savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_scaffold_mock, container, false)
+        return inflater.inflate(R.layout.fragment_read, container, false)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        textScaffoldMock.text = readViewModel.hello
+}
+
+internal class ReadViewModel : ViewModel() {
+
+    val scrollReadLiveData: LiveData<ScrollData> = MutableLiveData<ScrollData>().distinctUntilChanged { p, c ->
+        p.readKey() != c.readKey()
     }
+
+    fun scrollTo(source: Int, readKey: ReadKey) {
+        scrollReadLiveData.cast<MutableLiveData<ScrollData>>().value = ScrollData(source, readKey)
+    }
+
+    class ScrollData(val source: Int, val readKey: ReadKey)
+
 }
 
-class ReadViewModel @Inject constructor() : ViewModel() {
-
-    val hello = "Hello from ReadViewModel"
-
-}
