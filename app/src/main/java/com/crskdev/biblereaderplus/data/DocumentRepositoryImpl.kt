@@ -56,7 +56,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             while (true) {
                 yield((r.nextInt(24) + 97).toChar())
             }
-        }.take(r.nextInt(30) + 30)
+        }.take(r.nextInt(60) + 300)
             .joinToString("")
 
         val filerFactory: (FavoriteFilter) -> DataSource.Factory<Int, Read.Verset> = {
