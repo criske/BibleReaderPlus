@@ -46,6 +46,7 @@ buildscript {
         coroutinesVersion ='1.0.0'
 
         testRunnerVersion = '1.1.0'
+        archTestVersion = '2.0.0-rc01'
     }
     repositories {
         google()
