@@ -10,6 +10,7 @@ package com.crskdev.biblereaderplus.presentation.util.arch
 import android.util.Log
 import androidx.annotation.MainThread
 import androidx.lifecycle.*
+import com.crskdev.biblereaderplus.common.util.NowTimeProvider
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -70,10 +71,6 @@ fun <T> LiveData<T>.skip(count: Int): LiveData<T> {
 }
 
 fun <T> LiveData<T>.skipFirst(): LiveData<T> = skip(1)
-
-interface NowTimeProvider {
-    fun now() = System.currentTimeMillis()
-}
 
 fun <T> LiveData<T>.interval(
     duration: Long, unit: TimeUnit, nowTimeProvider: NowTimeProvider = object :

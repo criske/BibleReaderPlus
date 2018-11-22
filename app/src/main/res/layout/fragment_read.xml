@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<androidx.slidingpanelayout.widget.SlidingPaneLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <fragment android:layout_width="@dimen/contents_slide"
+              android:layout_height="match_parent"
+              android:name="com.crskdev.biblereaderplus.presentation.read.ContentsFragment"
+              tools:layout="@layout/fragment_contents"
+              android:id="@+id/fragmentReadContents"/>
+
+    <fragment android:layout_width="match_parent"
+              android:id="@+id/fragmentReadPages"
+              android:layout_weight="1"
+              android:layout_height="match_parent"
+              tools:layout="@layout/fragment_pages"
+              android:name="com.crskdev.biblereaderplus.presentation.read.PagesFragment"/>
+
+</androidx.slidingpanelayout.widget.SlidingPaneLayout>
