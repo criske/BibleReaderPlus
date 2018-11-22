@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<resources>
+    <dimen name="contents_slide">250dp</dimen>
+    <dimen name="item_read_height">36dp</dimen>
+</resources>

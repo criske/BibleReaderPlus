@@ -69,6 +69,7 @@ dependencies {
 
     implementation 'com.squareup.okhttp3:okhttp-urlconnection:3.11.0'
     implementation "com.squareup.retrofit2:retrofit:$rootProject.retrofit2Version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$rootProject.kotlinVersion"
 
 
     implementation "com.google.dagger:dagger:$rootProject.daggerVersion"
@@ -78,8 +79,8 @@ dependencies {
 
     // Testing dependencies
     androidTestImplementation 'androidx.annotation:annotation:1.0.0'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation "androidx.test:runner:$rootProject.testRunnerVersion"
+    androidTestImplementation "androidx.test:rules:$rootProject.testRunnerVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$rootProject.espressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-intents:$rootProject.espressoVersion"
     androidTestImplementation "androidx.test.espresso:espresso-contrib:$rootProject.espressoVersion"

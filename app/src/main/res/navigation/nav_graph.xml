@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/nav_graph">
+
+</navigation>

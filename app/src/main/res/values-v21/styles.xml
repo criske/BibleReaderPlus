@@ -1,11 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ License: MIT
   ~ Copyright (c)  Pela Cristian 2018.
   -->
 
 <resources>
-
-    <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="android:windowFullscreen">true</item>
@@ -13,7 +12,7 @@
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="colorAccent">@color/secondaryColor</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:colorForeground">@color/primaryTextColor</item>
     </style>
-
 </resources>
