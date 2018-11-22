@@ -11,6 +11,7 @@ import com.crskdev.arch.coroutines.paging.dataSourceFactory
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
+import java.util.*
 
 /**
  * Created by Cristian Pela on 21.11.2018.
@@ -50,13 +51,21 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
     override fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset> {
+        val r = Random()
+        fun versetContent() = sequence {
+            while (true) {
+                yield((r.nextInt(24) + 97).toChar())
+            }
+        }.take(r.nextInt(30) + 30)
+            .joinToString("")
+
         val filerFactory: (FavoriteFilter) -> DataSource.Factory<Int, Read.Verset> = {
             (1..100)
                 .map { id ->
                     Read.Verset(
                         VersetKey(id, 1, 1),
                         id,
-                        it::class.java.simpleName ?: "",
+                        "${it::class.java.simpleName}:${versetContent()}",
                         false,
                         ModifiedAt("")
                     )
