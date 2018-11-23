@@ -8,10 +8,12 @@ package com.crskdev.biblereaderplus.presentation.favorite
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import kotlinx.android.synthetic.main.item_verset.view.*
@@ -34,6 +36,10 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater, private val a
     override fun onBindViewHolder(holder: FavoriteVersetVH, position: Int) {
         holder.bind(getItem(position))
     }
+
+    override fun onViewRecycled(holder: FavoriteVersetVH) {
+        holder.clear()
+    }
 }
 
 
@@ -46,6 +52,10 @@ class FavoriteVersetVH(view: View) : RecyclerView.ViewHolder(view) {
         with(itemView) {
             textItemFavVerset.text = v?.content
         }
+    }
+
+    fun clear() {
+        itemView.cast<MotionLayout>().transitionToStart()
     }
 }
 

@@ -56,7 +56,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             while (true) {
                 yield((r.nextInt(24) + 97).toChar())
             }
-        }.take(r.nextInt(60) + 300)
+        }.take(r.nextInt(20) + 500)
             .joinToString("")
 
         val filerFactory: (FavoriteFilter) -> DataSource.Factory<Int, Read.Verset> = {
@@ -65,8 +65,8 @@ class DocumentRepositoryImpl : DocumentRepository {
                     Read.Verset(
                         VersetKey(id, 1, 1),
                         id,
-                        "${it::class.java.simpleName}:${versetContent()}",
-                        false,
+                        "${it::class.java.simpleName}:${versetContent().replace("a", "None")}",
+                        r.nextBoolean(),
                         ModifiedAt("")
                     )
                 }

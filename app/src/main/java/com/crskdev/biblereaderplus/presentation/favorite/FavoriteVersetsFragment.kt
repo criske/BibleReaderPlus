@@ -6,7 +6,6 @@
 package com.crskdev.biblereaderplus.presentation.favorite
 
 
-import android.graphics.Rect
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +14,6 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
-import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.ifNull
@@ -24,8 +22,12 @@ import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
+import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
+import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
+import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
+import com.crskdev.biblereaderplus.presentation.util.view.addSpaceItemDecoration
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -52,12 +54,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
         }
         recyclerFavorites.apply {
             adapter = favoritesAdapter
-            addItemDecoration(object : RecyclerView.ItemDecoration() {
-                override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-                    outRect.bottom = 20
-                    super.getItemOffsets(outRect, view, parent, state)
-                }
-            })
+            addSpaceItemDecoration {
+                bottom = 4.dpToPx(resources)
+            }
         }
 
         viewModel.versetsLiveData.observe(this, Observer {
@@ -89,6 +88,7 @@ interface FavoriteVersetsViewModel {
 
 @ObsoleteCoroutinesApi
 class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
+                                   private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
                                    private val interactor: FetchFavoriteVersetsInteractor) :
     CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
 
@@ -100,7 +100,24 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
     init {
         launch {
             val filterChannel = actor<FavoriteFilter> {
-                interactor.request(channel) {
+                val mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v ->
+                    val chain = charSequenceTransformerFactory
+                        .startChain(v.content)
+                        .transform(CharSequenceTransformerFactory.Type.LEAD_FIRST_LINE)
+                        .transform(
+                            CharSequenceTransformerFactory.Type.HIGHLIGHT,
+                            HighLightContentTransformer.HighlightArg("None", true)
+                        )
+                        .let {
+                            if (v.isFavorite) {
+                                it.transform(CharSequenceTransformerFactory.Type.ICON_AT_END)
+                            } else {
+                                it
+                            }
+                        }
+                    v.copy(content = chain.content)
+                }
+                interactor.request(channel, mapper) {
                     versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().value = it
                 }
             }

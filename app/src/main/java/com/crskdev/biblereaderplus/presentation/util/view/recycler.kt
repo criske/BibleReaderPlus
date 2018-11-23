@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.presentation.util.view
 
+import android.graphics.Rect
 import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,4 +35,13 @@ fun LinearLayoutManager.smoothScrollToPosition(
 ) {
     smoothScroller.targetPosition = position
     this.startSmoothScroll(smoothScroller)
+}
+
+inline fun RecyclerView.addSpaceItemDecoration(index: Int = -1, crossinline block: Rect.() -> Unit) {
+    addItemDecoration(object : RecyclerView.ItemDecoration() {
+        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+            super.getItemOffsets(outRect, view, parent, state)
+            outRect.block()
+        }
+    })
 }
