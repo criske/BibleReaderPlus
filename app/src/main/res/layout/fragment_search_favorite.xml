@@ -11,8 +11,6 @@
     android:orientation="vertical"
     tools:context=".presentation.favorite.FavoriteVersetsFragment">
 
-
-    <!-- TODO: Update blank fragment layout -->
     <Button
         android:id="@+id/button"
         android:layout_width="match_parent"
@@ -20,6 +18,8 @@
         android:text="Button" />
 
     <androidx.recyclerview.widget.RecyclerView
+        android:paddingEnd="4dp"
+        android:paddingStart="4dp"
         android:id="@+id/recyclerFavorites"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

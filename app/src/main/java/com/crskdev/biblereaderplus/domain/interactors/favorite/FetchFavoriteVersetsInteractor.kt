@@ -22,7 +22,9 @@ import javax.inject.Inject
  * Created by Cristian Pela on 13.11.2018.
  */
 interface FetchFavoriteVersetsInteractor {
-    suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit)
+    suspend fun request(filter: ReceiveChannel<FavoriteFilter>,
+                        mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v -> v },
+                        response: (PagedList<Read.Verset>) -> Unit)
 }
 
 @ExperimentalCoroutinesApi
@@ -31,21 +33,27 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val repository: DocumentRepository) : FetchFavoriteVersetsInteractor {
 
-    override suspend fun request(filter: ReceiveChannel<FavoriteFilter>, response: (PagedList<Read.Verset>) -> Unit) =
+    override suspend fun request(filter: ReceiveChannel<FavoriteFilter>,
+                                 mapper: (FavoriteFilter, Read.Verset) -> Read.Verset,
+                                 response: (PagedList<Read.Verset>) -> Unit) =
         coroutineScope {
             val sendChannel = actor<PagedList<Read.Verset>> {
                 for (r in channel) {
                     response(r)
                 }
             }
-            launch {
+            launch(SupervisorJob()) {
                 var job = Job()
                 while (isActive) {
                     select<Unit> {
-                        filter.onReceive {
+                        filter.onReceive { it ->
                             job.cancel()
-                            job = CoroutineScope(this@launch.coroutineContext + SupervisorJob()).launch {
+                            job = Job()
+                            launch(job) {
                                 repository.favorites(it)
+                                    .mapByPage { l ->
+                                        l.map { v -> mapper(it, v) }
+                                    }
                                     .setupPagedListBuilder {
                                         config(10)
                                         fetchDispatcher = dispatchers.DEFAULT

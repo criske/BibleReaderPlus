@@ -4,5 +4,6 @@
   -->
 <resources>
     <dimen name="contents_slide">250dp</dimen>
-    <dimen name="item_read_height">36dp</dimen>
+    <dimen name="item_read_height">72dp</dimen>
+    <dimen name="dimen_img_button">36dp</dimen>
 </resources>

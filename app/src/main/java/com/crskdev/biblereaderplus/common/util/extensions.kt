@@ -11,6 +11,8 @@ package com.crskdev.biblereaderplus.common.util
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> Any.cast(): T = this as T
 
+inline fun <reified T> Any.castOrNull(): T? = takeIf { it is T }?.cast<T>()
+
 @Suppress("UNCHECKED_CAST")
 inline fun <reified T> Any.castIf(): T? =
     try {

@@ -13,4 +13,5 @@
     <color name="secondaryDarkColor">#725b53</color>
     <color name="primaryTextColor">#424242</color>
     <color name="secondaryTextColor">#efebe9</color>
+    <color name="likeColor">#fff59d</color>
 </resources>
