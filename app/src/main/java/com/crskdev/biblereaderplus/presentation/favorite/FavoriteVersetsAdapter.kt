@@ -5,8 +5,11 @@
 
 package com.crskdev.biblereaderplus.presentation.favorite
 
+import android.animation.Animator
+import android.animation.LayoutTransition
 import android.graphics.Rect
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.motion.widget.MotionLayout
@@ -61,6 +64,8 @@ class FavoriteVersetVH(view: View,
 
     private var verset: Read.Verset? = null
 
+    private var animator: Animator? = null
+
     internal var itemDetails: VersetItemDetails =
         VersetItemDetails(RecyclerView.NO_POSITION, null, Rect())
 
@@ -68,19 +73,24 @@ class FavoriteVersetVH(view: View,
         with(itemView.cast<MotionLayout>()) {
             textItemFavVerset.getHitRect(itemDetails.selectionRect)
             btnItemVersetFav.setOnTouchListener { v, event ->
-                verset?.let {
-                    val kind = if (it.isFavorite)
-                        FavoriteAction.Remove(it.key)
-                    else
-                        FavoriteAction.Add(it.key)
-                    action(kind)
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    verset?.let {
+                        val kind = if (it.isFavorite)
+                            FavoriteAction.Remove(it.key)
+                        else
+                            FavoriteAction.Add(it.key)
+                        action(kind)
+                    }
                 }
-                false
+                true
             }
-            btnItemVersetInfo.setOnClickListener { _ ->
-                verset?.let {
-                    action(FavoriteAction.Info(it.key))
+            btnItemVersetInfo.setOnTouchListener { _, event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    verset?.let {
+                        action(FavoriteAction.Info(it.key))
+                    }
                 }
+                true
             }
         }
     }
@@ -96,12 +106,14 @@ class FavoriteVersetVH(view: View,
             val isSelected = selectionTracker.isSelected(itemDetails.key)
             layout.isActivated = isSelected
             textItemFavVerset.text = v?.content
-            post {
-                if (isSelected) {
-                    layout.transitionToEnd()
-                } else {
-                    layout.transitionToStart()
-                }
+            if (animator?.isRunning == true) {
+                animator?.cancel()
+            }
+            animator = layout.layoutTransition?.getAnimator(LayoutTransition.CHANGING)
+            if (isSelected) {
+                layout.transitionToEnd()
+            } else {
+                layout.transitionToStart()
             }
         }
     }
