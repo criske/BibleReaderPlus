@@ -41,9 +41,9 @@ class FavoriteVersetLookup(private val recyclerView: RecyclerView) : ItemDetails
                 holder.itemView.textItemFavVerset.getGlobalVisibleRect(rect)
                 println("Item details: $e")
                 println("Item details rect: $rect")
-                if (rect.contains(e.rawX.toInt(), e.rawY.toInt())) {
+                //if (rect.contains(e.rawX.toInt(), e.rawY.toInt())) {
                     return holder.itemDetails
-                }
+                //}
             }
         }
         // }

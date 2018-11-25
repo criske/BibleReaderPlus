@@ -64,29 +64,10 @@ class FavoriteVersetVH(view: View,
     internal var itemDetails: VersetItemDetails =
         VersetItemDetails(RecyclerView.NO_POSITION, null, Rect())
 
-    private var isVisualSelected = false
-
     init {
         with(itemView.cast<MotionLayout>()) {
             textItemFavVerset.getHitRect(itemDetails.selectionRect)
-            setTransitionListener(object : MotionLayout.TransitionListener {
-                override fun onTransitionChange(p0: MotionLayout?, p1: Int, p2: Int, p3: Float) =
-                    Unit
-
-                override fun onTransitionCompleted(layput: MotionLayout, id: Int) {
-//                    itemDetails.key?.let {
-//                        isVisualSelected = id == R.id.end
-//                        if (isVisualSelected) {
-//                            selectionTracker.select(it)
-//                        } else {
-//                            selectionTracker.deselect(it)
-//                        }
-//                    }
-//                    //recalc rect
-//                    textItemFavVerset.getHitRect(itemDetails.selectionRect)
-                }
-            })
-            btnItemVersetFav.setOnClickListener { _ ->
+            btnItemVersetFav.setOnTouchListener { v, event ->
                 verset?.let {
                     val kind = if (it.isFavorite)
                         FavoriteAction.Remove(it.key)
@@ -94,6 +75,7 @@ class FavoriteVersetVH(view: View,
                         FavoriteAction.Add(it.key)
                     action(kind)
                 }
+                false
             }
             btnItemVersetInfo.setOnClickListener { _ ->
                 verset?.let {
@@ -101,7 +83,6 @@ class FavoriteVersetVH(view: View,
                 }
             }
         }
-
     }
 
     fun bind(v: Read.Verset?) {
@@ -115,12 +96,13 @@ class FavoriteVersetVH(view: View,
             val isSelected = selectionTracker.isSelected(itemDetails.key)
             layout.isActivated = isSelected
             textItemFavVerset.text = v?.content
-            if (isSelected) {
-                layout.transitionToEnd()
-            } else {
-                layout.transitionToStart()
+            post {
+                if (isSelected) {
+                    layout.transitionToEnd()
+                } else {
+                    layout.transitionToStart()
+                }
             }
-            isVisualSelected = isSelected
         }
     }
 
