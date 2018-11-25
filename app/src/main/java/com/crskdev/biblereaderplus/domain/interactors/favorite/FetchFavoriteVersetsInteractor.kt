@@ -52,7 +52,9 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                             launch(job) {
                                 repository.favorites(it)
                                     .mapByPage { l ->
-                                        l.map { v -> mapper(it, v) }
+                                        runBlocking(job + dispatchers.DEFAULT) {
+                                            l.map { v -> mapper(it, v) }
+                                        }
                                     }
                                     .setupPagedListBuilder {
                                         config(10)

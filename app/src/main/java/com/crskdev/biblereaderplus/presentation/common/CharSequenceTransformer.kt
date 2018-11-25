@@ -50,8 +50,7 @@ class CharSequenceTransformerFactory(
             ?: throw ClassNotFoundException("Transformer Not Found!!")
 
 
-    fun startChain(content: CharSequence): Chain =
-        Chain(this, ensureSpannable(content))
+    fun startChain(content: CharSequence): Chain = Chain(this, ensureSpannable(content))
 
     enum class Type {
         ICON_AT_END, LEAD_FIRST_LINE, HIGHLIGHT
@@ -59,16 +58,14 @@ class CharSequenceTransformerFactory(
 
     class Chain internal constructor(
         private val factory: CharSequenceTransformerFactory,
-        val content: CharSequence) {
+        var content: CharSequence) {
 
         fun transform(type: Type, args: CharSequenceTransformer.Args? = null): Chain =
-            Chain(factory, factory.transform(type, content, args))
+            apply { content = factory.transform(type, content, args) }
 
     }
 
 }
-
-//TODO implement args for each transformer
 
 class IconAtEndTransformer(private val context: Context, @DrawableRes private val res: Int) :
     CharSequenceTransformer {
