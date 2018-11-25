@@ -10,17 +10,20 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
+import androidx.recyclerview.selection.SelectionTracker
+import androidx.recyclerview.selection.StableIdKeyProvider
+import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.ifNull
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
@@ -42,6 +45,8 @@ class FavoriteVersetsFragment : DaggerFragment() {
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
 
+    private lateinit var selectionTracker: SelectionTracker<Long>
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
@@ -50,13 +55,28 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val favoritesAdapter = FavoriteVersetsAdapter(LayoutInflater.from(context)) {
-
+            val todo = when (it) {
+                is FavoriteAction.Info -> "TODO: Show info: ${it.key}"
+                is FavoriteAction.Add -> "TODO: Add fav: ${it.key}"
+                is FavoriteAction.Remove -> "TODO: Remove fav: ${it.key}"
+            }
+            Toast.makeText(context, todo, Toast.LENGTH_SHORT).show()
         }
         recyclerFavorites.apply {
             adapter = favoritesAdapter
             addSpaceItemDecoration {
                 bottom = 4.dpToPx(resources)
             }
+            selectionTracker = SelectionTracker.Builder<Long>(
+                "fav-verset-select-tracker",
+                this,
+                StableIdKeyProvider(this),
+                FavoriteVersetLookup(this),
+                StorageStrategy.createLongStorage()
+            ).build().apply {
+                onRestoreInstanceState(savedInstanceState)
+            }
+            favoritesAdapter.selectionTracker = selectionTracker
         }
 
         viewModel.versetsLiveData.observe(this, Observer {
@@ -74,10 +94,16 @@ class FavoriteVersetsFragment : DaggerFragment() {
             )
         }
         savedInstanceState ifNull {
-            viewModel.filter()
+            view.post {
+                viewModel.filter()
+            }
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        selectionTracker.onSaveInstanceState(outState)
+        super.onSaveInstanceState(outState)
+    }
 }
 
 
@@ -129,14 +155,7 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
             }
         }
     }
-
-    private fun toVersetUI(verset: Read.Verset): VersetUI {
-        return VersetUI(verset.key, verset.content, verset.isFavorite)
-    }
-
     override fun filter(filter: FavoriteFilter) {
         filterLiveData.value = filter
     }
 }
-
-data class VersetUI(val versetKey: VersetKey, val content: CharSequence, val isFavorite: Boolean)
