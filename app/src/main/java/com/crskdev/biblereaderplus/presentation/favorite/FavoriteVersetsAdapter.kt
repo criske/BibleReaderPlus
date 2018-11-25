@@ -34,14 +34,7 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
             oldItem == newItem
     }) {
 
-    lateinit var selectionTracker: SelectionTracker<Long>
-
-    init {
-        setHasStableIds(true)
-    }
-
-    override fun getItemId(position: Int): Long =
-        getItem(position)?.key?.id?.toLong() ?: RecyclerView.NO_ID
+    lateinit var selectionTracker: SelectionTracker<String>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteVersetVH =
         FavoriteVersetVH(
@@ -52,8 +45,7 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
 
 
     override fun onBindViewHolder(holder: FavoriteVersetVH, position: Int) {
-        val key = getItemId(position)
-        holder.bind(getItem(position), position, key)
+        holder.bind(getItem(position))
     }
 
     override fun onViewRecycled(holder: FavoriteVersetVH) {
@@ -63,14 +55,14 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
 
 
 class FavoriteVersetVH(view: View,
-                       private val selectionTracker: SelectionTracker<Long>,
+                       private val selectionTracker: SelectionTracker<String>,
                        private val action: (FavoriteAction) -> Unit) :
     RecyclerView.ViewHolder(view) {
 
     private var verset: Read.Verset? = null
 
     internal var itemDetails: VersetItemDetails =
-        VersetItemDetails(RecyclerView.NO_POSITION, RecyclerView.NO_ID, Rect())
+        VersetItemDetails(RecyclerView.NO_POSITION, null, Rect())
 
     private var isVisualSelected = false
 
@@ -82,16 +74,16 @@ class FavoriteVersetVH(view: View,
                     Unit
 
                 override fun onTransitionCompleted(layput: MotionLayout, id: Int) {
-                    itemDetails.key?.let {
-                        isVisualSelected = id == R.id.end
-                        if (isVisualSelected) {
-                            selectionTracker.select(it)
-                        } else {
-                            selectionTracker.deselect(it)
-                        }
-                    }
-                    //recalc rect
-                    textItemFavVerset.getHitRect(itemDetails.selectionRect)
+//                    itemDetails.key?.let {
+//                        isVisualSelected = id == R.id.end
+//                        if (isVisualSelected) {
+//                            selectionTracker.select(it)
+//                        } else {
+//                            selectionTracker.deselect(it)
+//                        }
+//                    }
+//                    //recalc rect
+//                    textItemFavVerset.getHitRect(itemDetails.selectionRect)
                 }
             })
             btnItemVersetFav.setOnClickListener { _ ->
@@ -112,25 +104,23 @@ class FavoriteVersetVH(view: View,
 
     }
 
-    fun bind(v: Read.Verset?, position: Int, key: Long) {
+    fun bind(v: Read.Verset?) {
         verset = v
         with(itemDetails) {
-            this.adapterPosition = position
-            this.key = key
+            this.adapterPosition = this@FavoriteVersetVH.adapterPosition
+            this.key = v?.key.toString()
         }
-        if (key == RecyclerView.NO_ID) {
-            selectionTracker.deselect(key)
-        }
-
         val layout = itemView.cast<MotionLayout>()
         with(layout) {
-            textItemFavVerset.text = v?.content
             val isSelected = selectionTracker.isSelected(itemDetails.key)
-            if (isSelected && !isVisualSelected) {
+            layout.isActivated = isSelected
+            textItemFavVerset.text = v?.content
+            if (isSelected) {
                 layout.transitionToEnd()
-            } else if (!isSelected && isVisualSelected) {
+            } else {
                 layout.transitionToStart()
             }
+            isVisualSelected = isSelected
         }
     }
 

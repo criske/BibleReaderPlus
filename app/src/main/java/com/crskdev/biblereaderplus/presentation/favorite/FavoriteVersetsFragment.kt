@@ -16,7 +16,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.selection.StableIdKeyProvider
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
@@ -45,7 +44,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
 
-    private lateinit var selectionTracker: SelectionTracker<Long>
+    private lateinit var selectionTracker: SelectionTracker<String>
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -62,17 +61,18 @@ class FavoriteVersetsFragment : DaggerFragment() {
             }
             Toast.makeText(context, todo, Toast.LENGTH_SHORT).show()
         }
+        val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
         recyclerFavorites.apply {
             adapter = favoritesAdapter
             addSpaceItemDecoration {
                 bottom = 4.dpToPx(resources)
             }
-            selectionTracker = SelectionTracker.Builder<Long>(
+            selectionTracker = SelectionTracker.Builder<String>(
                 "fav-verset-select-tracker",
                 this,
-                StableIdKeyProvider(this),
+                favoriteVersetKeyProvider,
                 FavoriteVersetLookup(this),
-                StorageStrategy.createLongStorage()
+                StorageStrategy.createStringStorage()
             ).build().apply {
                 onRestoreInstanceState(savedInstanceState)
             }
@@ -80,6 +80,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
         }
 
         viewModel.versetsLiveData.observe(this, Observer {
+            favoriteVersetKeyProvider.list = it.snapshot()
             favoritesAdapter.submitList(it)
         })
         button.setOnClickListener {
@@ -155,6 +156,7 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
             }
         }
     }
+
     override fun filter(filter: FavoriteFilter) {
         filterLiveData.value = filter
     }
