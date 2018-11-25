@@ -12,9 +12,9 @@
         motion:constraintSetStart="@+id/start"
         motion:duration="200"
         motion:interpolator="linear">
-        <OnClick
-            motion:mode="toggle"
-            motion:target="@id/textItemFavVerset" />
+        <!--<OnClick-->
+        <!--motion:mode="toggle"-->
+        <!--motion:target="@id/textItemFavVerset" />-->
         <ConstraintSet android:id="@+id/start">
             <Constraint
                 android:id="@id/textItemFavVerset"
