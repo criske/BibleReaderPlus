@@ -8,6 +8,7 @@ package com.crskdev.biblereaderplus.presentation.favorite
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
@@ -15,6 +16,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
+import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
@@ -28,8 +30,6 @@ import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFa
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
-import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
-import com.crskdev.biblereaderplus.presentation.util.view.addSpaceItemDecoration
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -64,16 +64,15 @@ class FavoriteVersetsFragment : DaggerFragment() {
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
         recyclerFavorites.apply {
             adapter = favoritesAdapter
-            addSpaceItemDecoration {
-                bottom = 4.dpToPx(resources)
-            }
             selectionTracker = SelectionTracker.Builder<String>(
                 "fav-verset-select-tracker",
                 this,
                 favoriteVersetKeyProvider,
                 FavoriteVersetLookup(this),
                 StorageStrategy.createStringStorage()
-            ).build().apply {
+            ).withGestureTooltypes(MotionEvent.TOOL_TYPE_FINGER)
+                .withSelectionPredicate(SelectionPredicates.createSelectSingleAnything())
+                .build().apply {
                 onRestoreInstanceState(savedInstanceState)
             }
             favoritesAdapter.selectionTracker = selectionTracker
@@ -102,7 +101,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        selectionTracker.onSaveInstanceState(outState)
+        //  selectionTracker.onSaveInstanceState(outState)
         super.onSaveInstanceState(outState)
     }
 }
