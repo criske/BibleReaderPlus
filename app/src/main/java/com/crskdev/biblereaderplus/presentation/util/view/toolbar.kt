@@ -44,18 +44,20 @@ fun Toolbar.tintIcons(@ColorRes color: Int = android.R.color.darker_gray) {
             }
         }
         navigationIcon?.let { DrawableCompat.setTint(DrawableCompat.wrap(it), c) }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            elevation = 5.dpToPx(resources).toFloat()
-        }
     }
 }
 
-inline fun Toolbar.inflateTintedMenu(@MenuRes menu: Int, @ColorRes color: Int = android.R.color.darker_gray,
-                                     crossinline menuItemListener: (MenuItem) -> Boolean = { true }) {
-    inflateMenu(menu)
-    tintIcons(color)
+inline fun Toolbar.setup(@MenuRes menu: Int? = null, @ColorRes iconsTint: Int = android.R.color.darker_gray,
+                         crossinline menuItemListener: (MenuItem) -> Boolean = { true }) {
+    menu?.let {
+        inflateMenu(it)
+    }
+    tintIcons(iconsTint)
     setOnMenuItemClickListener {
         menuItemListener(it)
+    }
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        elevation = 5.dpToPx(resources).toFloat()
     }
 }
 

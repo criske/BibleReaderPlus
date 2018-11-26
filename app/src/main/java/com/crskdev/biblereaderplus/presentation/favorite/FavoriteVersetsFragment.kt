@@ -31,7 +31,7 @@ import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransform
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
-import com.crskdev.biblereaderplus.presentation.util.view.tintIcons
+import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -81,10 +81,12 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
         //toolbar
         with(toolbarFavorites) {
+            setup {
+                true
+            }
             menu.addSearch(context, R.string.search) {
 
             }
-            tintIcons()
         }
 
         //buttons
