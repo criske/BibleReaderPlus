@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.presentation.util.view
 
+import android.graphics.Rect
 import android.view.View
 
 
@@ -18,4 +19,13 @@ fun View.isPointInside(x: Float, y: Float): Boolean {
     val viewY = location[1]
     // point is inside view bounds
     return x > viewX && x < viewX + width && y > viewY && y < viewY + height
+}
+
+
+fun View.getDrawingRect(): Rect = Rect().apply {
+    getDrawingRect(this)
+}
+
+fun View.getHitRect(): Rect = Rect().apply {
+    getHitRect(this)
 }

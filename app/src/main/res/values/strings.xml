@@ -6,4 +6,5 @@
 <resources>
     <string name="app_name">BibleReaderPlus</string>
     <string name="hint_books">Books</string>
+    <string name="search">Search</string>
 </resources>

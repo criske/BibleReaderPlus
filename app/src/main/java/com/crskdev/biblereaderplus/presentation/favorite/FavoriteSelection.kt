@@ -5,7 +5,6 @@
 
 package com.crskdev.biblereaderplus.presentation.favorite
 
-import android.graphics.Rect
 import android.view.MotionEvent
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.ItemKeyProvider
@@ -18,7 +17,6 @@ import com.crskdev.biblereaderplus.domain.entity.Read
  */
 
 class FavoriteVersetKeyProvider(var list: List<Read.Verset> = emptyList()) :
-
     ItemKeyProvider<String>(SCOPE_MAPPED) {
 
     override fun getKey(position: Int): String? = list.getOrNull(position)?.key?.toString()
@@ -29,6 +27,7 @@ class FavoriteVersetKeyProvider(var list: List<Read.Verset> = emptyList()) :
 
 
 class FavoriteVersetLookup(private val recyclerView: RecyclerView) : ItemDetailsLookup<String>() {
+
     override fun getItemDetails(e: MotionEvent): ItemDetails<String>? {
         val view = recyclerView.findChildViewUnder(e.x, e.y)
         if (view != null) {
@@ -41,7 +40,7 @@ class FavoriteVersetLookup(private val recyclerView: RecyclerView) : ItemDetails
     }
 }
 
-class VersetItemDetails(var adapterPosition: Int, var key: String?, var selectionRect: Rect) :
+class FavoriteVersetItemDetails(var adapterPosition: Int, var key: String?) :
     ItemDetailsLookup.ItemDetails<String>() {
 
     override fun getSelectionKey(): String? = key

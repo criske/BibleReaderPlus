@@ -5,7 +5,6 @@
 
 package com.crskdev.biblereaderplus.presentation.favorite
 
-import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -19,6 +18,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
+import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import kotlinx.android.synthetic.main.item_verset.view.*
 
 /**
@@ -63,12 +63,11 @@ class FavoriteVersetVH(view: View,
 
     private var verset: Read.Verset? = null
 
-    internal var itemDetails: VersetItemDetails =
-        VersetItemDetails(RecyclerView.NO_POSITION, null, Rect())
+    internal var itemDetails: FavoriteVersetItemDetails =
+        FavoriteVersetItemDetails(RecyclerView.NO_POSITION, null)
 
     init {
         with(itemView.cast<MotionLayout>()) {
-            textItemFavVerset.getHitRect(itemDetails.selectionRect)
             btnItemVersetFav.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     verset?.let {
@@ -95,17 +94,19 @@ class FavoriteVersetVH(view: View,
     fun bind(v: Read.Verset?) {
         verset = v
         with(itemDetails) {
-            this.adapterPosition = this@FavoriteVersetVH.adapterPosition
-            this.key = v?.key.toString()
+            key = v?.key?.toString()
+            adapterPosition = this@FavoriteVersetVH.adapterPosition
         }
-        val layout = itemView.cast<MotionLayout>()
-        with(layout) {
+        with(itemView.cast<MotionLayout>()) {
+            textItemFavVerset.text = v?.content
             val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
                 btnItemVersetFav.isEnabled = this
                 btnItemVersetInfo.isEnabled = this
             }
+            btnItemVersetFav.setColorFilter(
+                context.getColorCompat(if (v?.isFavorite == true) R.color.likeColor else R.color.primaryDarkColor)
+            )
             isActivated = isSelected
-            textItemFavVerset.text = v?.content
             transitionToState(
                 if (isSelected) {
                     R.id.end
