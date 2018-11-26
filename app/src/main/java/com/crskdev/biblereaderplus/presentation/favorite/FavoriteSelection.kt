@@ -17,6 +17,7 @@ import com.crskdev.biblereaderplus.domain.entity.Read
  */
 
 class FavoriteVersetKeyProvider(var list: List<Read.Verset> = emptyList()) :
+
     ItemKeyProvider<String>(SCOPE_MAPPED) {
 
     override fun getKey(position: Int): String? = list.getOrNull(position)?.key?.toString()
