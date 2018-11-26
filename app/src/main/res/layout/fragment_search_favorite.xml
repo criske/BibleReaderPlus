@@ -8,13 +8,21 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/background_light"
     android:orientation="vertical"
     tools:context=".presentation.favorite.FavoriteVersetsFragment">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarFavorites"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppToolbar.Nav" />
 
     <Button
         android:id="@+id/button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="16dp"
         android:text="Button" />
 
     <androidx.recyclerview.widget.RecyclerView

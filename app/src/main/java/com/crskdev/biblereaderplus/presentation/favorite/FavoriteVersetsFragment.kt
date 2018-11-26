@@ -30,6 +30,8 @@ import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFa
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
+import com.crskdev.biblereaderplus.presentation.util.view.addSearch
+import com.crskdev.biblereaderplus.presentation.util.view.tintIcons
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.CoroutineDispatcher
@@ -44,8 +46,6 @@ class FavoriteVersetsFragment : DaggerFragment() {
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
 
-    private lateinit var selectionTracker: SelectionTracker<String>
-
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         // Inflate the layout for this fragment
@@ -53,6 +53,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        //recycler stuff
         val favoritesAdapter = FavoriteVersetsAdapter(LayoutInflater.from(context)) {
             val todo = when (it) {
                 is FavoriteAction.Info -> "TODO: Show info: ${it.key}"
@@ -64,7 +65,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
         recyclerFavorites.apply {
             adapter = favoritesAdapter
-            selectionTracker = SelectionTracker.Builder<String>(
+            val selectionTracker = SelectionTracker.Builder<String>(
                 "fav-verset-select-tracker",
                 this,
                 favoriteVersetKeyProvider,
@@ -73,15 +74,20 @@ class FavoriteVersetsFragment : DaggerFragment() {
             ).withGestureTooltypes(MotionEvent.TOOL_TYPE_FINGER)
                 .withSelectionPredicate(SelectionPredicates.createSelectSingleAnything())
                 .build().apply {
-                onRestoreInstanceState(savedInstanceState)
-            }
+                    onRestoreInstanceState(savedInstanceState)
+                }
             favoritesAdapter.selectionTracker = selectionTracker
         }
 
-        viewModel.versetsLiveData.observe(this, Observer {
-            favoriteVersetKeyProvider.list = it.snapshot()
-            favoritesAdapter.submitList(it)
-        })
+        //toolbar
+        with(toolbarFavorites) {
+            menu.addSearch(context, R.string.search) {
+
+            }
+            tintIcons()
+        }
+
+        //buttons
         button.setOnClickListener {
             viewModel.filter(
                 listOf(
@@ -93,6 +99,13 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 ).random()
             )
         }
+
+
+        //interactions with vm
+        viewModel.versetsLiveData.observe(this, Observer {
+            favoriteVersetKeyProvider.list = it.snapshot()
+            favoritesAdapter.submitList(it)
+        })
         savedInstanceState ifNull {
             view.post {
                 viewModel.filter()
@@ -101,7 +114,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        //  selectionTracker.onSaveInstanceState(outState)
+        //  selectionTracker.onSaveInstanceState(outState) --> don't activate using motion layout as item and getting buggy
         super.onSaveInstanceState(outState)
     }
 }
