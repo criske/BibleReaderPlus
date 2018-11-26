@@ -7,13 +7,10 @@ package com.crskdev.biblereaderplus.presentation.favorite
 
 import android.graphics.Rect
 import android.view.MotionEvent
-import android.view.View
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.ItemKeyProvider
 import androidx.recyclerview.widget.RecyclerView
-import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.presentation.util.view.isPointInside
 
 
 /**
@@ -21,6 +18,7 @@ import com.crskdev.biblereaderplus.presentation.util.view.isPointInside
  */
 
 class FavoriteVersetKeyProvider(var list: List<Read.Verset> = emptyList()) :
+
     ItemKeyProvider<String>(SCOPE_MAPPED) {
 
     override fun getKey(position: Int): String? = list.getOrNull(position)?.key?.toString()
@@ -35,8 +33,6 @@ class FavoriteVersetLookup(private val recyclerView: RecyclerView) : ItemDetails
         val view = recyclerView.findChildViewUnder(e.x, e.y)
         if (view != null) {
             val holder = recyclerView.getChildViewHolder(view)
-            val contains = view.findViewById<View>(R.id.textItemFavVerset)
-                ?.isPointInside(e.rawX, e.rawY) == true
             if (holder is FavoriteVersetVH) {
                 return holder.itemDetails
             }

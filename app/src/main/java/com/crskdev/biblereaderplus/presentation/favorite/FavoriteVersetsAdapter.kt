@@ -5,8 +5,6 @@
 
 package com.crskdev.biblereaderplus.presentation.favorite
 
-import android.animation.Animator
-import android.animation.LayoutTransition
 import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -39,6 +37,7 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
 
     lateinit var selectionTracker: SelectionTracker<String>
 
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FavoriteVersetVH =
         FavoriteVersetVH(
             inflater.inflate(R.layout.item_verset, parent, false),
@@ -63,8 +62,6 @@ class FavoriteVersetVH(view: View,
     RecyclerView.ViewHolder(view) {
 
     private var verset: Read.Verset? = null
-
-    private var animator: Animator? = null
 
     internal var itemDetails: VersetItemDetails =
         VersetItemDetails(RecyclerView.NO_POSITION, null, Rect())
@@ -103,18 +100,19 @@ class FavoriteVersetVH(view: View,
         }
         val layout = itemView.cast<MotionLayout>()
         with(layout) {
-            val isSelected = selectionTracker.isSelected(itemDetails.key)
-            layout.isActivated = isSelected
+            val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
+                btnItemVersetFav.isEnabled = this
+                btnItemVersetInfo.isEnabled = this
+            }
+            isActivated = isSelected
             textItemFavVerset.text = v?.content
-            if (animator?.isRunning == true) {
-                animator?.cancel()
-            }
-            animator = layout.layoutTransition?.getAnimator(LayoutTransition.CHANGING)
-            if (isSelected) {
-                layout.transitionToEnd()
-            } else {
-                layout.transitionToStart()
-            }
+            transitionToState(
+                if (isSelected) {
+                    R.id.end
+                } else {
+                    R.id.start
+                }
+            )
         }
     }
 
