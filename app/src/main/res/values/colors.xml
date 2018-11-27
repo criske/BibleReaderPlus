@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
   ~ License: MIT
   ~ Copyright (c)  Pela Cristian 2018.
   -->
@@ -14,4 +13,5 @@
     <color name="primaryTextColor">#424242</color>
     <color name="secondaryTextColor">#efebe9</color>
     <color name="likeColor">#fff59d</color>
+    <color name="backgroundColor">@android:color/background_light</color>
 </resources>

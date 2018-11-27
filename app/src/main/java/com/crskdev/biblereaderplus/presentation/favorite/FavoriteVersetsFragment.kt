@@ -21,7 +21,6 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.common.util.ifNull
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
@@ -29,7 +28,10 @@ import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVers
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
+import com.crskdev.biblereaderplus.presentation.util.arch.RestorableViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
+import com.crskdev.biblereaderplus.presentation.util.arch.onNext
+import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
@@ -45,6 +47,10 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
+
+    companion object {
+        private const val KEY_SI_FILTER = "KEY_SI_FILTER"
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
@@ -93,38 +99,38 @@ class FavoriteVersetsFragment : DaggerFragment() {
         button.setOnClickListener {
             viewModel.filter(
                 listOf(
-                    FavoriteFilter.ByLastModified.ASC,
-                    FavoriteFilter.ByLastModified.DESC,
-                    FavoriteFilter.None,
+                    FavoriteFilter.None(),
                     FavoriteFilter.ByTag(Tag("foo")),
                     FavoriteFilter.Query("foo")
                 ).random()
             )
         }
 
-
         //interactions with vm
         viewModel.versetsLiveData.observe(this, Observer {
             favoriteVersetKeyProvider.list = it.snapshot()
             favoritesAdapter.submitList(it)
         })
-        savedInstanceState ifNull {
-            view.post {
-                viewModel.filter()
-            }
-        }
+        viewModel.restore(
+            savedInstanceState
+                ?.getParcelableMixin<ParcelableFavoriteFilter>(KEY_SI_FILTER)
+                ?.deparcelize()
+        )
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        //  selectionTracker.onSaveInstanceState(outState) --> don't activate using motion layout as item and getting buggy
+        outState.putParcelable(
+            KEY_SI_FILTER,
+            viewModel.getSavingInstanceForKillProcess()?.parcelize()
+        )
         super.onSaveInstanceState(outState)
     }
 }
 
 
-interface FavoriteVersetsViewModel {
+interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
-    fun filter(filter: FavoriteFilter = FavoriteFilter.None)
+    fun filter(filter: FavoriteFilter = FavoriteFilter.None())
 }
 
 @ObsoleteCoroutinesApi
@@ -132,6 +138,8 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                    private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
                                    private val interactor: FetchFavoriteVersetsInteractor) :
     CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
+
+    private var savingInstanceForKillProcess: FavoriteFilter? = null
 
     override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
         MutableLiveData<PagedList<Read.Verset>>()
@@ -163,15 +171,28 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                 }
             }
             //throttled filter
-            filterLiveData.interval(300, TimeUnit.MILLISECONDS).observeForever {
-                launch {
-                    filterChannel.send(it)
+            filterLiveData.interval(300, TimeUnit.MILLISECONDS)
+                .onNext {
+                    savingInstanceForKillProcess = it
                 }
-            }
+                .observeForever {
+                    launch {
+                        filterChannel.send(it)
+                    }
+                }
         }
     }
 
+    override fun getSavingInstanceForKillProcess(): FavoriteFilter? = savingInstanceForKillProcess
+
     override fun filter(filter: FavoriteFilter) {
         filterLiveData.value = filter
+    }
+
+    override fun restore(filter: FavoriteFilter?) {
+        if (savingInstanceForKillProcess == null) {
+            val safeFilter = filter ?: FavoriteFilter.None()
+            filter(safeFilter)
+        }
     }
 }

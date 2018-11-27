@@ -1,12 +1,12 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.entity
 
-sealed class FavoriteFilter {
-    sealed class ByLastModified : FavoriteFilter() {
-        object ASC : ByLastModified()
-        object DESC : ByLastModified()
-    }
-
-    object None : FavoriteFilter()
-    class Query(val query: String) : FavoriteFilter()
-    class ByTag(val tag: Tag) : FavoriteFilter()
+sealed class FavoriteFilter(val asc: Boolean) {
+    class None(asc: Boolean = false) : FavoriteFilter(asc)
+    class Query(val query: String, asc: Boolean = false) : FavoriteFilter(asc)
+    class ByTag(val tag: Tag, asc: Boolean = false) : FavoriteFilter(asc)
 }

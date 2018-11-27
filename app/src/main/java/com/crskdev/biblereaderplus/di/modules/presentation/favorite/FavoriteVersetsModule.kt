@@ -37,7 +37,6 @@ abstract class FavoriteVersetsModule {
                                             context: Context,
                                             interactor: FetchFavoriteVersetsInteractor): FavoriteVersetsViewModel =
             viewModelFromProvider(container) {
-
                 val transformerFactory = CharSequenceTransformerFactory(
                     EnumMap<CharSequenceTransformerFactory.Type, Lazy<CharSequenceTransformer>>(
                         CharSequenceTransformerFactory.Type::class.java

@@ -6,6 +6,8 @@
 package com.crskdev.biblereaderplus.presentation.util.system
 
 import android.app.Activity
+import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +32,21 @@ fun Activity.hideSoftKeyboard() {
     val view = currentFocus ?: View(this);
     getSystemService<InputMethodManager>()?.hideSoftInputFromWindow(view.windowToken, 0);
 }
+
+/**
+ * useful to obtain parcelable decendentats of an unparcelable class (like abstract or sealed)
+ * ``
+ *
+ *     sealed class Foo{
+ *          @Parcelize
+ *          class A: Foo(), Parcelable {}
+ * }
+ *
+ *      bundle.getParcelableMixin<Foo>(KEY)
+ * ``
+ */
+inline fun <reified T> Bundle.getParcelableMixin(key: String): T? =
+    this.getParcelable<Parcelable>(key)?.cast<T>()
 
 
 
