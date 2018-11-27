@@ -31,12 +31,15 @@ fun FavoriteFilter.parcelize(): Parcelable =
     when (this) {
         is FavoriteFilter.None -> ParcelableFavoriteFilter.None(asc)
         is FavoriteFilter.Query -> ParcelableFavoriteFilter.Query(query, asc)
-        is FavoriteFilter.ByTag -> ParcelableFavoriteFilter.ByTag(tag.name, asc)
+        is FavoriteFilter.ByTag -> ParcelableFavoriteFilter.ByTag(tags.joinToString("@"), asc)
     } as Parcelable
 
 fun ParcelableFavoriteFilter.deparcelize(): FavoriteFilter =
     when (this) {
         is ParcelableFavoriteFilter.None -> FavoriteFilter.None(asc)
         is ParcelableFavoriteFilter.Query -> FavoriteFilter.Query(query, asc)
-        is ParcelableFavoriteFilter.ByTag -> FavoriteFilter.ByTag(Tag(tag), asc)
+        is ParcelableFavoriteFilter.ByTag -> FavoriteFilter.ByTag(
+            tag.split("@").map { Tag(it) },
+            asc
+        )
     }

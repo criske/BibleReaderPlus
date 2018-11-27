@@ -100,7 +100,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
             viewModel.filter(
                 listOf(
                     FavoriteFilter.None(),
-                    FavoriteFilter.ByTag(Tag("foo")),
+                    FavoriteFilter.ByTag(listOf(Tag("foo"))),
                     FavoriteFilter.Query("foo")
                 ).random()
             )
