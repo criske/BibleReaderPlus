@@ -61,34 +61,36 @@ inline fun Toolbar.setup(@MenuRes menu: Int? = null, @ColorRes iconsTint: Int = 
     }
 }
 
-inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDefault: Boolean = false,
+inline fun Menu.addSearch(context: Context,
+                          @StringRes title: Int,
+                          expandedByDefault: Boolean = false,
+                          customSearchView: SearchView? = null,
                           crossinline onChange: (String) -> Unit = {},
                           crossinline onSubmit: (String) -> Unit = {}) {
 
     add(title).apply {
-        actionView = SearchView(
+        actionView = (customSearchView ?: SearchView(
             ContextThemeWrapper(
                 context,
                 R.style.ThemeOverlay_MaterialComponents_Light_TintedIcon
             )
-        )
-            .apply {
-                maxWidth = Int.MAX_VALUE
-                setIconifiedByDefault(false)
-                val sv = this
-                setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                    override fun onQueryTextSubmit(query: String): Boolean {
-                        onSubmit(query)
-                        sv.clearFocus()
-                        return true
-                    }
+        )).apply {
+            maxWidth = Int.MAX_VALUE
+            setIconifiedByDefault(false)
+            val sv = this
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    onSubmit(query)
+                    sv.clearFocus()
+                    return true
+                }
 
-                    override fun onQueryTextChange(newText: String): Boolean {
-                        onChange(newText)
-                        return true
-                    }
-                })
-            }
+                override fun onQueryTextChange(newText: String): Boolean {
+                    onChange(newText)
+                    return true
+                }
+            })
+        }
         icon = ContextCompat.getDrawable(context, R.drawable.ic_search_black_24dp)
         setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW.or(MenuItem.SHOW_AS_ACTION_ALWAYS))
         if (expandedByDefault) {
