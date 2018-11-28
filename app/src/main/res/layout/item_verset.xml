@@ -2,12 +2,11 @@
   ~ License: MIT
   ~ Copyright (c)  Pela Cristian 2018.
   -->
-<androidx.constraintlayout.motion.widget.MotionLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    app:layoutDescription="@xml/item_verset_motion_scene">
+    android:layout_height="wrap_content">
 
     <ImageButton
         android:id="@+id/btnItemVersetFav"
@@ -15,7 +14,7 @@
         android:layout_width="@dimen/dimen_img_button"
         android:layout_height="@dimen/dimen_img_button"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="0dp"
         android:layout_marginBottom="8dp"
         android:enabled="false"
         android:tint="@color/likeColor"
@@ -29,7 +28,7 @@
         android:layout_width="@dimen/dimen_img_button"
         android:layout_height="@dimen/dimen_img_button"
         android:layout_marginTop="4dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="0dp"
         android:layout_marginBottom="8dp"
         android:enabled="false"
         android:tint="@color/secondaryColor"
@@ -48,7 +47,7 @@
         android:fontFamily="sans-serif-condensed"
         android:minHeight="@dimen/item_read_height"
         android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-        android:textSize="18sp"
+        android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -56,4 +55,4 @@
         tools:text="textdsadsasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasasssssssssqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" />
 
 
-</androidx.constraintlayout.motion.widget.MotionLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
