@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<MotionScene xmlns:motion="http://schemas.android.com/apk/res-auto">
+    <Transition
+        motion:constraintSetEnd="@layout/fragment_search_favorite_expanded"
+        motion:constraintSetStart="@layout/fragment_search_favorite_collapsed"
+        motion:interpolator="linear">
+        <OnClick
+            motion:mode="toggle"
+            motion:target="@id/btnFavoritesAvailableTags" />
+    </Transition>
+</MotionScene>

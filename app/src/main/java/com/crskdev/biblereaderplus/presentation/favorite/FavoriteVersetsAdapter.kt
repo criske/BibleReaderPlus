@@ -5,19 +5,19 @@
 
 package com.crskdev.biblereaderplus.presentation.favorite
 
+import android.animation.ObjectAnimator
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
+import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import kotlinx.android.synthetic.main.item_verset.view.*
 
@@ -67,7 +67,9 @@ class FavoriteVersetVH(view: View,
         FavoriteVersetItemDetails(RecyclerView.NO_POSITION, null)
 
     init {
-        with(itemView.cast<MotionLayout>()) {
+
+        println("Parent: " + view.parent)
+        with(itemView) {
             btnItemVersetFav.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     verset?.let {
@@ -78,7 +80,7 @@ class FavoriteVersetVH(view: View,
                         action(kind)
                     }
                 }
-                true
+                false
             }
             btnItemVersetInfo.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
@@ -86,7 +88,7 @@ class FavoriteVersetVH(view: View,
                         action(FavoriteAction.Info(it.key))
                     }
                 }
-                true
+                false
             }
         }
     }
@@ -97,7 +99,7 @@ class FavoriteVersetVH(view: View,
             key = v?.key?.toString()
             adapterPosition = this@FavoriteVersetVH.adapterPosition
         }
-        with(itemView.cast<MotionLayout>()) {
+        with(itemView) {
             textItemFavVerset.text = v?.content
             val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
                 btnItemVersetFav.isEnabled = this
@@ -107,14 +109,29 @@ class FavoriteVersetVH(view: View,
                 context.getColorCompat(if (v?.isFavorite == true) R.color.likeColor else R.color.primaryDarkColor)
             )
             isActivated = isSelected
-            transitionToState(
-                if (isSelected) {
-                    R.id.end
-                } else {
-                    R.id.start
-                }
-            )
+            swipeTextItemFavVerset(isSelected)
         }
+    }
+
+    private fun swipeTextItemFavVerset(selected: Boolean) {
+        val offset = 40.dpToPx(itemView.resources).toFloat()
+        val existentTranslationX = itemView.textItemFavVerset.translationX
+        with(itemView.textItemFavVerset) {
+            if (selected && existentTranslationX == 0f) {
+                // if (isShown) {
+                ObjectAnimator
+                    .ofFloat(this, "translationX", 0f, -offset)
+                    .setDuration(300)
+                    .start()
+//                } else {
+//                    translationX = -offset
+//                }
+            } else
+                translationX = 0f
+
+        }
+
+
     }
 
     fun clear() {

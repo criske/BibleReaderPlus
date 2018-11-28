@@ -87,25 +87,27 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
         //toolbar
         with(toolbarFavorites) {
-            setup {
+            setup(R.menu.menu_favorites) {
+                when (it.itemId) {
+                    R.id.menu_action_debug_refresh -> {
+                        viewModel.filter(
+                            listOf(
+                                FavoriteFilter.None(),
+                                FavoriteFilter.ByTag(listOf(Tag("foo"))),
+                                FavoriteFilter.Query("foo")
+                            ).random()
+                        )
+                    }
+                    R.id.menu_action_sort -> {
+
+                    }
+                }
                 true
             }
             menu.addSearch(context, R.string.search) {
 
             }
         }
-
-        //buttons
-        button.setOnClickListener {
-            viewModel.filter(
-                listOf(
-                    FavoriteFilter.None(),
-                    FavoriteFilter.ByTag(listOf(Tag("foo"))),
-                    FavoriteFilter.Query("foo")
-                ).random()
-            )
-        }
-
         //interactions with vm
         viewModel.versetsLiveData.observe(this, Observer {
             favoriteVersetKeyProvider.list = it.snapshot()

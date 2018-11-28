@@ -4,7 +4,8 @@
   -->
 
 <resources>
-    <string name="app_name">BibleReaderPlus</string>
+    <string name="app_name">"\u271D"Reader"\u002B"</string>
     <string name="hint_books">Books</string>
     <string name="search">Search</string>
+    <string name="sort">Sort</string>
 </resources>

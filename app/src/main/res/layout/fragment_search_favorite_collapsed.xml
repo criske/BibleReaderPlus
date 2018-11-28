@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarFavorites"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/AppToolbar.Nav"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnFavoritesAvailableTags"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon.Sized"
+        android:layout_marginStart="12dp"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerFavoritesAvailableTags"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/scrollChipGroupFavoritesSelectedTags" />
+
+    <HorizontalScrollView
+        android:id="@+id/scrollChipGroupFavoritesSelectedTags"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toStartOf="@+id/btnFavoritesAddTag"
+        app:layout_constraintStart_toEndOf="@+id/btnFavoritesAvailableTags"
+        app:layout_constraintTop_toBottomOf="@id/toolbarFavorites">
+
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupFavoritesSelectedTags"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent" />
+    </HorizontalScrollView>
+
+    <ImageButton
+        android:id="@+id/btnFavoritesAddTag"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton.Icon.Sized"
+        android:contentDescription="@null"
+        app:layout_constraintBottom_toTopOf="@+id/recyclerFavoritesAvailableTags"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/scrollChipGroupFavoritesSelectedTags" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerFavoritesAvailableTags"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:alpha="0"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scrollChipGroupFavoritesSelectedTags"
+        tools:layout_height="100dp" />
+
+    <View
+        android:id="@+id/dividerFavorites"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/recyclerFavoritesAvailableTags" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerFavorites"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dividerFavorites" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
