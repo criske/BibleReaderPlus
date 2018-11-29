@@ -9,6 +9,7 @@ import android.content.Context
 import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.annotation.ColorRes
 import androidx.annotation.MenuRes
 import androidx.annotation.StringRes
@@ -61,11 +62,15 @@ inline fun Toolbar.setup(@MenuRes menu: Int? = null, @ColorRes iconsTint: Int = 
     }
 }
 
+const val ADDED_SEARCH_ID = 1337
+
 inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDefault: Boolean = false,
                           crossinline onChange: (String) -> Unit = {},
+                          crossinline onClose: () -> Unit = {},
+                          crossinline onClear: () -> Unit = {},
                           crossinline onSubmit: (String) -> Unit = {}) {
 
-    add(title).apply {
+    add(Menu.NONE, ADDED_SEARCH_ID, 10000, title).apply {
         actionView = SearchView(
             ContextThemeWrapper(
                 context,
@@ -76,6 +81,13 @@ inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDef
                 maxWidth = Int.MAX_VALUE
                 setIconifiedByDefault(false)
                 val sv = this
+                setOnCloseListener {
+                    onClose()
+                    true
+                }
+                findViewById<View>(R.id.search_close_btn).setOnClickListener {
+                    onClear()
+                }
                 setOnQueryTextListener(object : SearchView.OnQueryTextListener {
                     override fun onQueryTextSubmit(query: String): Boolean {
                         onSubmit(query)

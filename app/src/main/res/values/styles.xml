@@ -36,8 +36,8 @@
         <item name="navigationIcon">@drawable/ic_arrow_back_black_24dp</item>
     </style>
 
-    <style name="Widget.MaterialComponents.Button.OutlinedButton.Icon.Sized">
-        <item name="android:layout_width">36dp</item>
-        <item name="android:layout_height">36dp</item>
+    <style name="IconButton" parent="Widget.MaterialComponents.Button.OutlinedButton.Icon">
+        <item name="android:layout_width">48dp</item>
+        <item name="android:layout_height">48dp</item>
     </style>
 </resources>

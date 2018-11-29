@@ -11,9 +11,9 @@
         <OnClick
             motion:mode="toggle"
             motion:target="@id/btnFavoritesAvailableTags" />
-        <OnSwipe
-            motion:touchAnchorId="@id/recyclerFavorites"
-            motion:touchAnchorSide="top"
-            motion:dragDirection="dragUp" />
+        <!--<OnSwipe-->
+        <!--motion:touchAnchorId="@id/recyclerFavorites"-->
+        <!--motion:touchAnchorSide="top"-->
+        <!--motion:dragDirection="dragUp" />-->
     </Transition>
 </MotionScene>
