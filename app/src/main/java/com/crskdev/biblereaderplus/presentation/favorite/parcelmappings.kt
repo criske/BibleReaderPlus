@@ -13,33 +13,22 @@ import kotlinx.android.parcel.Parcelize
 /**
  * Created by Cristian Pela on 27.11.2018.
  */
-sealed class ParcelableFavoriteFilter {
-    @Parcelize
-    class None(val asc: Boolean = false) : ParcelableFavoriteFilter(), Parcelable
+@Parcelize
+class ParcelableFavoriteFilter(val query: String? = null,
+                               val tags: List<ParcelableTag> = emptyList(),
+                               val asc: Boolean = false) : Parcelable
 
-    @Parcelize
-    class Query(val query: String, val asc: Boolean = false) : ParcelableFavoriteFilter(),
-        Parcelable
-
-    @Parcelize
-    class ByTag(val tag: String, val asc: Boolean = false) : ParcelableFavoriteFilter(),
-        Parcelable
-}
+@Parcelize
+class ParcelableTag(val id: Int, val name: String, val color: String) : Parcelable
 
 @Suppress("IMPLICIT_CAST_TO_ANY")
-fun FavoriteFilter.parcelize(): Parcelable =
-    when (this) {
-        is FavoriteFilter.None -> ParcelableFavoriteFilter.None(asc)
-        is FavoriteFilter.Query -> ParcelableFavoriteFilter.Query(query, asc)
-        is FavoriteFilter.ByTag -> ParcelableFavoriteFilter.ByTag(tags.joinToString("@"), asc)
-    } as Parcelable
+fun FavoriteFilter.parcelize(): ParcelableFavoriteFilter =
+    ParcelableFavoriteFilter(query, tags.map {
+        ParcelableTag(it.id, it.name, it.color)
+    }, asc)
+
 
 fun ParcelableFavoriteFilter.deparcelize(): FavoriteFilter =
-    when (this) {
-        is ParcelableFavoriteFilter.None -> FavoriteFilter.None(asc)
-        is ParcelableFavoriteFilter.Query -> FavoriteFilter.Query(query, asc)
-        is ParcelableFavoriteFilter.ByTag -> FavoriteFilter.ByTag(
-            tag.split("@").map { Tag(it) },
-            asc
-        )
-    }
+    FavoriteFilter(query, tags.map {
+        Tag(it.id, it.name, it.color)
+    }, asc)

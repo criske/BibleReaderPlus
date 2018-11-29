@@ -65,7 +65,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                     Read.Verset(
                         VersetKey(id, 1, 1),
                         id,
-                        "${it::class.java.simpleName}:${versetContent().replace("a", "None")}",
+                        "$it|->:${versetContent().replace("a", "None")}",
                         r.nextBoolean(),
                         ModifiedAt("")
                     )
