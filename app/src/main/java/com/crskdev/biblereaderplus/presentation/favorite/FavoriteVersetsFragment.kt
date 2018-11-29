@@ -92,10 +92,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                     R.id.menu_action_debug_refresh -> {
                         viewModel.filter(
                             listOf(
-                                FavoriteFilter.None(),
-                                FavoriteFilter.ByTag(listOf(Tag("foo"))),
-                                FavoriteFilter.Query("foo")
-                            ).random()
+                                FavoriteFilter("foo", listOf(Tag(1, "tfoo"))),
+                                FavoriteFilter("bar", listOf(Tag(1, "tfoo"), Tag(2, "tfoo2"))),
+                                FavoriteFilter(tags = listOf(Tag(1, "tfoo")))).random()
                         )
                     }
                     R.id.menu_action_sort -> {
@@ -132,7 +131,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
 interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
-    fun filter(filter: FavoriteFilter = FavoriteFilter.None())
+    fun filter(filter: FavoriteFilter = FavoriteFilter.NONE)
 }
 
 @ObsoleteCoroutinesApi
@@ -193,7 +192,7 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
 
     override fun restore(filter: FavoriteFilter?) {
         if (savingInstanceForKillProcess == null) {
-            val safeFilter = filter ?: FavoriteFilter.None()
+            val safeFilter = filter ?: FavoriteFilter.NONE
             filter(safeFilter)
         }
     }
