@@ -12,35 +12,17 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
-import androidx.paging.PagedList
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
-import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
-import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
-import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
-import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
-import com.crskdev.biblereaderplus.presentation.util.arch.RestorableViewModel
-import com.crskdev.biblereaderplus.presentation.util.arch.interval
-import com.crskdev.biblereaderplus.presentation.util.arch.onNext
+import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.actor
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class FavoriteVersetsFragment : DaggerFragment() {
@@ -89,22 +71,14 @@ class FavoriteVersetsFragment : DaggerFragment() {
         with(toolbarFavorites) {
             setup(R.menu.menu_favorites) {
                 when (it.itemId) {
-                    R.id.menu_action_debug_refresh -> {
-                        viewModel.filter(
-                            listOf(
-                                FavoriteFilter("foo", listOf(Tag(1, "tfoo"))),
-                                FavoriteFilter("bar", listOf(Tag(1, "tfoo"), Tag(2, "tfoo2"))),
-                                FavoriteFilter(tags = listOf(Tag(1, "tfoo")))).random()
-                        )
-                    }
                     R.id.menu_action_sort -> {
-
+                        viewModel.filter(FilterSource.Order)
                     }
                 }
                 true
             }
             menu.addSearch(context, R.string.search) {
-
+                viewModel.filter(FilterSource.Query(it))
             }
         }
         //interactions with vm
@@ -129,71 +103,3 @@ class FavoriteVersetsFragment : DaggerFragment() {
 }
 
 
-interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
-    val versetsLiveData: LiveData<PagedList<Read.Verset>>
-    fun filter(filter: FavoriteFilter = FavoriteFilter.NONE)
-}
-
-@ObsoleteCoroutinesApi
-class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
-                                   private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
-                                   private val interactor: FetchFavoriteVersetsInteractor) :
-    CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
-
-    private var savingInstanceForKillProcess: FavoriteFilter? = null
-
-    override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
-        MutableLiveData<PagedList<Read.Verset>>()
-
-    private val filterLiveData: MutableLiveData<FavoriteFilter> = MutableLiveData()
-
-    init {
-        launch {
-            val filterChannel = actor<FavoriteFilter> {
-                val mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v ->
-                    val chain = charSequenceTransformerFactory
-                        .startChain(v.content)
-                        .transform(CharSequenceTransformerFactory.Type.LEAD_FIRST_LINE)
-                        .transform(
-                            CharSequenceTransformerFactory.Type.HIGHLIGHT,
-                            HighLightContentTransformer.HighlightArg("None", true)
-                        )
-                        .let {
-                            if (v.isFavorite) {
-                                it.transform(CharSequenceTransformerFactory.Type.ICON_AT_END)
-                            } else {
-                                it
-                            }
-                        }
-                    v.copy(content = chain.content)
-                }
-                interactor.request(channel, mapper) {
-                    versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().value = it
-                }
-            }
-            //throttled filter
-            filterLiveData.interval(300, TimeUnit.MILLISECONDS)
-                .onNext {
-                    savingInstanceForKillProcess = it
-                }
-                .observeForever {
-                    launch {
-                        filterChannel.send(it)
-                    }
-                }
-        }
-    }
-
-    override fun getSavingInstanceForKillProcess(): FavoriteFilter? = savingInstanceForKillProcess
-
-    override fun filter(filter: FavoriteFilter) {
-        filterLiveData.value = filter
-    }
-
-    override fun restore(filter: FavoriteFilter?) {
-        if (savingInstanceForKillProcess == null) {
-            val safeFilter = filter ?: FavoriteFilter.NONE
-            filter(safeFilter)
-        }
-    }
-}
