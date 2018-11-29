@@ -5,8 +5,9 @@
 
 package com.crskdev.biblereaderplus.domain.entity
 
-sealed class FavoriteFilter(val asc: Boolean) {
-    class None(asc: Boolean = false) : FavoriteFilter(asc)
-    class Query(val query: String, asc: Boolean = false) : FavoriteFilter(asc)
-    class ByTag(val tags: List<Tag>, asc: Boolean = false) : FavoriteFilter(asc)
+data class FavoriteFilter(val query: String? = null, val tags: List<Tag> = emptyList(), val asc: Boolean = false) {
+    companion object {
+        val NONE = FavoriteFilter()
+        val NONE_ASC = FavoriteFilter(asc = true)
+    }
 }
