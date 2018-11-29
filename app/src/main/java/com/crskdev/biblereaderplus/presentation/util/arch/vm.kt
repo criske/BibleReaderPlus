@@ -11,7 +11,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
-import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -54,6 +53,6 @@ abstract class CoroutineScopedViewModel(val mainDispatcher: CoroutineDispatcher)
 }
 
 interface RestorableViewModel<T> {
-    fun restore(filter: FavoriteFilter?)
-    fun getSavingInstanceForKillProcess(): FavoriteFilter?
+    fun restore(data: T?)
+    fun getSavingInstanceForKillProcess(): T?
 }

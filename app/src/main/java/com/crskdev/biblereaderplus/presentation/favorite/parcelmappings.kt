@@ -31,4 +31,4 @@ fun FavoriteFilter.parcelize(): ParcelableFavoriteFilter =
 fun ParcelableFavoriteFilter.deparcelize(): FavoriteFilter =
     FavoriteFilter(query, tags.map {
         Tag(it.id, it.name, it.color)
-    }, asc)
+    }.toSet(), asc)
