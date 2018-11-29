@@ -27,16 +27,23 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
+
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
+
+    val availableTagsLiveData: LiveData<List<Tag>>
+
     fun currentFilterLiveData(): LiveData<FavoriteFilter>
+
     fun filter(source: FilterSource)
+
     sealed class FilterSource {
-        class Query(val query: String) : FilterSource()
+        class Query(val query: String?) : FilterSource()
         class TagAction(val tag: Tag, val add: Boolean = true) : FilterSource()
         object Order : FilterSource()
     }
 }
 
+//TODO add tags interactor
 @ObsoleteCoroutinesApi
 class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                    private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
@@ -44,14 +51,24 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
     CoroutineScopedViewModel(mainDispatcher),
     FavoriteVersetsViewModel {
 
-    private var savingInstanceForKillProcess: FavoriteFilter? = null
-
     override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
         MutableLiveData<PagedList<Read.Verset>>()
 
-    private val filterLiveData: MutableLiveData<FavoriteFilter> =
-        MutableLiveData()
+    override val availableTagsLiveData: LiveData<List<Tag>> = MutableLiveData<List<Tag>>().apply {
+        val colors = listOf(
+            "#ffcc99", "#cc66ff", "#f7ffe6", "#80aaff", "#ff66a3", "#ffffff", "#000000"
+        )
+        val tagPrefixes = listOf(
+            "", "a", "abc", "abcd", "abdcdefg"
+        )
+        value = (0..100).map {
+            Tag(it + 1, "Tag${it + 1}${tagPrefixes.random()}", colors.random())
+        }
+    }
 
+    private var savingInstanceForKillProcess: FavoriteFilter? = null
+
+    private val filterLiveData: MutableLiveData<FavoriteFilter> = MutableLiveData()
 
     init {
         launch {

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<com.google.android.material.chip.Chip xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    app:chipStrokeWidth="1dp"
+    android:layout_height="28dp"
+    app:chipCornerRadius="5dp"
+    android:layout_margin="1dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:text="Test"
+    app:closeIconEnabled="false" />

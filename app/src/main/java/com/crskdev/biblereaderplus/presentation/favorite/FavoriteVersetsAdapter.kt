@@ -67,8 +67,6 @@ class FavoriteVersetVH(view: View,
         FavoriteVersetItemDetails(RecyclerView.NO_POSITION, null)
 
     init {
-
-        println("Parent: " + view.parent)
         with(itemView) {
             btnItemVersetFav.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
