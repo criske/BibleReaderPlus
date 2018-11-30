@@ -16,10 +16,7 @@ import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVers
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
-import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
-import com.crskdev.biblereaderplus.presentation.util.arch.RestorableViewModel
-import com.crskdev.biblereaderplus.presentation.util.arch.interval
-import com.crskdev.biblereaderplus.presentation.util.arch.onNext
+import com.crskdev.biblereaderplus.presentation.util.arch.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
@@ -30,11 +27,15 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
 
+    val searchTagsLiveData: SingleLiveEvent<List<Tag>>
+
     val availableTagsLiveData: LiveData<List<Tag>>
 
     fun currentFilterLiveData(): LiveData<FavoriteFilter>
 
     fun filter(source: FilterSource)
+
+    fun searchTagsWith(name: String)
 
     sealed class FilterSource {
         class Query(val query: String?) : FilterSource()
@@ -51,19 +52,23 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
     CoroutineScopedViewModel(mainDispatcher),
     FavoriteVersetsViewModel {
 
+    private val colors = listOf(
+        "#ffcc99", "#cc66ff", "#f7ffe6", "#80aaff", "#ff66a3", "#ffffff", "#000000"
+    )
+    private val tagPrefixes = listOf(
+        "", "a", "abc", "abcd", "abdcdefg"
+    )
+    private val tagsMock = (0..100).map {
+        Tag(it + 1, "Tag${it + 1}${tagPrefixes.random()}", colors.random())
+    }
+
+    override val searchTagsLiveData: SingleLiveEvent<List<Tag>> = SingleLiveEvent<List<Tag>>()
+
     override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
         MutableLiveData<PagedList<Read.Verset>>()
 
     override val availableTagsLiveData: LiveData<List<Tag>> = MutableLiveData<List<Tag>>().apply {
-        val colors = listOf(
-            "#ffcc99", "#cc66ff", "#f7ffe6", "#80aaff", "#ff66a3", "#ffffff", "#000000"
-        )
-        val tagPrefixes = listOf(
-            "", "a", "abc", "abcd", "abdcdefg"
-        )
-        value = (0..100).map {
-            Tag(it + 1, "Tag${it + 1}${tagPrefixes.random()}", colors.random())
-        }
+        value = tagsMock
     }
 
     private var savingInstanceForKillProcess: FavoriteFilter? = null
@@ -124,6 +129,14 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                 value.copy(tags = value.tags - source.tag)
             }
             is FilterSource.Order -> value.copy(asc = !value.asc)
+        }
+    }
+
+    override fun searchTagsWith(name: String) {
+        if (name.isEmpty()) {
+            searchTagsLiveData.value = tagsMock
+        } else {
+            searchTagsLiveData.value = tagsMock.filter { it.name.contains(name, ignoreCase = true) }
         }
     }
 

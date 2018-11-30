@@ -8,9 +8,9 @@
         motion:constraintSetEnd="@layout/fragment_search_favorite_expanded"
         motion:constraintSetStart="@layout/fragment_search_favorite_collapsed"
         motion:interpolator="linear">
-        <OnClick
-            motion:mode="toggle"
-            motion:target="@id/btnFavoritesAvailableTags" />
+        <!--<OnClick-->
+        <!--motion:mode="toggle"-->
+        <!--motion:target="@id/btnFavoritesAvailableTags" />-->
         <!--<OnSwipe-->
         <!--motion:touchAnchorId="@id/recyclerFavorites"-->
         <!--motion:touchAnchorSide="top"-->

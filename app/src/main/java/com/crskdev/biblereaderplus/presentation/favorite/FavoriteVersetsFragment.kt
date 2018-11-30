@@ -17,9 +17,9 @@ import androidx.lifecycle.Observer
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
@@ -34,8 +34,26 @@ class FavoriteVersetsFragment : DaggerFragment() {
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
 
+    private val tagsSearchBottomSheetDialogHelper by lazy {
+        TagsSearchBottomSheetDialogHelper(context!!) {
+            when (it) {
+                is TagsSearchView.Action.Query -> {
+                    viewModel.searchTagsWith(it.query)
+                }
+                is TagsSearchView.Action.Select -> {
+                    viewModel.filter(FilterSource.TagAction(it.tag, true))
+                }
+            }
+        }
+    }
+
     companion object {
         private const val KEY_SI_FILTER = "KEY_SI_FILTER"
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        lifecycle.addObserver(tagsSearchBottomSheetDialogHelper)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -71,18 +89,6 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 }
             favoritesAdapter.selectionTracker = selectionTracker
         }
-
-        //available tags recycler stuff
-        val availableTagsAdapter =
-            TagsAdapter(inflater, TagBehaviour(isSelectable = true)) { t, _ ->
-                viewModel.filter(FilterSource.TagAction(t))
-            }
-        with(recyclerFavoritesAvailableTags) {
-            adapter = availableTagsAdapter
-            layoutManager = StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.HORIZONTAL)
-        }
-
-
         //selected tags recycler stuff
         val selectedTagsAdapter = TagsAdapter(inflater, TagBehaviour(isClosable = true)) { t, _ ->
             viewModel.filter(FilterSource.TagAction(t, add = false))
@@ -97,6 +103,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 when (it.itemId) {
                     R.id.menu_action_sort -> {
                         viewModel.filter(FilterSource.Order)
+                    }
+                    R.id.menu_action_tags -> {
+                        tagsSearchBottomSheetDialogHelper.toggleBottomSheet()
                     }
                 }
                 true
@@ -113,7 +122,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
             favoritesAdapter.submitList(it)
         })
         viewModel.availableTagsLiveData.observe(this, Observer {
-            availableTagsAdapter.submitList(it)
+            tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
         })
         viewModel.currentFilterLiveData().observe(this, Observer {
             toolbarFavorites.menu
@@ -121,6 +130,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 .cast<SearchView>()
                 .setQuery(it.query, false)
             selectedTagsAdapter.submitList(it.tags.toList())
+        })
+        viewModel.searchTagsLiveData.observe(this, Observer {
+            tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
         })
         viewModel.restore(
             savedInstanceState
