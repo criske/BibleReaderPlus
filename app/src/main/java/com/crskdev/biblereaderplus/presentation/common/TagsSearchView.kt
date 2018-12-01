@@ -59,6 +59,10 @@ class TagsSearchView : LinearLayout {
         suggestionsAdapter.submitList(tags)
     }
 
+    fun setQuery(query: CharSequence) {
+        editTagSearch.setText(query)
+    }
+
     fun onSearchListener(listener: (Action) -> Unit) {
         this.listener = listener
     }

@@ -50,13 +50,16 @@ class TagsSearchBottomSheetDialogHelper(private val context: Context,
                     tagsSearchView =
                             TagsSearchView(ContextThemeWrapper(context, R.style.AppTheme)).apply {
                                 onSearchListener(listener)
+                                setContentView(
+                                    this, ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        300.dpToPx(context.resources)
+                                    )
+                                )
+                                post {
+                                    setQuery("")
+                                }
                             }
-                    setContentView(
-                        tagsSearchView!!, ViewGroup.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            300.dpToPx(context.resources)
-                        )
-                    )
                 }
         }
         sheetDialog?.show()
