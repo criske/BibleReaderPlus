@@ -121,9 +121,6 @@ class FavoriteVersetsFragment : DaggerFragment() {
             favoriteVersetKeyProvider.list = it.snapshot()
             favoritesAdapter.submitList(it)
         })
-        viewModel.availableTagsLiveData.observe(this, Observer {
-            tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
-        })
         viewModel.currentFilterLiveData().observe(this, Observer {
             toolbarFavorites.menu
                 .findItem(ADDED_SEARCH_ID).actionView

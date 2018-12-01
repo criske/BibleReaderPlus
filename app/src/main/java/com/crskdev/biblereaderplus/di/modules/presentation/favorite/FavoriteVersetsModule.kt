@@ -9,6 +9,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
+import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.*
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel
@@ -35,7 +36,8 @@ abstract class FavoriteVersetsModule {
         fun provideFavoriteVersetsViewModel(container: FavoriteVersetsFragment,
                                             dispatchers: GatewayDispatchers,
                                             context: Context,
-                                            interactor: FetchFavoriteVersetsInteractor): FavoriteVersetsViewModel =
+                                            versetsInteractor: FetchFavoriteVersetsInteractor,
+                                            tagsInteractor: FetchTagsInteractor): FavoriteVersetsViewModel =
             viewModelFromProvider(container) {
                 val transformerFactory = CharSequenceTransformerFactory(
                     EnumMap<CharSequenceTransformerFactory.Type, Lazy<CharSequenceTransformer>>(
@@ -55,7 +57,8 @@ abstract class FavoriteVersetsModule {
                 FavoriteVersetsViewModelImpl(
                     dispatchers.MAIN,
                     transformerFactory,
-                    interactor
+                    versetsInteractor,
+                    tagsInteractor
                 )
             }
 

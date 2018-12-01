@@ -5,14 +5,18 @@
 
 package com.crskdev.biblereaderplus.di.modules.domain.interactors
 
+import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractorImpl
+import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 /**
  * Created by Cristian Pela on 21.11.2018.
@@ -27,5 +31,25 @@ class InteractorsModule {
                                               repository: DocumentRepository): FetchFavoriteVersetsInteractor =
         FetchFavoriteVersetsInteractorImpl(dispatchers, repository)
 
+    //TODO real impl
+    @Provides
+    fun provideFetchTagsInteractor(dispatchers: GatewayDispatchers): FetchTagsInteractor =
+        object : FetchTagsInteractor {
+            val colors = listOf(
+                "#ffcc99", "#cc66ff", "#f7ffe6", "#80aaff", "#ff66a3", "#ffffff", "#000000"
+            )
+            val tagPrefixes = listOf(
+                "", "a", "abc", "abcd", "abdcdefg"
+            )
+            val tagsMock = (0..100).map {
+                Tag(it + 1, "Tag${it + 1}${tagPrefixes.random()}", colors.random())
+            }
+
+            override suspend fun request(query: String): List<Tag> = coroutineScope {
+                withContext(dispatchers.DEFAULT) {
+                    tagsMock.filter { it.name.contains(query, ignoreCase = true) }
+                }
+            }
+        }
 
 }
