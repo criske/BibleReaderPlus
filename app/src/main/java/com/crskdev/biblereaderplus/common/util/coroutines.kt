@@ -23,7 +23,7 @@ suspend fun <T> retry(
     var currentDelay = initialDelay
     for (i in 1..times) {
         try {
-            block()
+            return block()
         } catch (e: java.lang.Exception) {
             tracker(i, e)
         }

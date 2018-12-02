@@ -1,8 +1,12 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import com.crskdev.arch.coroutines.paging.dataSourceFactory
-import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.Read
@@ -10,13 +14,12 @@ import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.testutil.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.testutil.TestDispatchers
-import com.crskdev.biblereaderplus.testutil.classesName
 import io.mockk.MockKAnnotations
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -51,9 +54,9 @@ class FetchFavoriteVersetsInteractorImplTest {
                 (1..100)
                     .map { id ->
                         Read.Verset(
-                            VersetKey(id, 1, 1),
+                            VersetKey(id, 1, 1, "id"),
                             id,
-                            filter::class.java.simpleName ?: "",
+                            filter.toString(),
                             false,
                             ModifiedAt("")
                         )
@@ -62,11 +65,7 @@ class FetchFavoriteVersetsInteractorImplTest {
                         dataSourceFactory { InMemoryPagedListDataSource(l) }
                     }
             }
-            val filters = listOf(
-                FavoriteFilter.None,
-                FavoriteFilter.ByLastModified.ASC,
-                FavoriteFilter.ByLastModified.DESC
-            )
+            val filters = listOf(FavoriteFilter.NONE)
             val filterChannel = Channel<FavoriteFilter>()
             val mainJob = Job().apply {
                 invokeOnCompletion {
@@ -77,7 +76,7 @@ class FetchFavoriteVersetsInteractorImplTest {
             launch(mainJob) {
                 //pick the filter in content of each paged list batch, then compare
                 interactor.request(filterChannel) {
-                    assertEquals(true, filters.classesName().contains(it.first().content.cast<String>()))
+                    assertEquals(FavoriteFilter.NONE.toString(), it.first().content)
                 }
             }
             launch{
