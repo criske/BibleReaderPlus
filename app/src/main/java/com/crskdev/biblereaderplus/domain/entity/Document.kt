@@ -22,7 +22,7 @@ sealed class Read(val id: Int) {
 
     data class Verset(val key: VersetKey, val number: Int, val content: CharSequence, val isFavorite: Boolean, val modifiedAt: ModifiedAt) :
         Read(key.id) {
-        data class Key(val id: Int, val bookId: Int, val chapterId: Int)
+        data class Key(val id: Int, val bookId: Int, val chapterId: Int, val remoteKey: String)
     }
 }
 
