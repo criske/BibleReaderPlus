@@ -13,6 +13,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlin.coroutines.CoroutineContext
 
@@ -39,8 +40,8 @@ inline fun <reified V : ViewModel> viewModelFromProvider(fragment: Fragment, cro
     }).get(V::class.java)
 
 
-abstract class CoroutineScopedViewModel(val mainDispatcher: CoroutineDispatcher) : ViewModel(),
-    CoroutineScope {
+abstract class CoroutineScopedViewModel(mainDispatcher: CoroutineDispatcher = Dispatchers.Main) :
+    ViewModel(), CoroutineScope {
 
     protected val job = Job()
 
