@@ -5,6 +5,8 @@
 
 package com.crskdev.biblereaderplus.common.util
 
+import java.util.*
+
 /**
  * Created by Cristian Pela on 31.10.2018.
  */
@@ -24,5 +26,11 @@ inline fun <reified T> Any.castIf(): T? =
 infix fun Any?.ifNull(block: () -> Unit) {
     if (this == null) block()
 }
+
+inline fun <reified E : Enum<E>, V> enumMap() = EnumMap<E, V>(E::class.java)
+
+inline fun <E : Enum<E>, V> enumMap(block: MutableMap<E, V>.() -> Unit) = EnumMap<E, V>(
+    mutableMapOf<E, V>().apply(block)
+)
 
 fun Any.println() = println(this)

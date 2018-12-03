@@ -10,6 +10,7 @@ import com.crskdev.biblereaderplus.BibleReaderApplication
 import com.crskdev.biblereaderplus.di.modules.common.CommonModule
 import com.crskdev.biblereaderplus.di.modules.data.DataModule
 import com.crskdev.biblereaderplus.di.modules.domain.interactors.InteractorsModule
+import com.crskdev.biblereaderplus.di.modules.presentation.SingleActivityModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.presentation.MainActivity
 import dagger.Binds
@@ -39,7 +40,7 @@ abstract class AppModule {
     abstract fun bindContext(application: BibleReaderApplication): Context
 
     @PerActivity
-    @ContributesAndroidInjector()
+    @ContributesAndroidInjector(modules = [SingleActivityModule::class])
     abstract fun mainActivityInjector(): MainActivity
 
 }

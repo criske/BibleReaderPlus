@@ -12,6 +12,8 @@ import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.domain.entity.VersetKey
+import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
@@ -36,6 +38,8 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 
     fun searchTagsWith(name: String)
 
+    fun favoriteAction(versetKey: VersetKey, add: Boolean)
+
     sealed class FilterSource {
         class Query(val query: String?) : FilterSource()
         class TagAction(val tag: Tag, val add: Boolean = true) : FilterSource()
@@ -47,7 +51,8 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                    private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
                                    private val versetsInteractor: FetchFavoriteVersetsInteractor,
-                                   private val tagsInteractor: FetchTagsInteractor) :
+                                   private val tagsInteractor: FetchTagsInteractor,
+                                   private val favoriteInteractor: FavoriteActionsVersetInteractor) :
     CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
 
     override val searchTagsLiveData: SingleLiveEvent<List<Tag>> = SingleLiveEvent()
@@ -121,6 +126,12 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
             tagsInteractor.request(name).apply {
                 searchTagsLiveData.postValue(this)
             }
+        }
+    }
+
+    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+        launch {
+            favoriteInteractor.request(versetKey, add)
         }
     }
 

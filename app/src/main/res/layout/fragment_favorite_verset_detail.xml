@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".presentation.favorite.FavoriteVersetDetailFragment">
+
+    <TextView
+        android:id="@+id/textVersetDetail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Text"
+        tools:ignore="UnusedAttribute" />
+
+</FrameLayout>

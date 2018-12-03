@@ -11,15 +11,17 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.Observer
+import androidx.navigation.fragment.FragmentNavigatorExtras
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
+import com.crskdev.biblereaderplus.presentation.common.parcelize
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
@@ -66,12 +68,18 @@ class FavoriteVersetsFragment : DaggerFragment() {
         //versets recycler stuff
         val inflater = LayoutInflater.from(context)
         val favoritesAdapter = FavoriteVersetsAdapter(inflater) {
-            val todo = when (it) {
-                is FavoriteAction.Info -> "TODO: Show info: ${it.key}"
+            when (it) {
+                is FavoriteAction.Info -> findNavController().navigate(
+                    FavoriteVersetsFragmentDirections
+                        .actionFavoriteVersetsFragmentToFavoriteVersetDetailFragment(
+                            it.key.parcelize(),
+                            it.content.toString(), it.transitionInfo.second
+                        ),
+                    FragmentNavigatorExtras(it.transitionInfo)
+                )
                 is FavoriteAction.Add -> "TODO: Add fav: ${it.key}"
                 is FavoriteAction.Remove -> "TODO: Remove fav: ${it.key}"
             }
-            Toast.makeText(context, todo, Toast.LENGTH_SHORT).show()
         }
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
         recyclerFavorites.apply {

@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.DiffUtil
@@ -19,6 +20,7 @@ import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
+import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
 import kotlinx.android.synthetic.main.item_verset.view.*
 
 /**
@@ -47,7 +49,7 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
 
 
     override fun onBindViewHolder(holder: FavoriteVersetVH, position: Int) {
-        holder.bind(getItem(position))
+        getItem(position)?.let { holder.bind(it) } ?: holder.clear()
     }
 
     override fun onViewRecycled(holder: FavoriteVersetVH) {
@@ -59,18 +61,32 @@ class FavoriteVersetsAdapter(private val inflater: LayoutInflater,
 class FavoriteVersetVH(view: View,
                        private val selectionTracker: SelectionTracker<String>,
                        private val action: (FavoriteAction) -> Unit) :
-    RecyclerView.ViewHolder(view) {
+    BindableViewHolder<Read.Verset>(view) {
 
-    private var verset: Read.Verset? = null
+    companion object {
+        private const val TRANSITION_DETAIL_NAME_SUFFIX = "verset_transition_detail"
+    }
 
     internal var itemDetails: FavoriteVersetItemDetails =
         FavoriteVersetItemDetails(RecyclerView.NO_POSITION, null)
 
     init {
         with(itemView) {
+            textItemFavVerset.setOnLongClickListener {
+                model?.let {
+                    action(
+                        FavoriteAction.Info(
+                            it.key,
+                            it.content,
+                            textItemFavVerset to "$TRANSITION_DETAIL_NAME_SUFFIX$adapterPosition"
+                        )
+                    )
+                }
+                true
+            }
             btnItemVersetFav.setOnTouchListener { v, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
-                    verset?.let {
+                    model?.let {
                         val kind = if (it.isFavorite)
                             FavoriteAction.Remove(it.key)
                         else
@@ -82,8 +98,14 @@ class FavoriteVersetVH(view: View,
             }
             btnItemVersetInfo.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
-                    verset?.let {
-                        action(FavoriteAction.Info(it.key))
+                    model?.let {
+                        action(
+                            FavoriteAction.Info(
+                                it.key,
+                                it.content,
+                                textItemFavVerset to "$TRANSITION_DETAIL_NAME_SUFFIX$adapterPosition"
+                            )
+                        )
                     }
                 }
                 false
@@ -91,20 +113,20 @@ class FavoriteVersetVH(view: View,
         }
     }
 
-    fun bind(v: Read.Verset?) {
-        verset = v
+    override fun onBind(model: Read.Verset) {
         with(itemDetails) {
-            key = v?.key?.toString()
+            key = model.key.toString()
             adapterPosition = this@FavoriteVersetVH.adapterPosition
         }
         with(itemView) {
-            textItemFavVerset.text = v?.content
+            textItemFavVerset.text = model.content
+            ViewCompat.setTransitionName(textItemFavVerset, "detailTransition$adapterPosition")
             val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
                 btnItemVersetFav.isEnabled = this
                 btnItemVersetInfo.isEnabled = this
             }
             btnItemVersetFav.setColorFilter(
-                context.getColorCompat(if (v?.isFavorite == true) R.color.likeColor else R.color.primaryDarkColor)
+                context.getColorCompat(if (model.isFavorite) R.color.likeColor else R.color.primaryDarkColor)
             )
             isActivated = isSelected
             swipeTextItemFavVerset(isSelected)
@@ -133,12 +155,13 @@ class FavoriteVersetVH(view: View,
     }
 
     fun clear() {
-
+        itemView.textItemFavVerset.text = null
     }
 }
 
 sealed class FavoriteAction(val key: VersetKey) {
     class Add(key: VersetKey) : FavoriteAction(key)
     class Remove(key: VersetKey) : FavoriteAction(key)
-    class Info(key: VersetKey) : FavoriteAction(key)
+    class Info(key: VersetKey, val content: CharSequence, val transitionInfo: Pair<View, String>) :
+        FavoriteAction(key)
 }
