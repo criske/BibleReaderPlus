@@ -8,6 +8,9 @@ package com.crskdev.biblereaderplus.di.modules.domain.interactors
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
+import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
+import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
+import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
@@ -30,6 +33,12 @@ class InteractorsModule {
     fun provideFetchFavoriteVersetsInteractor(dispatchers: GatewayDispatchers,
                                               repository: DocumentRepository): FetchFavoriteVersetsInteractor =
         FetchFavoriteVersetsInteractorImpl(dispatchers, repository)
+
+    @Provides
+    fun providerFavoriteActionVersetInteractor(dispatchers: GatewayDispatchers,
+                                               localRepository: DocumentRepository,
+                                               remoteRepository: RemoteDocumentRepository): FavoriteActionsVersetInteractor =
+        FavoriteActionsVersetInteractorImpl(dispatchers, localRepository, remoteRepository)
 
     //TODO real impl
     @Provides

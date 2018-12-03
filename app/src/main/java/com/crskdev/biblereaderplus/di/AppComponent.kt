@@ -7,7 +7,6 @@ package com.crskdev.biblereaderplus.di
 
 import com.crskdev.biblereaderplus.BibleReaderApplication
 import com.crskdev.biblereaderplus.di.modules.AppModule
-import com.crskdev.biblereaderplus.di.modules.presentation.SingleActivityModule
 import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjector
@@ -26,7 +25,6 @@ import javax.inject.Singleton
 @Component(
     modules = [
         AndroidSupportInjectionModule::class,
-        SingleActivityModule::class,
         AppModule::class]
 )
 interface AppComponent : AndroidInjector<BibleReaderApplication> {

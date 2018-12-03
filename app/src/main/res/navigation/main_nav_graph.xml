@@ -4,8 +4,10 @@
   -->
 
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/read_nav_graph"
+    app:startDestination="@id/favoriteVersetDetailFragment"
     tools:ignore="InvalidNavigation">
 
     <fragment
@@ -21,6 +23,26 @@
         android:id="@+id/favoriteVersetsFragment"
         android:name="com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment"
         android:label="FavoriteVersetsFragment"
-        tools:layout="@layout/fragment_search_favorite" />
+        tools:layout="@layout/fragment_search_favorite">
+        <action
+            android:id="@+id/action_favoriteVersetsFragment_to_favoriteVersetDetailFragment"
+            app:destination="@id/favoriteVersetDetailFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/favoriteVersetDetailFragment"
+        android:name="com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailFragment"
+        android:label="fragment_favorite_verset_detail"
+        tools:layout="@layout/fragment_favorite_verset_detail">
+        <argument
+            android:name="key"
+            app:argType="com.crskdev.biblereaderplus.presentation.common.ParcelableVersetKey" />
+        <argument
+            android:name="content"
+            app:argType="string" />
+        <argument
+            android:name="transitionName"
+            app:argType="string"
+            app:nullable="true" />
+    </fragment>
 
 </navigation>
