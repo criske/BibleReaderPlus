@@ -36,14 +36,16 @@ class TagsSearchView : LinearLayout {
             super(context, attrs, defStyleAttr) {
         val inflater = LayoutInflater.from(context)
         inflater.inflate(R.layout.tag_search_view_layout, this, true)
+        suggestionsAdapter = TagsAdapter(
+            inflater,
+            TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)
+        ) { t, _ ->
+            listener(Action.Select(t))
+        }
         with(recyclerTagSearch) {
-            suggestionsAdapter = TagsAdapter(inflater, TagBehaviour(isSelectable = true)) { t, _ ->
-                listener(Action.Select(t))
-            }
             adapter = suggestionsAdapter
             layoutManager = StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL)
         }
-        listener(Action.Query(""))
         editTagSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) = Unit
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) =
