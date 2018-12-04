@@ -6,10 +6,11 @@
 package com.crskdev.biblereaderplus.presentation.util.view
 
 import android.content.Context
+import android.graphics.Color
 import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import android.widget.ImageView
 import androidx.annotation.ColorRes
 import androidx.annotation.MenuRes
 import androidx.annotation.StringRes
@@ -20,6 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.iterator
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.presentation.common.CollapsibleSearchView
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 
 /**
@@ -71,36 +73,42 @@ inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDef
                           crossinline onSubmit: (String) -> Unit = {}) {
 
     add(Menu.NONE, ADDED_SEARCH_ID, 10000, title).apply {
-        actionView = SearchView(
+        actionView = CollapsibleSearchView(
             ContextThemeWrapper(
                 context,
-                R.style.ThemeOverlay_MaterialComponents_Light_TintedIcon
+                R.style.AppTheme
             )
-        )
-            .apply {
-                maxWidth = Int.MAX_VALUE
-                setIconifiedByDefault(false)
-                val sv = this
-                setOnCloseListener {
-                    onClose()
-                    true
-                }
-                findViewById<View>(R.id.search_close_btn).setOnClickListener {
+        ).apply {
+            setIconifiedByDefault(false)
+            val sv = this
+            setOnCloseListener {
+                onClose()
+                true
+            }
+            findViewById<ImageView>(R.id.search_mag_icon).apply {
+                setImageResource(R.drawable.ic_search_black_24dp)
+                setColorFilter(Color.GRAY)
+            }
+            findViewById<ImageView>(R.id.search_close_btn).apply {
+                setImageResource(R.drawable.ic_clear_black_24dp)
+                setColorFilter(Color.GRAY)
+                setOnClickListener {
                     onClear()
                 }
-                setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-                    override fun onQueryTextSubmit(query: String): Boolean {
-                        onSubmit(query)
-                        sv.clearFocus()
-                        return true
-                    }
-
-                    override fun onQueryTextChange(newText: String): Boolean {
-                        onChange(newText)
-                        return true
-                    }
-                })
             }
+            setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String): Boolean {
+                    onSubmit(query)
+                    sv.clearFocus()
+                    return true
+                }
+
+                override fun onQueryTextChange(newText: String): Boolean {
+                    onChange(newText)
+                    return true
+                }
+            })
+        }
         icon = ContextCompat.getDrawable(context, R.drawable.ic_search_black_24dp)
         setShowAsAction(MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW.or(MenuItem.SHOW_AS_ACTION_ALWAYS))
         if (expandedByDefault) {
