@@ -19,6 +19,10 @@ abstract class BindableViewHolder<M>(v: View) : RecyclerView.ViewHolder(v) {
     @Suppress("MemberVisibilityCanBePrivate")
     protected var model: M? = null
 
+    protected val context by lazy {
+        itemView.context
+    }
+
     fun bind(model: Any) {
         this.model = model as M
         onBind(model)
@@ -36,6 +40,7 @@ fun LinearLayoutManager.smoothScrollToPosition(
     smoothScroller.targetPosition = position
     this.startSmoothScroll(smoothScroller)
 }
+
 
 inline fun RecyclerView.addSpaceItemDecoration(index: Int = -1, crossinline block: Rect.() -> Unit) {
     addItemDecoration(object : RecyclerView.ItemDecoration() {

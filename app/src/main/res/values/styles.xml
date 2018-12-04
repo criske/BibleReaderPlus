@@ -16,6 +16,7 @@
         <item name="colorPrimary">@color/primaryColor</item>
         <item name="colorPrimaryDark">@color/primaryDarkColor</item>
         <item name="colorAccent">@color/secondaryColor</item>
+        <item name="searchViewStyle">@style/SearchView</item>
     </style>
 
     <style name="AppToolbar">
@@ -39,5 +40,9 @@
     <style name="IconButton" parent="Widget.MaterialComponents.Button.OutlinedButton.Icon">
         <item name="android:layout_width">48dp</item>
         <item name="android:layout_height">48dp</item>
+    </style>
+
+    <style name="SearchView" parent="Widget.AppCompat.SearchView">
+        <item name="android:maxWidth">10000dp</item>
     </style>
 </resources>

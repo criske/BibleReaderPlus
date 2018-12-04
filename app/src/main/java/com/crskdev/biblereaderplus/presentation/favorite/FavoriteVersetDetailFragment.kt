@@ -23,7 +23,11 @@ class FavoriteVersetDetailFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        postponeEnterTransition();
         sharedElementEnterTransition = DetailsTransition().apply {
+            duration = 300
+        }
+        sharedElementReturnTransition = DetailsTransition().apply {
             duration = 300
         }
     }
@@ -35,7 +39,6 @@ class FavoriteVersetDetailFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        postponeEnterTransition()
         val args = FavoriteVersetDetailFragmentArgs.fromBundle(arguments)
         ViewCompat.setTransitionName(view, args.transitionName)
         textVersetDetail.text = args.content

@@ -14,6 +14,5 @@
         android:id="@+id/menu_action_tags"
         android:icon="@drawable/ic_bookmark_border_black_24dp"
         android:title="@string/tag"
-        app:showAsAction="always" />
-
+        app:showAsAction="ifRoom" />
 </menu>
