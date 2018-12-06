@@ -3,35 +3,61 @@
   ~ Copyright (c)  Pela Cristian 2018.
   -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp"
-    tools:parentTag="android.widget.LinearLayout">
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    android:layout_height="wrap_content">
 
-    <com.google.android.material.textfield.TextInputLayout
+    <EditText
+        android:id="@+id/editTagSearch"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp">
+        android:layout_height="56dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:autofillHints="@null"
+        android:hint="@string/tag"
+        android:inputType="text"
+        android:maxLines="1"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        tools:ignore="UnusedAttribute"
+        tools:text="Test" />
 
-        <EditText
-            android:id="@+id/editTagSearch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:autofillHints="@null"
-            android:hint="@string/tag"
-            android:inputType="text"
-            android:maxLines="1"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
-            tools:ignore="UnusedAttribute"
-            tools:text="Test" />
-    </com.google.android.material.textfield.TextInputLayout>
+    <ImageView
+        android:id="@+id/btnTagSearchAdd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toBottomOf="@+id/editTagSearch"
+        app:layout_constraintEnd_toEndOf="@+id/editTagSearch"
+        app:layout_constraintTop_toTopOf="@+id/editTagSearch"
+        app:srcCompat="@drawable/ic_add_black_24dp" />
+
+    <ImageView
+        android:id="@+id/btnTagSearchClear"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="2dp"
+        app:layout_constraintBottom_toBottomOf="@+id/editTagSearch"
+        app:layout_constraintEnd_toStartOf="@+id/btnTagSearchAdd"
+        app:layout_constraintTop_toTopOf="@+id/editTagSearch"
+        app:srcCompat="@drawable/ic_clear_black_24dp" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerTagSearch"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/editTagSearch" />
+</merge>

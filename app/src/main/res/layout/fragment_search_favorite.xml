@@ -22,16 +22,18 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:title="@string/app_name"
-            android:theme="@style/AppToolbar"
+            android:theme="@style/AppToolbar.Nav"
             tools:targetApi="lollipop" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/scrollChipGroupFavoritesSelectedTags"
+            android:id="@+id/recyclerFavoritesSelectedTags"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
+            android:layout_marginBottom="4dp"
             android:elevation="2dp"
-            android:paddingBottom="8dp"
+            android:visibility="gone"
+            tools:visibility="visible"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             tools:ignore="UnusedAttribute" />
 

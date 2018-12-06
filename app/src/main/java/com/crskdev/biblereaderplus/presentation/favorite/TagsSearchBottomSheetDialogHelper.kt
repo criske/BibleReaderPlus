@@ -16,6 +16,7 @@ import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
 /**
  * Created by Cristian Pela on 30.11.2018.
@@ -50,12 +51,17 @@ class TagsSearchBottomSheetDialogHelper(private val context: Context,
                     tagsSearchView =
                             TagsSearchView(ContextThemeWrapper(context, R.style.AppTheme)).apply {
                                 onSearchListener(listener)
+                                val sheetHeight = 400
                                 setContentView(
                                     this, ViewGroup.LayoutParams(
                                         ViewGroup.LayoutParams.MATCH_PARENT,
-                                        300.dpToPx(context.resources)
+                                        sheetHeight.dpToPx(resources)
                                     )
                                 )
+                                recyclerTagSearch.layoutParams =
+                                        recyclerTagSearch.layoutParams.apply {
+                                            height = (sheetHeight - 65).dpToPx(resources)
+                                        }
                                 post {
                                     setQuery("")
                                 }
