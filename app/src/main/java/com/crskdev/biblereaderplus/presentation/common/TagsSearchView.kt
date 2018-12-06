@@ -11,7 +11,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
-import android.widget.LinearLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
@@ -23,7 +23,7 @@ import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 /**
  * Created by Cristian Pela on 30.11.2018.
  */
-class TagsSearchView : LinearLayout {
+class TagsSearchView : ConstraintLayout {
 
     private var listener: (Action) -> Unit = { _ -> }
 
@@ -55,6 +55,9 @@ class TagsSearchView : LinearLayout {
                 listener(Action.Query(s.toString()))
             }
         })
+        btnTagSearchClear.setOnClickListener {
+            editTagSearch.setText("")
+        }
     }
 
     fun submitSuggestions(tags: List<Tag>) {
@@ -68,7 +71,6 @@ class TagsSearchView : LinearLayout {
     fun onSearchListener(listener: (Action) -> Unit) {
         this.listener = listener
     }
-
 
     override fun onRestoreInstanceState(state: Parcelable?) {
         super.onRestoreInstanceState(state)

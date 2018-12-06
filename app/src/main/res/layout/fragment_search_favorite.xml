@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:title="@string/app_name"
-            android:theme="@style/AppToolbar"
+            android:theme="@style/AppToolbar.Nav"
             tools:targetApi="lollipop" />
 
         <androidx.recyclerview.widget.RecyclerView
