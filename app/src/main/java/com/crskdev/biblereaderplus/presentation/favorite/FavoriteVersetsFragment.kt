@@ -12,6 +12,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.navigation.fragment.FragmentNavigatorExtras
 import androidx.navigation.fragment.findNavController
@@ -101,7 +102,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
         val selectedTagsAdapter = TagsAdapter(inflater, TagBehaviour(isClosable = true)) { t, _ ->
             viewModel.filter(FilterSource.TagAction(t, add = false))
         }
-        with(scrollChipGroupFavoritesSelectedTags) {
+        with(recyclerFavoritesSelectedTags) {
             adapter = selectedTagsAdapter
         }
 
@@ -134,6 +135,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 .findItem(ADDED_SEARCH_ID).actionView
                 .cast<SearchView>()
                 .setQuery(it.query, false)
+            recyclerFavoritesSelectedTags.isVisible = it.tags.isNotEmpty()
             selectedTagsAdapter.submitList(it.tags.toList())
         })
         viewModel.searchTagsLiveData.observe(this, Observer {
