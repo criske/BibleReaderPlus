@@ -6,18 +6,17 @@
 package com.crskdev.biblereaderplus.presentation.common
 
 import android.content.Context
-import android.os.Parcelable
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.favorite.TagBehaviour
 import com.crskdev.biblereaderplus.presentation.favorite.TagsAdapter
-import kotlinx.android.parcel.Parcelize
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
 /**
@@ -32,14 +31,12 @@ class TagsSearchView : ConstraintLayout {
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
+    //@formatter:off
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
             super(context, attrs, defStyleAttr) {
         val inflater = LayoutInflater.from(context)
         inflater.inflate(R.layout.tag_search_view_layout, this, true)
-        suggestionsAdapter = TagsAdapter(
-            inflater,
-            TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)
-        ) { t, _ ->
+        suggestionsAdapter = TagsAdapter(inflater, TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)) { t, _ ->
             listener(Action.Select(t))
         }
         with(recyclerTagSearch) {
@@ -52,15 +49,24 @@ class TagsSearchView : ConstraintLayout {
                 Unit
 
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                listener(Action.Query(s.toString()))
+                btnTagSearchClear.isVisible = s.isNotBlank()
+                ensurePaddingEnd()
+                listener(Action.Query(s.toString().trim()))
             }
         })
         btnTagSearchClear.setOnClickListener {
             editTagSearch.setText("")
         }
+        btnTagSearchAdd.setOnClickListener {
+            listener(Action.Add(editTagSearch.text.toString()))
+        }
     }
+    //@formatter:on
 
     fun submitSuggestions(tags: List<Tag>) {
+        btnTagSearchAdd.isVisible = tags.isEmpty() &&
+                editTagSearch.let { it.text.isNotBlank() && it.length() > 2 }
+        ensurePaddingEnd()
         suggestionsAdapter.submitList(tags)
     }
 
@@ -68,19 +74,22 @@ class TagsSearchView : ConstraintLayout {
         editTagSearch.setText(query)
     }
 
-    fun onSearchListener(listener: (Action) -> Unit) {
-        this.listener = listener
+    private fun ensurePaddingEnd() {
+        //TODO: should really calculate or leave it hardcoded from xml?
+//        val clearSpace = btnTagSearchClear.takeIf { it.isVisible }
+//            ?.let { it.width + it.marginEnd + it.marginStart } ?: 0
+//        val addSpace = btnTagSearchAdd.takeIf { it.isVisible }
+//            ?.let { it.width + it.marginEnd + it.marginStart } ?: 0
+//        editTagSearch.setPadding(left, top, clearSpace + addSpace, bottom)
     }
 
-    override fun onRestoreInstanceState(state: Parcelable?) {
-        super.onRestoreInstanceState(state)
+    fun onSearchListener(listener: (Action) -> Unit) {
+        this.listener = listener
     }
 
     sealed class Action {
         class Select(val tag: Tag) : Action()
         class Query(val query: String) : Action()
+        class Add(val tagName: String) : Action()
     }
-
-    @Parcelize
-    private class State(val query: String) : Parcelable
 }

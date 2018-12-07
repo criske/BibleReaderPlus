@@ -7,24 +7,25 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <EditText
+        android:paddingEnd="50dp"
         android:id="@+id/editTagSearch"
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         android:autofillHints="@null"
         android:hint="@string/tag"
         android:inputType="text"
         android:maxLines="1"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Subtitle1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:ignore="UnusedAttribute"
         tools:text="Test" />
 
@@ -33,20 +34,24 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/editTagSearch"
         app:layout_constraintEnd_toEndOf="@+id/editTagSearch"
         app:layout_constraintTop_toTopOf="@+id/editTagSearch"
-        app:srcCompat="@drawable/ic_add_black_24dp" />
+        app:srcCompat="@drawable/ic_add_black_24dp"
+        tools:visibility="visible" />
 
     <ImageView
         android:id="@+id/btnTagSearchClear"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="2dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/editTagSearch"
         app:layout_constraintEnd_toStartOf="@+id/btnTagSearchAdd"
         app:layout_constraintTop_toTopOf="@+id/editTagSearch"
-        app:srcCompat="@drawable/ic_clear_black_24dp" />
+        app:srcCompat="@drawable/ic_clear_black_24dp"
+        tools:visibility="visible" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerTagSearch"
