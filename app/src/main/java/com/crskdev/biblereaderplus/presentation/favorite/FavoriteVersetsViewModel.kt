@@ -18,7 +18,6 @@ import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVers
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
-import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
 import com.crskdev.biblereaderplus.presentation.util.arch.*
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ObsoleteCoroutinesApi
@@ -40,11 +39,13 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 
     fun favoriteAction(versetKey: VersetKey, add: Boolean)
 
-    sealed class FilterSource {
-        class Query(val query: String?) : FilterSource()
-        class TagAction(val tag: Tag, val add: Boolean = true) : FilterSource()
-        object Order : FilterSource()
-    }
+    fun createTag(tagName: String)
+}
+
+sealed class FilterSource {
+    class Query(val query: String?) : FilterSource()
+    class TagAction(val tag: Tag, val add: Boolean = true) : FilterSource()
+    object Order : FilterSource()
 }
 
 @ObsoleteCoroutinesApi
@@ -137,10 +138,15 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
 
     override fun currentFilterLiveData(): LiveData<FavoriteFilter> = filterLiveData
 
+    override fun createTag(tagName: String) {
+        //TODO create tag
+    }
+
     override fun restore(data: FavoriteFilter?) {
         if (savingInstanceForKillProcess == null) {
             val filter = data ?: FavoriteFilter.NONE
             filterLiveData.value = filter
         }
     }
+
 }

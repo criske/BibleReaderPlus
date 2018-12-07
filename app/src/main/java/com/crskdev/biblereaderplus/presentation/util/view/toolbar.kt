@@ -10,8 +10,10 @@ import android.graphics.Color
 import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.ImageView
 import androidx.annotation.ColorRes
+import androidx.annotation.IdRes
 import androidx.annotation.MenuRes
 import androidx.annotation.StringRes
 import androidx.appcompat.view.ContextThemeWrapper
@@ -116,3 +118,6 @@ inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDef
         }
     }
 }
+
+inline fun <reified V : View> Menu.findActionView(@IdRes itemId: Int): V =
+    findItem(itemId).actionView as V
