@@ -23,7 +23,7 @@ import javax.inject.Inject
  */
 interface FetchFavoriteVersetsInteractor {
     suspend fun request(filter: ReceiveChannel<FavoriteFilter>,
-                        mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v -> v },
+                        decorator: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v -> v },
                         response: (PagedList<Read.Verset>) -> Unit)
 }
 
@@ -34,7 +34,7 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
     private val repository: DocumentRepository) : FetchFavoriteVersetsInteractor {
 
     override suspend fun request(filter: ReceiveChannel<FavoriteFilter>,
-                                 mapper: (FavoriteFilter, Read.Verset) -> Read.Verset,
+                                 decorator: (FavoriteFilter, Read.Verset) -> Read.Verset,
                                  response: (PagedList<Read.Verset>) -> Unit) =
         coroutineScope {
             val sendChannel = actor<PagedList<Read.Verset>> {
@@ -51,13 +51,7 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                             job = Job()
                             launch(job) {
                                 repository.favorites(it)
-                                    .mapByPage { l ->
-
-                                        val t = Thread.currentThread()
-                                        runBlocking(job + dispatchers.UNCONFINED) {
-                                            l.map { v -> mapper(it, v) }
-                                        }
-                                    }
+                                    .mapByPage { l -> l.map { v -> decorator(it, v) } }
                                     .setupPagedListBuilder {
                                         config(10)
                                         fetchDispatcher = dispatchers.DEFAULT
