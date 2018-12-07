@@ -25,6 +25,8 @@ interface DocumentRepository {
     //local
     fun getVerset(versetKey: VersetKey): SelectedVerset?
 
+    suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit)
+
     //remote?
     fun getVersetProps(versetKey: VersetKey): VersetProps
 

@@ -20,13 +20,12 @@ import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.common.parcelize
-import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.FilterSource
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
+import com.crskdev.biblereaderplus.presentation.util.view.findActionView
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
@@ -45,6 +44,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 }
                 is TagsSearchView.Action.Select -> {
                     viewModel.filter(FilterSource.TagAction(it.tag, true))
+                }
+                is TagsSearchView.Action.Add -> {
+                    viewModel.createTag(it.tagName)
                 }
             }
         }
@@ -78,8 +80,8 @@ class FavoriteVersetsFragment : DaggerFragment() {
                         ),
                     FragmentNavigatorExtras(it.transitionInfo)
                 )
-                is FavoriteAction.Add -> "TODO: Add fav: ${it.key}"
-                is FavoriteAction.Remove -> "TODO: Remove fav: ${it.key}"
+                is FavoriteAction.Add -> viewModel.favoriteAction(it.key, true)
+                is FavoriteAction.Remove -> viewModel.favoriteAction(it.key, false)
             }
         }
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
@@ -119,9 +121,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 }
                 true
             }
-            menu.addSearch(context, R.string.search, onClear = {
-                viewModel.filter(FilterSource.Query(null))
-            }) {
+            menu.addSearch(context, R.string.search, onClear = { viewModel.filter(FilterSource.Query(null)) }) {
                 viewModel.filter(FilterSource.Query(it))
             }
         }
@@ -131,9 +131,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
             favoritesAdapter.submitList(it)
         })
         viewModel.currentFilterLiveData().observe(this, Observer {
-            toolbarFavorites.menu
-                .findItem(ADDED_SEARCH_ID).actionView
-                .cast<SearchView>()
+            toolbarFavorites
+                .menu
+                .findActionView<SearchView>(ADDED_SEARCH_ID)
                 .setQuery(it.query, false)
             recyclerFavoritesSelectedTags.isVisible = it.tags.isNotEmpty()
             selectedTagsAdapter.submitList(it.tags.toList())

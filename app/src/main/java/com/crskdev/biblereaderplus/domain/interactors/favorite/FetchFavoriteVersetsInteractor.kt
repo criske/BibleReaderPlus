@@ -52,7 +52,9 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                             launch(job) {
                                 repository.favorites(it)
                                     .mapByPage { l ->
-                                        runBlocking(job + dispatchers.DEFAULT) {
+
+                                        val t = Thread.currentThread()
+                                        runBlocking(job + dispatchers.UNCONFINED) {
                                             l.map { v -> mapper(it, v) }
                                         }
                                     }

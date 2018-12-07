@@ -11,9 +11,14 @@ import com.crskdev.biblereaderplus.common.util.println
 /**
  * Created by Cristian Pela on 12.11.2018.
  */
-class InMemoryPagedListDataSource<T>(private val list: List<T>) : PositionalDataSource<T>() {
+class InMemoryPagedListDataSource<T>(private val listProvider: () -> List<T>) : PositionalDataSource<T>() {
+
+    companion object {
+        fun <T> justWith(list: List<T>): InMemoryPagedListDataSource<T> = InMemoryPagedListDataSource { list }
+    }
 
     override fun loadRange(params: LoadRangeParams, callback: LoadRangeCallback<T>) {
+        val list = listProvider()
         val endPosition =
             (params.startPosition + params.loadSize).coerceAtMost(list.size)
         val subList = list.subList(params.startPosition, endPosition)
@@ -22,6 +27,7 @@ class InMemoryPagedListDataSource<T>(private val list: List<T>) : PositionalData
     }
 
     override fun loadInitial(params: LoadInitialParams, callback: LoadInitialCallback<T>) {
+        val list = listProvider()
         val totalCount = list.size
         val firstLoadPosition =
             PositionalDataSource.computeInitialLoadPosition(
