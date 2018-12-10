@@ -11,4 +11,4 @@ data class SelectedVerset(val key: VersetKey,
                           val number: Int,
                           val contents: CharSequence,
                           val isFavorite: Boolean = false,
-                          val tags: List<String> = emptyList())
+                          val tags: List<Tag> = emptyList())

@@ -8,7 +8,6 @@ package com.crskdev.biblereaderplus.presentation.favorite
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
@@ -87,13 +86,14 @@ class FavoriteVersetsFragment : DaggerFragment() {
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
         recyclerFavorites.apply {
             adapter = favoritesAdapter
-            val selectionTracker = SelectionTracker.Builder<String>(
-                "fav-verset-select-tracker",
-                this,
-                favoriteVersetKeyProvider,
-                FavoriteVersetLookup(this),
-                StorageStrategy.createStringStorage()
-            ).withGestureTooltypes(MotionEvent.TOOL_TYPE_FINGER)
+            val selectionTracker = SelectionTracker
+                .Builder<String>(
+                    "fav-verset-select-tracker",
+                    this,
+                    favoriteVersetKeyProvider,
+                    FavoriteVersetLookup(this),
+                    StorageStrategy.createStringStorage()
+                )
                 .withSelectionPredicate(SelectionPredicates.createSelectSingleAnything())
                 .build().apply {
                     onRestoreInstanceState(savedInstanceState)
@@ -121,7 +121,10 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 }
                 true
             }
-            menu.addSearch(context, R.string.search, onClear = { viewModel.filter(FilterSource.Query(null)) }) {
+            menu.addSearch(
+                context,
+                R.string.search,
+                onClear = { viewModel.filter(FilterSource.Query(null)) }) {
                 viewModel.filter(FilterSource.Query(it))
             }
         }

@@ -89,7 +89,7 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                     v.copy(content = chain.content)
                 }
                 versetsInteractor.request(channel, mapper) {
-                    versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().value = it
+                    versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().postValue(it)
                 }
             }
             //throttled filter

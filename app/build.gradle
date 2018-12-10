@@ -94,6 +94,7 @@ dependencies {
     testImplementation "androidx.arch.core:core-testing:$rootProject.archTestVersion"
 
     implementation 'com.github.criske:ArchCoroutinesPaging:v1.0.0'
+    implementation 'com.github.criske:TitledLayout:1.0.1'
 }
 
 tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {

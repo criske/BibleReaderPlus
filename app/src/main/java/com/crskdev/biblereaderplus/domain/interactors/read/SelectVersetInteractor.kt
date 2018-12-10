@@ -1,14 +1,23 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.read
 
 import com.crskdev.biblereaderplus.common.util.launchIgnoreThrow
 import com.crskdev.biblereaderplus.common.util.retry
 import com.crskdev.biblereaderplus.common.util.sendAndClose
 import com.crskdev.biblereaderplus.domain.entity.SelectedVerset
+import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
-import kotlinx.coroutines.*
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -31,6 +40,7 @@ interface SelectVersetInteractor {
 
 }
 
+//TODO remove/or update this --> there is already FavoriteVersetInteractor in package interactors/favorite. plus tags will be all locally so need for partial results anymore
 @ObsoleteCoroutinesApi
 class SelectVersetInteractorImpl(
     private val dispatchers: GatewayDispatchers,
@@ -79,7 +89,9 @@ class SelectVersetInteractorImpl(
 
                 sender.sendAndClose(
                     SelectVersetInteractor.Response.OK(
-                        verset.copy(isFavorite = props.isFavorite, tags = props.tags)
+                        verset.copy(
+                            isFavorite = props.isFavorite,
+                            tags = props.tags.map { Tag(0, it) })
                     )
                 )
                 Unit

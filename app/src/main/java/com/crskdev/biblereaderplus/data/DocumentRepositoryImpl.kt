@@ -14,8 +14,11 @@ import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSo
 import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import java.lang.Thread.sleep
 import java.util.*
 
 /**
@@ -96,7 +99,9 @@ class DocumentRepositoryImpl : DocumentRepository {
             }
         }
         val liveDataObserver = Observer<List<Read.Verset>> {
-            actor.offer(it.first { it.key == versetKey })
+            launch(Dispatchers.Default) {
+                actor.send(it.first { it.key == versetKey })
+            }
         }
         versetsLiveData
             .filter { it?.any { it.key == versetKey } ?: false }
@@ -124,14 +129,15 @@ class DocumentRepositoryImpl : DocumentRepository {
                 it
             }
         })
+        sleep(200)//gib time for da value to settle
         dataSource?.invalidate()
     }
 
     @Synchronized
     override fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset> {
-        versetsLiveData.postValue(versetsLiveData.value?.map {
+        versetsLiveData.value = versetsLiveData.value?.map {
             it.copy(content = "$filter|->:${it.content}")
-        })
+        }
         return dataSourceFactory {
             InMemoryPagedListDataSource {
                 versetsLiveData.value ?: emptyList()

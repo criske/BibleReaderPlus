@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.domain.gateway
 
+import androidx.annotation.MainThread
 import androidx.paging.DataSource
 import androidx.paging.PagedList
 import com.crskdev.biblereaderplus.domain.entity.*
@@ -25,6 +26,7 @@ interface DocumentRepository {
     //local
     fun getVerset(versetKey: VersetKey): SelectedVerset?
 
+    @MainThread
     suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit)
 
     //remote?
