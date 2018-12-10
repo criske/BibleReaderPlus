@@ -94,7 +94,7 @@ class FavoriteVersetVH(view: View,
                         action(kind)
                     }
                 }
-                false
+                true
             }
             btnItemVersetInfo.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {

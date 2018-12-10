@@ -47,5 +47,8 @@ class FavoriteVersetItemDetails(var adapterPosition: Int, var key: String?) :
 
     override fun getPosition(): Int = adapterPosition
 
-    override fun inSelectionHotspot(e: MotionEvent): Boolean = true
+    override fun inSelectionHotspot(e: MotionEvent): Boolean {
+        //TODO better hotspot
+        return e.x < 200f
+    }
 }

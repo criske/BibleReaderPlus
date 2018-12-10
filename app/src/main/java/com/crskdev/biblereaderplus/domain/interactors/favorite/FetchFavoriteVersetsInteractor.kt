@@ -42,9 +42,12 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                     response(r)
                 }
             }
+            sendChannel.invokeOnClose {
+                println("offered not anymore $it")
+            }
             launch(SupervisorJob()) {
                 var job = Job()
-                while (isActive) {
+                while (!sendChannel.isClosedForSend) {
                     select<Unit> {
                         filter.onReceive { it ->
                             job.cancel()
