@@ -19,7 +19,12 @@ import javax.inject.Inject
  */
 interface FavoriteActionsVersetInteractor {
 
-    suspend fun request(versetKey: VersetKey, addToFavorites: Boolean)
+    suspend fun request(versetKey: VersetKey, action: Action)
+
+    sealed class Action {
+        class FavoriteAction(val add: Boolean) : Action()
+        class TagAction(val tagId: String, val add: Boolean) : Action()
+    }
 
 }
 
@@ -29,14 +34,25 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
     private val remoteRepository: RemoteDocumentRepository) : FavoriteActionsVersetInteractor {
 
     @ObsoleteCoroutinesApi
-    override suspend fun request(versetKey: VersetKey, addToFavorites: Boolean) =
+    override suspend fun request(versetKey: VersetKey, action: FavoriteActionsVersetInteractor.Action) =
         coroutineScope {
-            launch(dispatchers.DEFAULT) {
-                localRepository.favoriteAction(versetKey, addToFavorites)
+            when (action) {
+                is FavoriteActionsVersetInteractor.Action.FavoriteAction -> {
+                    launch(dispatchers.DEFAULT) {
+                        localRepository.favoriteAction(versetKey, action.add)
+                    }
+                    launch(dispatchers.IO) {
+                        remoteRepository.favoriteAction(versetKey, action.add)
+                    }
+                }
+                is FavoriteActionsVersetInteractor.Action.TagAction -> {
+                    launch(dispatchers.DEFAULT) {
+                        localRepository.tagToVersetAction(versetKey, action.tagId, action.add)
+                    }
+                    //todo: support for remote
+                }
             }
-            launch(dispatchers.IO) {
-                remoteRepository.favoriteAction(versetKey, addToFavorites)
-            }
+
             Unit
         }
 

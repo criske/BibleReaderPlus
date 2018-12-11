@@ -12,6 +12,7 @@ import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteVersetInteractor
+import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.map
@@ -23,20 +24,29 @@ import kotlinx.coroutines.launch
  */
 interface FavoriteVersetDetailViewModel {
 
-    val versetDetailLiveData: LiveData<SelectedVersetUI>
-
-    val tagsLiveData: LiveData<List<Tag>>
-
     val versetKey: VersetKey
 
+    val versetDetailLiveData: LiveData<SelectedVersetUI>
+
+    val versetTagsLiveData: LiveData<List<Tag>>
+
+    val searchTagsLiveData: LiveData<List<Tag>>
+
     fun addToFavorite(add: Boolean)
+
+    fun searchTagsWith(name: String?)
+
+    fun createTag(tagName: String)
+
+    fun tagVersetAction(tagId: String, add: Boolean)
 
 }
 
 class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
                                         private val favoriteActionsVersetInteractor: FavoriteActionsVersetInteractor,
                                         private val favoriteVersetInteractor: FavoriteVersetInteractor,
-                                        private val charSequenceTransformerFactory: CharSequenceTransformerFactory)
+                                        private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
+                                        private val tagsInteractor: FetchTagsInteractor)
     : CoroutineScopedViewModel(Dispatchers.Main), FavoriteVersetDetailViewModel {
 
     private val selectedVersetLiveData: MutableLiveData<SelectedVerset> = MutableLiveData()
@@ -52,9 +62,12 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
             it.isFavorite
         )
     }
-    override val tagsLiveData: LiveData<List<Tag>> = selectedVersetLiveData.map {
+
+    override val versetTagsLiveData: LiveData<List<Tag>> = selectedVersetLiveData.map {
         it.tags
     }
+
+    override val searchTagsLiveData: LiveData<List<Tag>> = MutableLiveData<List<Tag>>()
 
     init {
         launch {
@@ -66,9 +79,34 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
 
     override fun addToFavorite(add: Boolean) {
         launch {
-            favoriteActionsVersetInteractor.request(versetKey, add)
+            favoriteActionsVersetInteractor.request(
+                versetKey,
+                FavoriteActionsVersetInteractor.Action.FavoriteAction(add)
+            )
         }
     }
+
+    override fun tagVersetAction(tagId: String, add: Boolean) {
+        launch {
+            favoriteActionsVersetInteractor.request(
+                versetKey,
+                FavoriteActionsVersetInteractor.Action.TagAction(tagId, add)
+            )
+        }
+    }
+
+    override fun searchTagsWith(name: String?) {
+        launch {
+            tagsInteractor.request(name).apply {
+                (searchTagsLiveData as MutableLiveData<List<Tag>>).postValue(this)
+            }
+        }
+    }
+
+    override fun createTag(tagName: String) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
 
 }
 

@@ -19,7 +19,7 @@ class ParcelableFavoriteFilter(val query: String? = null,
                                val asc: Boolean = false) : Parcelable
 
 @Parcelize
-class ParcelableTag(val id: Int, val name: String, val color: String) : Parcelable
+class ParcelableTag(val id: String, val name: String, val color: String) : Parcelable
 
 @Suppress("IMPLICIT_CAST_TO_ANY")
 fun FavoriteFilter.parcelize(): ParcelableFavoriteFilter =

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menu_action_tags"
+        android:icon="@drawable/ic_bookmark_border_black_24dp"
+        android:title="@string/tag"
+        app:showAsAction="ifRoom" />
+</menu>
