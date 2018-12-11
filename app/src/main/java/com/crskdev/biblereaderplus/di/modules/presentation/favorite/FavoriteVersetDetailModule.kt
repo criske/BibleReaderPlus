@@ -8,6 +8,7 @@ package com.crskdev.biblereaderplus.di.modules.presentation.favorite
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteVersetInteractor
+import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.deparcelize
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailFragment
@@ -29,6 +30,7 @@ class FavoriteVersetDetailModule {
     fun provideFavoriteVersetsViewModel(container: FavoriteVersetDetailFragment,
                                         favoriteActionsVersetInteractor: FavoriteActionsVersetInteractor,
                                         favoriteVersetInteractor: FavoriteVersetInteractor,
+                                        fetchTagsInteractor: FetchTagsInteractor,
                                         charSequenceTransformerFactory: CharSequenceTransformerFactory)
             : FavoriteVersetDetailViewModel =
         viewModelFromProvider(container) {
@@ -36,7 +38,8 @@ class FavoriteVersetDetailModule {
                 FavoriteVersetDetailFragmentArgs.fromBundle(container.arguments).key.deparcelize(),
                 favoriteActionsVersetInteractor,
                 favoriteVersetInteractor,
-                charSequenceTransformerFactory
+                charSequenceTransformerFactory,
+                fetchTagsInteractor
             )
         }
 

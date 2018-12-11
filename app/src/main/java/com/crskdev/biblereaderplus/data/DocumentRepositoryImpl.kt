@@ -14,7 +14,6 @@ import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSo
 import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
-import com.crskdev.biblereaderplus.presentation.util.arch.map
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
@@ -32,8 +31,11 @@ class DocumentRepositoryImpl : DocumentRepository {
 
     private data class Database(
         val versets: List<Read.Verset>,
-        val tags: List<Tag>
+        val tags: Set<Tag>,
+        val versetTags: Set<VersetTag>
     )
+
+    private data class VersetTag(val versetKey: VersetKey, val tagId: String)
 
     private var dataSource: DataSource<Int, Read.Verset>? = null
 
@@ -86,10 +88,16 @@ class DocumentRepositoryImpl : DocumentRepository {
             )).let {
                 val (colors, tagPrefixes) = it
                 (0..100).map {
-                    Tag(it + 1, "Tag${it + 1}${tagPrefixes.random()}", colors.random())
+                    Tag((it + 1).toString(), "Tag${it + 1}${tagPrefixes.random()}", colors.random())
                 }
             }
-            value = Database(versets, tags)
+            value = Database(
+                versets, tags.toSet(), setOf(
+                    VersetTag(versets.first().key, tags.first().id),
+                    VersetTag(versets.first().key, tags[1].id),
+                    VersetTag(versets[1].key, tags.first().id)
+                )
+            )
         }
     }
 
@@ -106,7 +114,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun filter(query: String): List<Read.Content> {
+    override fun filter(contains: String): List<Read.Content> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -122,31 +130,33 @@ class DocumentRepositoryImpl : DocumentRepository {
 
     override suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit) =
         coroutineScope {
-            val actor = actor<Read.Verset> {
+            val actor = actor<SelectedVerset> {
                 for (rv in channel) {
-                    observer(rv.let {
-                        SelectedVerset(
-                            it.key, "Book${it.key.bookId}", it.key.chapterId,
-                            it.key.id,
-                            it.content,
-                            it.isFavorite
-                        )
-                    })
+                    observer(rv)
                 }
-            }
-            val liveDataObserver = Observer<List<Read.Verset>> {
-                launch {
-                    actor.send(it.first { it.key == versetKey })
-                }
-            }
-            val versetsLiveData = dbLiveData
-                .filter { it?.versets?.any { it.key == versetKey } ?: false }
-                .map { it.versets }
 
-            versetsLiveData.observeForever(liveDataObserver)
+            }
+            val liveDataObserver = Observer<Database> { db ->
+                launch {
+                    val v = db.versets.first { it.key == versetKey }
+                    val vts = db.versetTags.filter { it.versetKey == versetKey }
+                        .map { t -> db.tags.first { it.id == t.tagId } }
+                    val selected = SelectedVerset(
+                        v.key, "Book${v.key.bookId}", v.key.chapterId,
+                        v.key.id,
+                        v.content,
+                        v.isFavorite,
+                        vts
+                    )
+                    actor.send(selected)
+                }
+            }
+            dbLiveData
+                .filter { it?.versets?.any { it.key == versetKey } ?: false }
+                .observeForever(liveDataObserver)
 
             actor.invokeOnClose {
-                versetsLiveData.removeObserver(liveDataObserver)
+                dbLiveData.removeObserver(liveDataObserver)
             }
             Unit
         }
@@ -159,34 +169,57 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    override fun tagToVersetAction(versetKey: VersetKey, tagId: String, add: Boolean) {
+        updateDatabasePost {
+            val vt = VersetTag(versetKey, tagId)
+            copy(versetTags = if (add) versetTags + vt else versetTags - vt)
+        }
+    }
+
     override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
-        dbLiveData.postValue(dbLiveData.value?.let {
-            it.copy(versets = it.versets.map {
+        updateDatabasePost {
+            copy(versets = versets.map {
                 if (it.key == versetKey) {
                     it.copy(isFavorite = add)
                 } else {
                     it
                 }
             })
-        })
-        sleep(200)//gib time for da value to settle
-        dataSource?.invalidate()
+        }
     }
 
     @Synchronized
     override fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset> {
-        dbLiveData.value = dbLiveData.value?.let {
-            it.copy(versets = it.versets.map {
-                it.copy(content = "$filter|->:${it.content}")
-            })
-        }
         return dataSourceFactory {
             InMemoryPagedListDataSource {
-                dbLiveData.value?.versets ?: emptyList()
+                dbLiveData.value?.let { db ->
+                    db.versets
+                        .filter { v ->
+                            filter.query?.let { v.content.contains(it, true) } ?: true
+                        }
+                        .filter { v ->
+                            filter.tags.takeIf { it.isNotEmpty() }?.let { f ->
+                                db.versetTags.any { vt -> vt.versetKey == v.key && f.any { it.id == vt.tagId } }
+                            } ?: true
+                        }
+                } ?: emptyList()
             }.apply {
                 dataSource = this
             }
         }
+    }
+
+    override fun filterTags(contains: String?): List<Tag> {
+        val tags = dbLiveData.value?.tags ?: emptySet()
+        return (contains?.let { c ->
+            tags.filter { it.name.contains(c, true) }
+        } ?: tags).toList()
+    }
+
+    private inline fun updateDatabasePost(block: Database.() -> Database) {
+        dbLiveData.postValue(dbLiveData.value?.block())
+        sleep(200)//gib time for da value to settle
+        dataSource?.invalidate()
     }
 
 }

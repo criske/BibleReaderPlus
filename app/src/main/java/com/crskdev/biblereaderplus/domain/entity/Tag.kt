@@ -8,4 +8,4 @@ package com.crskdev.biblereaderplus.domain.entity
 /**
  * Created by Cristian Pela on 18.11.2018.
  */
-data class Tag(val id: Int, val name: String, val color: String = "#000000")
+data class Tag(val id: String, val name: String, val color: String = "#000000")

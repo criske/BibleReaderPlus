@@ -21,7 +21,7 @@ interface DocumentRepository {
 
     fun contents(): List<Read.Content>
 
-    fun filter(query: String): List<Read.Content>
+    fun filter(contains: String): List<Read.Content>
 
     //local
     fun getVerset(versetKey: VersetKey): SelectedVerset?
@@ -37,5 +37,9 @@ interface DocumentRepository {
     fun favoriteAction(versetKey: VersetKey, add: Boolean)
 
     fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
+
+    fun tagToVersetAction(versetKey: VersetKey, tagId: String, add: Boolean)
+
+    fun filterTags(contains: String?): List<Tag>
 
 }

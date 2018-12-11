@@ -91,7 +91,7 @@ class SelectVersetInteractorImpl(
                     SelectVersetInteractor.Response.OK(
                         verset.copy(
                             isFavorite = props.isFavorite,
-                            tags = props.tags.map { Tag(0, it) })
+                            tags = props.tags.map { Tag("0", it) })
                     )
                 )
                 Unit

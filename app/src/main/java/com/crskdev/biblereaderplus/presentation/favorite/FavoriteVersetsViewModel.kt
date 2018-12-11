@@ -35,9 +35,9 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 
     fun filter(source: FilterSource)
 
-    fun searchTagsWith(name: String)
-
     fun favoriteAction(versetKey: VersetKey, add: Boolean)
+
+    fun searchTagsWith(name: String)
 
     fun createTag(tagName: String)
 }
@@ -132,7 +132,10 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
 
     override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
         launch {
-            favoriteInteractor.request(versetKey, add)
+            favoriteInteractor.request(
+                versetKey,
+                FavoriteActionsVersetInteractor.Action.FavoriteAction(add)
+            )
         }
     }
 
