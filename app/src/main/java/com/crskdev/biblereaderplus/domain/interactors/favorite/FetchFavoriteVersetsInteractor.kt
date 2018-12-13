@@ -41,9 +41,6 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                     response(r)
                 }
             }
-            sendChannel.invokeOnClose {
-                println("offered not anymore $it")
-            }
             launch(SupervisorJob()) {
                 var job = Job()
                 while (!sendChannel.isClosedForSend) {
