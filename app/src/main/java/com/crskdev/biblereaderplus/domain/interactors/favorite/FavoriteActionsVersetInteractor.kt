@@ -12,7 +12,10 @@ import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor.ResponseError
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import javax.inject.Inject
 
 /**
@@ -43,15 +46,14 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
     @ObsoleteCoroutinesApi
     override suspend fun request(versetKey: VersetKey, action: FavoriteActionsVersetInteractor.Action,
                                  responseError: (FavoriteActionsVersetInteractor.ResponseError) -> Unit) =
-        coroutineScope {
-            val coroutineErrHandler =
-                SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
-                    if (throwable is ResponseError) {
-                        responseError(throwable)
-                    } else {
-                        responseError(ResponseError.Unknown(throwable))
-                    }
+        supervisorScope {
+            val coroutineErrHandler = CoroutineExceptionHandler { _, throwable ->
+                if (throwable is ResponseError) {
+                    responseError(throwable)
+                } else {
+                    responseError(ResponseError.Unknown(throwable))
                 }
+            }
             when (action) {
                 is FavoriteActionsVersetInteractor.Action.FavoriteAction -> {
                     launch(coroutineErrHandler + dispatchers.DEFAULT) {
@@ -74,7 +76,7 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
                                 when {
                                     tagOp.newName.isBlank() -> throw ResponseError.EmptyTagName
                                     tagOp.newName.length < 3 -> throw ResponseError.ShortTagName
-                                    else -> localRepository.tagRename(tagOp.id, tagOp.newName)
+                                    else -> localRepository.tagRename(tagOp.id, tagOp.newName.trim())
                                 }
                             }
                             is TagOp.Color  -> localRepository.tagColor(tagOp.id, tagOp.color)
