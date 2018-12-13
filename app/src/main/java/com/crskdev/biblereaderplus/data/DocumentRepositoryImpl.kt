@@ -14,6 +14,7 @@ import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSo
 import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
+import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.channels.actor
@@ -118,6 +119,18 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
+    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+        updateDatabasePost {
+            copy(versets = versets.map {
+                if (it.key == versetKey) {
+                    it.copy(isFavorite = add)
+                } else {
+                    it
+                }
+            })
+        }
+    }
+
     override fun getVerset(versetKey: VersetKey): SelectedVerset? =
         dbLiveData.value?.versets?.firstOrNull { it.key == versetKey }?.let {
             SelectedVerset(
@@ -169,22 +182,58 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun tagToVersetAction(versetKey: VersetKey, tagId: String, add: Boolean) {
+    //#####################################TAG OPERATIONS###########################################
+
+    override suspend fun tagsObserve(contains: String?, observer: (Set<Tag>) -> Unit) =
+        coroutineScope {
+            dbLiveData.toChannel {
+                for (db in it) {
+                    val tags = db.tags
+                    val filtered = (contains?.let { c ->
+                        tags.filter { it.name.contains(c, true) }.toSet()
+                    } ?: tags)
+                    observer(filtered)
+                }
+            }
+            Unit
+        }
+
+    override fun tagFavoriteVerset(versetKey: VersetKey, tagId: String, add: Boolean) {
         updateDatabasePost {
             val vt = VersetTag(versetKey, tagId)
             copy(versetTags = if (add) versetTags + vt else versetTags - vt)
         }
     }
 
-    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+    override fun tagCreate(newTag: Tag) {
+//        updateDatabasePost {
+//            copy(tags = tags + newTag)
+//        }
+        TODO("Oops! Need to implement tag creation")
+    }
+
+    override fun tagDelete(id: String) {
         updateDatabasePost {
-            copy(versets = versets.map {
-                if (it.key == versetKey) {
-                    it.copy(isFavorite = add)
-                } else {
-                    it
-                }
-            })
+            copy(
+                tags = tags.filter { it.id != id }.toSet(),
+                versetTags = versetTags.filter { it.tagId == id }.toSet()
+            )
+        }
+    }
+
+    override fun tagRename(id: String, newName: String) {
+        updateDatabasePost {
+            copy(
+                tags = tags.map { if (id == it.id) it.copy(name = newName) else it }.toSet()
+            )
+        }
+    }
+
+    override fun tagColor(id: String, color: String) {
+        updateDatabasePost {
+            copy(
+                tags = tags.map { if (id == it.id) it.copy(color = color) else it }.toSet()
+            )
         }
     }
 
@@ -209,12 +258,8 @@ class DocumentRepositoryImpl : DocumentRepository {
         }
     }
 
-    override fun filterTags(contains: String?): List<Tag> {
-        val tags = dbLiveData.value?.tags ?: emptySet()
-        return (contains?.let { c ->
-            tags.filter { it.name.contains(c, true) }
-        } ?: tags).toList()
-    }
+
+    //###############################################################################################
 
     private inline fun updateDatabasePost(block: Database.() -> Database) {
         dbLiveData.postValue(dbLiveData.value?.block())

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_tag_select"
+        android:title="@string/select" />
+    <item
+        android:id="@+id/action_tag_rename"
+        android:title="@string/rename" />
+    <item
+        android:id="@+id/action_tag_remove"
+        android:title="@string/remove" />
+</menu>

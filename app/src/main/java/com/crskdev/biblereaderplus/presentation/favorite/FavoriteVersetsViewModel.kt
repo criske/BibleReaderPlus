@@ -9,19 +9,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.paging.PagedList
 import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
-import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
+import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
+import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsViewModel.ErrorVM
 import com.crskdev.biblereaderplus.presentation.util.arch.*
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
@@ -30,6 +28,8 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
     val versetsLiveData: LiveData<PagedList<Read.Verset>>
 
     val searchTagsLiveData: SingleLiveEvent<List<Tag>>
+
+    val errorsLiveData: SingleLiveEvent<ErrorVM>
 
     fun currentFilterLiveData(): LiveData<FavoriteFilter>
 
@@ -40,6 +40,14 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
     fun searchTagsWith(name: String)
 
     fun createTag(tagName: String)
+
+    fun renameTag(id: String, newName: String)
+
+    sealed class ErrorVM(val err: Throwable?) {
+        object EmptyTagName : ErrorVM(null)
+        object ShortTagName : ErrorVM(null)
+        class Unknown(err: Throwable?) : ErrorVM(err)
+    }
 }
 
 sealed class FilterSource {
@@ -48,6 +56,7 @@ sealed class FilterSource {
     object Order : FilterSource()
 }
 
+@ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
 class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                    private val charSequenceTransformerFactory: CharSequenceTransformerFactory,
@@ -56,52 +65,70 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                    private val favoriteInteractor: FavoriteActionsVersetInteractor) :
     CoroutineScopedViewModel(mainDispatcher), FavoriteVersetsViewModel {
 
-    override val searchTagsLiveData: SingleLiveEvent<List<Tag>> = SingleLiveEvent()
-
-    override val versetsLiveData: LiveData<PagedList<Read.Verset>> =
-        MutableLiveData<PagedList<Read.Verset>>()
-
     private var savingInstanceForKillProcess: FavoriteFilter? = null
 
     private val filterLiveData: MutableLiveData<FavoriteFilter> = MutableLiveData()
 
+    private val querySearchTagsLiveData: MutableLiveData<String?> = MutableLiveData()
+
+    override val searchTagsLiveData: SingleLiveEvent<List<Tag>> = SingleLiveEvent()
+
+    override val versetsLiveData: LiveData<PagedList<Read.Verset>> = MutableLiveData()
+
+    override val errorsLiveData: SingleLiveEvent<ErrorVM> = SingleLiveEvent()
+
+    private val errorHandler: (FavoriteActionsVersetInteractor.ResponseError) -> Unit = {
+        val err = when (it) {
+            FavoriteActionsVersetInteractor.ResponseError.EmptyTagName -> ErrorVM.EmptyTagName
+            FavoriteActionsVersetInteractor.ResponseError.ShortTagName -> ErrorVM.ShortTagName
+            is FavoriteActionsVersetInteractor.ResponseError.Unknown -> ErrorVM.Unknown(
+                it.err
+            )
+        }
+        errorsLiveData.postValue(err)
+    }
+
     init {
         launch {
-            val filterChannel = actor<FavoriteFilter> {
-                val mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v ->
-                    val chain = charSequenceTransformerFactory
-                        .startChain(v.content)
-                        .transform(CharSequenceTransformerFactory.Type.LEAD_FIRST_LINE)
-                        .transform(
-                            CharSequenceTransformerFactory.Type.HIGHLIGHT,
-                            HighLightContentTransformer.HighlightArg(
-                                "None",
-                                true
-                            )
-                        )
-                        .let {
-                            if (v.isFavorite) {
-                                it.transform(CharSequenceTransformerFactory.Type.ICON_AT_END)
-                            } else {
-                                it
-                            }
-                        }
-                    v.copy(content = chain.content)
-                }
-                versetsInteractor.request(channel, mapper) {
-                    versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>().postValue(it)
-                }
-            }
-            //throttled filter
+            //throttled inputs 300ms+
             filterLiveData.interval(300, TimeUnit.MILLISECONDS)
                 .onNext {
                     savingInstanceForKillProcess = it
                 }
-                .observeForever {
-                    launch {
-                        filterChannel.send(it)
+                .toChannel {
+                    val mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v ->
+                        val chain = charSequenceTransformerFactory
+                            .startChain(v.content)
+                            .transform(CharSequenceTransformerFactory.Type.LEAD_FIRST_LINE)
+                            .transform(
+                                CharSequenceTransformerFactory.Type.HIGHLIGHT,
+                                HighLightContentTransformer.HighlightArg(
+                                    "None",
+                                    true
+                                )
+                            )
+                            .let {
+                                if (v.isFavorite) {
+                                    it.transform(CharSequenceTransformerFactory.Type.ICON_AT_END)
+                                } else {
+                                    it
+                                }
+                            }
+                        v.copy(content = chain.content)
+                    }
+                    versetsInteractor.request(it, mapper) {
+                        versetsLiveData.cast<MutableLiveData<PagedList<Read.Verset>>>()
+                            .postValue(it)
                     }
                 }
+        }
+        launch {
+            querySearchTagsLiveData.interval(300, TimeUnit.MILLISECONDS).toChannel {
+                tagsInteractor.request(it) {
+                    searchTagsLiveData.cast<MutableLiveData<List<Tag>>>()
+                        .postValue(it.toList())
+                }
+            }
         }
     }
 
@@ -123,27 +150,40 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
     }
 
     override fun searchTagsWith(name: String) {
-        launch {
-            tagsInteractor.request(name).apply {
-                searchTagsLiveData.postValue(this)
-            }
-        }
+        querySearchTagsLiveData.value = name
     }
 
     override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
         launch {
             favoriteInteractor.request(
                 versetKey,
-                FavoriteActionsVersetInteractor.Action.FavoriteAction(add)
+                FavoriteActionsVersetInteractor.Action.FavoriteAction(add),
+                errorHandler
+            )
+        }
+    }
+
+    override fun createTag(tagName: String) {
+        launch {
+            favoriteInteractor.request(
+                VersetKey.NONE,
+                FavoriteActionsVersetInteractor.Action.TagAction(TagOp.Create(tagName)),
+                errorHandler
+            )
+        }
+    }
+
+    override fun renameTag(id: String, newName: String) {
+        launch {
+            favoriteInteractor.request(
+                VersetKey.NONE,
+                FavoriteActionsVersetInteractor.Action.TagAction(TagOp.Rename(id, newName)),
+                errorHandler
             )
         }
     }
 
     override fun currentFilterLiveData(): LiveData<FavoriteFilter> = filterLiveData
-
-    override fun createTag(tagName: String) {
-        //TODO create tag
-    }
 
     override fun restore(data: FavoriteFilter?) {
         if (savingInstanceForKillProcess == null) {

@@ -22,6 +22,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.common.parcelize
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
+import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
 import com.crskdev.biblereaderplus.presentation.util.view.findActionView
@@ -44,8 +45,11 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 is TagsSearchView.Action.Select -> {
                     viewModel.filter(FilterSource.TagAction(it.tag, true))
                 }
-                is TagsSearchView.Action.Add -> {
+                is TagsSearchView.Action.Create -> {
                     viewModel.createTag(it.tagName)
+                }
+                is TagsSearchView.Action.Rename -> {
+                    viewModel.renameTag(it.tag.id, it.tag.name)
                 }
             }
         }
@@ -143,6 +147,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
         })
         viewModel.searchTagsLiveData.observe(this, Observer {
             tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
+        })
+        viewModel.errorsLiveData.observe(this, Observer {
+            context?.showSimpleToast("${it.javaClass.simpleName}: ${it.err}")
         })
         viewModel.restore(
             savedInstanceState

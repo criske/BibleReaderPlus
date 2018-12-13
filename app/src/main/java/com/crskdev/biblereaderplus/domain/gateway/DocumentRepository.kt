@@ -38,8 +38,18 @@ interface DocumentRepository {
 
     fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
 
-    fun tagToVersetAction(versetKey: VersetKey, tagId: String, add: Boolean)
+    //##############################TAGS#################################
 
-    fun filterTags(contains: String?): List<Tag>
+    @MainThread
+    suspend fun tagsObserve(contains: String?, observer: (Set<Tag>) -> Unit)
 
+    fun tagFavoriteVerset(versetKey: VersetKey, tagId: String, add: Boolean)
+
+    fun tagDelete(id: String)
+
+    fun tagRename(id: String, newName: String)
+
+    fun tagColor(id: String, color: String)
+
+    fun tagCreate(newTag: Tag)
 }
