@@ -5,13 +5,14 @@
 
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
+import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.domain.entity.TagOp
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
-import kotlinx.coroutines.ObsoleteCoroutinesApi
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor.ResponseError
+import kotlinx.coroutines.*
 import javax.inject.Inject
 
 /**
@@ -19,11 +20,17 @@ import javax.inject.Inject
  */
 interface FavoriteActionsVersetInteractor {
 
-    suspend fun request(versetKey: VersetKey, action: Action)
+    suspend fun request(versetKey: VersetKey, action: Action, responseError: (ResponseError) -> Unit)
 
     sealed class Action {
         class FavoriteAction(val add: Boolean) : Action()
-        class TagAction(val tagId: String, val add: Boolean) : Action()
+        class TagAction(val tagOp: TagOp) : Action()
+    }
+
+    sealed class ResponseError(val err: Throwable?) : Throwable(err) {
+        object EmptyTagName : ResponseError(null)
+        object ShortTagName : ResponseError(null)
+        class Unknown(err: Throwable) : ResponseError(err)
     }
 
 }
@@ -34,23 +41,48 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
     private val remoteRepository: RemoteDocumentRepository) : FavoriteActionsVersetInteractor {
 
     @ObsoleteCoroutinesApi
-    override suspend fun request(versetKey: VersetKey, action: FavoriteActionsVersetInteractor.Action) =
+    override suspend fun request(versetKey: VersetKey, action: FavoriteActionsVersetInteractor.Action,
+                                 responseError: (FavoriteActionsVersetInteractor.ResponseError) -> Unit) =
         coroutineScope {
+            val coroutineErrHandler =
+                SupervisorJob() + CoroutineExceptionHandler { _, throwable ->
+                    if (throwable is ResponseError) {
+                        responseError(throwable)
+                    } else {
+                        responseError(ResponseError.Unknown(throwable))
+                    }
+                }
             when (action) {
                 is FavoriteActionsVersetInteractor.Action.FavoriteAction -> {
-                    launch(dispatchers.DEFAULT) {
+                    launch(coroutineErrHandler + dispatchers.DEFAULT) {
                         localRepository.favoriteAction(versetKey, action.add)
                     }
-                    launch(dispatchers.IO) {
+                    launch(coroutineErrHandler + dispatchers.IO) {
                         remoteRepository.favoriteAction(versetKey, action.add)
                     }
                 }
+                //@formatter:off
                 is FavoriteActionsVersetInteractor.Action.TagAction -> {
-                    launch(dispatchers.DEFAULT) {
-                        localRepository.tagToVersetAction(versetKey, action.tagId, action.add)
+                    launch(coroutineErrHandler + dispatchers.DEFAULT) {
+                        val tagOp = action.tagOp
+                         //todo: support for remote
+                        when (tagOp) {
+                            is TagOp.Add    -> localRepository.tagFavoriteVerset(versetKey, tagOp.id, true)
+                            is TagOp.Remove -> localRepository.tagFavoriteVerset(versetKey, tagOp.id, false)
+                            is TagOp.Delete -> localRepository.tagDelete(tagOp.id)
+                            is TagOp.Rename -> {
+                                when {
+                                    tagOp.newName.isBlank() -> throw ResponseError.EmptyTagName
+                                    tagOp.newName.length < 3 -> throw ResponseError.ShortTagName
+                                    else -> localRepository.tagRename(tagOp.id, tagOp.newName)
+                                }
+                            }
+                            is TagOp.Color  -> localRepository.tagColor(tagOp.id, tagOp.color)
+                            is TagOp.Create -> localRepository.tagCreate(Tag("",tagOp.name))
+                        }
                     }
-                    //todo: support for remote
                 }
+                //@formatter:on
             }
 
             Unit

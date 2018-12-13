@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.favorite.TagBehaviour
+import com.crskdev.biblereaderplus.presentation.favorite.TagSelectAction
 import com.crskdev.biblereaderplus.presentation.favorite.TagsAdapter
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
@@ -36,8 +37,14 @@ class TagsSearchView : ConstraintLayout {
             super(context, attrs, defStyleAttr) {
         val inflater = LayoutInflater.from(context)
         inflater.inflate(R.layout.tag_search_view_layout, this, true)
-        suggestionsAdapter = TagsAdapter(inflater, TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)) { t, _ ->
-            listener(Action.Select(t))
+        suggestionsAdapter = TagsAdapter(inflater, TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)) { t, a ->
+            when(a){
+                TagSelectAction.CLOSE -> {}
+                TagSelectAction.CONTEXT_MENU_RENAME ->  listener(Action.Rename(t))
+                TagSelectAction.CONTEXT_MENU_REMOVE -> TODO()
+                TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> TODO()
+                TagSelectAction.SELECT -> listener(Action.Select(t))
+            }
         }
         with(recyclerTagSearch) {
             adapter = suggestionsAdapter
@@ -58,7 +65,7 @@ class TagsSearchView : ConstraintLayout {
             editTagSearch.setText("")
         }
         btnTagSearchAdd.setOnClickListener {
-            listener(Action.Add(editTagSearch.text.toString()))
+            listener(Action.Create(editTagSearch.text.toString()))
         }
     }
     //@formatter:on
@@ -90,6 +97,7 @@ class TagsSearchView : ConstraintLayout {
     sealed class Action {
         class Select(val tag: Tag) : Action()
         class Query(val query: String) : Action()
-        class Add(val tagName: String) : Action()
+        class Create(val tagName: String) : Action()
+        class Rename(val tag: Tag) : Action()
     }
 }

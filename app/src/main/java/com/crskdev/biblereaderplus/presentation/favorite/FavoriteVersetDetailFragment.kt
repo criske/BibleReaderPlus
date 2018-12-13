@@ -44,8 +44,11 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                 is TagsSearchView.Action.Select -> {
                     viewModel.tagVersetAction(it.tag.id, true)
                 }
-                is TagsSearchView.Action.Add -> {
+                is TagsSearchView.Action.Create -> {
                     viewModel.createTag(it.tagName)
+                }
+                is TagsSearchView.Action.Rename -> {
+                    viewModel.renameTag(it.tag.id, it.tag.name)
                 }
             }
         }
@@ -121,8 +124,9 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                         viewModel.tagVersetAction(t.id, false)
                     }
                     TagSelectAction.CONTEXT_MENU_RENAME -> {
+                        viewModel.renameTag(t.id, t.name)
                     }
-                    TagSelectAction.CONTEXT_MENU_DELETE -> {
+                    TagSelectAction.CONTEXT_MENU_REMOVE -> {
                     }
                     TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
                     }
