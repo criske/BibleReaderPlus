@@ -22,7 +22,6 @@ import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.system.showSimpleInputDialog
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
-import com.crskdev.biblereaderplus.presentation.util.view.ColorUtilsExtra
 import com.google.android.material.chip.Chip
 
 /**
@@ -36,6 +35,12 @@ class TagsAdapter(private val inflater: LayoutInflater,
         override fun areItemsTheSame(oldItem: Tag, newItem: Tag): Boolean = oldItem.id == newItem.id
         override fun areContentsTheSame(oldItem: Tag, newItem: Tag): Boolean = oldItem == newItem
     }) {
+
+    init {
+        setHasStableIds(true)
+    }
+
+    override fun getItemId(position: Int): Long = getItem(position).id.toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TagVH =
         TagVH(
@@ -111,23 +116,10 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
                             }
                             R.id.action_tag_remove -> {
                                 model?.let {
-                                    TagOpsUI.showConfirmationDialogOnDelete(context, it) {
-                                        action(
-                                            it,
-                                            TagSelectAction.CONTEXT_MENU_REMOVE
-                                        )
-                                    }
-                                }
-                            }
-                            R.id.action_tag_color -> {
-                                model?.let {
-                                    TagOpsUI.showColorPicker(context, it) { t ->
-                                        action(
-                                            t,
-                                            TagSelectAction.CONTEXT_MENU_CHANGE_COLOR
-                                        )
-                                    }
-
+                                    action(
+                                        it,
+                                        TagSelectAction.CONTEXT_MENU_REMOVE
+                                    )
                                 }
                             }
                         }
@@ -166,9 +158,8 @@ fun Chip.setContrastingTextColor(@ColorInt color: Int) {
     chipBackgroundColor = ColorStateList.valueOf(color)
     chipStrokeColor = ColorStateList.valueOf(ColorUtils.blendARGB(Color.WHITE, color, 0.5f))
     setTextColor(
-        ColorUtilsExtra.contrastColor(color)(
-            context.getColorCompat(R.color.secondaryTextColor),
-            context.getColorCompat(R.color.primaryTextColor)
-        )
+        ColorUtils.calculateLuminance(color).takeIf { it < 0.5 }?.let {
+            context.getColorCompat(R.color.secondaryTextColor)
+        } ?: context.getColorCompat(R.color.primaryTextColor)
     )
 }

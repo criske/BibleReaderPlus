@@ -6,6 +6,7 @@
 package com.crskdev.biblereaderplus.presentation.tags
 
 import android.content.Context
+import android.view.ContextThemeWrapper
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
@@ -13,7 +14,6 @@ import androidx.lifecycle.OnLifecycleEvent
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
-import com.crskdev.biblereaderplus.presentation.util.system.withTheme
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
@@ -48,24 +48,25 @@ class TagsSearchBottomSheetDialogHelper(private val context: Context,
                         dismiss()
                     }
                     tagsSearchView =
-                            TagsSearchView(context.withTheme(R.style.AppTheme))
-                                .apply {
-                                    onSearchListener(listener)
-                                    val sheetHeight = 400
-                                    setContentView(
-                                        this, ViewGroup.LayoutParams(
-                                            ViewGroup.LayoutParams.MATCH_PARENT,
-                                            sheetHeight.dpToPx(resources)
-                                        )
+                            TagsSearchView(
+                                ContextThemeWrapper(context, R.style.AppTheme)
+                            ).apply {
+                                onSearchListener(listener)
+                                val sheetHeight = 400
+                                setContentView(
+                                    this, ViewGroup.LayoutParams(
+                                        ViewGroup.LayoutParams.MATCH_PARENT,
+                                        sheetHeight.dpToPx(resources)
                                     )
-                                    recyclerTagSearch.layoutParams =
-                                            recyclerTagSearch.layoutParams.apply {
-                                                height = (sheetHeight - 65).dpToPx(resources)
-                                            }
-                                    post {
-                                        setQuery("")
-                                    }
+                                )
+                                recyclerTagSearch.layoutParams =
+                                        recyclerTagSearch.layoutParams.apply {
+                                            height = (sheetHeight - 65).dpToPx(resources)
+                                        }
+                                post {
+                                    setQuery("")
                                 }
+                            }
                 }
         }
         sheetDialog?.show()
