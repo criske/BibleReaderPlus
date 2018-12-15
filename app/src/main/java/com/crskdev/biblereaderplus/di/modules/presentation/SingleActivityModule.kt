@@ -25,12 +25,16 @@ import com.crskdev.biblereaderplus.presentation.setup.SetupFragment
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 /**
  * Created by Cristian Pela on 05.11.2018.
  */
 
 @Module
+@ObsoleteCoroutinesApi
+@ExperimentalCoroutinesApi
 abstract class SingleActivityModule {
 
     @PerFragment

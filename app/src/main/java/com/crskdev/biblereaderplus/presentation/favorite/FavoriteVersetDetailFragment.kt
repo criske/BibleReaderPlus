@@ -21,38 +21,27 @@ import androidx.transition.ChangeTransform
 import androidx.transition.TransitionSet
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.castIf
-import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
+import com.crskdev.biblereaderplus.presentation.tags.*
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_favorite_verset_detail.*
 import kotlinx.android.synthetic.main.title_layout_default_content.*
 import kotlinx.android.synthetic.main.titled_layout.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
 class FavoriteVersetDetailFragment : DaggerFragment() {
 
     @Inject
     lateinit var viewModel: FavoriteVersetDetailViewModel
 
-    private val tagsSearchBottomSheetDialogHelper by lazy {
-        TagsSearchBottomSheetDialogHelper(context!!) {
-            when (it) {
-                is TagsSearchView.Action.Query -> {
-                    viewModel.searchTagsWith(it.query)
-                }
-                is TagsSearchView.Action.Select -> {
-                    viewModel.tagVersetAction(it.tag.id, true)
-                }
-                is TagsSearchView.Action.Create -> {
-                    viewModel.createTag(it.tagName)
-                }
-                is TagsSearchView.Action.Rename -> {
-                    viewModel.renameTag(it.tag.id, it.tag.name)
-                }
-            }
-        }
-    }
+    @Inject
+    lateinit var tagSelectViewModel: TagSelectViewModel
+
+    @Inject
+    lateinit var tagOpsViewModel: TagsOpsViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +52,6 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
         sharedElementReturnTransition = DetailsTransition().apply {
             duration = 300
         }
-        lifecycle.addObserver(tagsSearchBottomSheetDialogHelper)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -98,8 +86,8 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
         viewModel.versetTagsLiveData.observe(this, Observer {
             recyclerVersetDetailTags.adapter?.castIf<TagsAdapter>()?.submitList(it)
         })
-        viewModel.searchTagsLiveData.observe(this, Observer {
-            tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
+        tagSelectViewModel.selectedTagLiveData.observe(this, Observer {
+            viewModel.tagToFavoriteAction(it.id, true)
         })
     }
 
@@ -108,7 +96,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
             setup(R.menu.menu_tags) {
                 when (it.itemId) {
                     R.id.menu_action_tags -> {
-                        tagsSearchBottomSheetDialogHelper.toggleBottomSheet()
+                        TagsSearchBottomSheetDialogFragment.show(childFragmentManager)
                     }
                 }
                 true
@@ -121,10 +109,10 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
             ) { t, a ->
                 when (a) {
                     TagSelectAction.CLOSE -> {
-                        viewModel.tagVersetAction(t.id, false)
+                        viewModel.tagToFavoriteAction(t.id, false)
                     }
                     TagSelectAction.CONTEXT_MENU_RENAME -> {
-                        viewModel.renameTag(t.id, t.name)
+                        tagOpsViewModel.renameTag(t.id, t.name)
                     }
                     TagSelectAction.CONTEXT_MENU_REMOVE -> {
                     }

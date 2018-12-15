@@ -11,6 +11,8 @@ import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
 import com.crskdev.biblereaderplus.domain.interactors.favorite.*
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractorImpl
+import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor
+import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractorImpl
 import dagger.Module
 import dagger.Provides
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -43,5 +45,9 @@ class InteractorsModule {
     @Provides
     fun provideFetchTagsInteractor(dispatchers: GatewayDispatchers, repository: DocumentRepository): FetchTagsInteractor =
         FetchTagsInteractorImpl(dispatchers, repository)
+
+    @Provides
+    fun provideTagsOpsInteractor(dispatchers: GatewayDispatchers, localRepository: DocumentRepository, remoteRepository: RemoteDocumentRepository): TagOpsInteractor =
+        TagOpsInteractorImpl(dispatchers, localRepository, remoteRepository)
 
 }

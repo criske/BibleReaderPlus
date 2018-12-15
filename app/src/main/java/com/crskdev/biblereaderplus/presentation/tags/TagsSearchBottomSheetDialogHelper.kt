@@ -3,7 +3,7 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-package com.crskdev.biblereaderplus.presentation.favorite
+package com.crskdev.biblereaderplus.presentation.tags
 
 import android.content.Context
 import android.view.ContextThemeWrapper
@@ -13,7 +13,6 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
@@ -49,7 +48,9 @@ class TagsSearchBottomSheetDialogHelper(private val context: Context,
                         dismiss()
                     }
                     tagsSearchView =
-                            TagsSearchView(ContextThemeWrapper(context, R.style.AppTheme)).apply {
+                            TagsSearchView(
+                                ContextThemeWrapper(context, R.style.AppTheme)
+                            ).apply {
                                 onSearchListener(listener)
                                 val sheetHeight = 400
                                 setContentView(

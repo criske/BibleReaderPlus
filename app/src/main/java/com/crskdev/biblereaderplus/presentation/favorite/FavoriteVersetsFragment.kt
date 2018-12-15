@@ -19,49 +19,32 @@ import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.presentation.common.TagsSearchView
 import com.crskdev.biblereaderplus.presentation.common.parcelize
+import com.crskdev.biblereaderplus.presentation.tags.*
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
-import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
 import com.crskdev.biblereaderplus.presentation.util.view.findActionView
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 
+@ExperimentalCoroutinesApi
 class FavoriteVersetsFragment : DaggerFragment() {
 
     @Inject
     lateinit var viewModel: FavoriteVersetsViewModel
 
-    private val tagsSearchBottomSheetDialogHelper by lazy {
-        TagsSearchBottomSheetDialogHelper(context!!) {
-            when (it) {
-                is TagsSearchView.Action.Query -> {
-                    viewModel.searchTagsWith(it.query)
-                }
-                is TagsSearchView.Action.Select -> {
-                    viewModel.filter(FilterSource.TagAction(it.tag, true))
-                }
-                is TagsSearchView.Action.Create -> {
-                    viewModel.createTag(it.tagName)
-                }
-                is TagsSearchView.Action.Rename -> {
-                    viewModel.renameTag(it.tag.id, it.tag.name)
-                }
-            }
-        }
-    }
+    @Inject
+    lateinit var tagSelectViewModel: TagSelectViewModel
+
+    @Inject
+    lateinit var tagOpsViewModel: TagsOpsViewModel
 
     companion object {
         private const val KEY_SI_FILTER = "KEY_SI_FILTER"
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        lifecycle.addObserver(tagsSearchBottomSheetDialogHelper)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -105,7 +88,10 @@ class FavoriteVersetsFragment : DaggerFragment() {
             favoritesAdapter.selectionTracker = selectionTracker
         }
         //selected tags recycler stuff
-        val selectedTagsAdapter = TagsAdapter(inflater, TagBehaviour(isClosable = true)) { t, _ ->
+        val selectedTagsAdapter = TagsAdapter(
+            inflater,
+            TagBehaviour(isClosable = true)
+        ) { t, _ ->
             viewModel.filter(FilterSource.TagAction(t, add = false))
         }
         with(recyclerFavoritesSelectedTags) {
@@ -120,7 +106,7 @@ class FavoriteVersetsFragment : DaggerFragment() {
                         viewModel.filter(FilterSource.Order)
                     }
                     R.id.menu_action_tags -> {
-                        tagsSearchBottomSheetDialogHelper.toggleBottomSheet()
+                        TagsSearchBottomSheetDialogFragment.show(childFragmentManager)
                     }
                 }
                 true
@@ -145,17 +131,14 @@ class FavoriteVersetsFragment : DaggerFragment() {
             recyclerFavoritesSelectedTags.isVisible = it.tags.isNotEmpty()
             selectedTagsAdapter.submitList(it.tags.toList())
         })
-        viewModel.searchTagsLiveData.observe(this, Observer {
-            tagsSearchBottomSheetDialogHelper.submitSuggestions(it)
-        })
-        viewModel.errorsLiveData.observe(this, Observer {
-            context?.showSimpleToast("${it.javaClass.simpleName}: ${it.err}")
-        })
         viewModel.restore(
             savedInstanceState
                 ?.getParcelableMixin<ParcelableFavoriteFilter>(KEY_SI_FILTER)
                 ?.deparcelize()
         )
+        tagSelectViewModel.selectedTagLiveData.observe(this, Observer {
+            viewModel.filter(FilterSource.TagAction(it, true))
+        })
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

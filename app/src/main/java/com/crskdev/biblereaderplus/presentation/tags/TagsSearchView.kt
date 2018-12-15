@@ -3,7 +3,7 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-package com.crskdev.biblereaderplus.presentation.common
+package com.crskdev.biblereaderplus.presentation.tags
 
 import android.content.Context
 import android.text.Editable
@@ -15,9 +15,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.presentation.favorite.TagBehaviour
-import com.crskdev.biblereaderplus.presentation.favorite.TagSelectAction
-import com.crskdev.biblereaderplus.presentation.favorite.TagsAdapter
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
 /**
