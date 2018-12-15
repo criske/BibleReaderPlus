@@ -35,6 +35,7 @@ import dagger.android.support.AndroidSupportInjection
 import dagger.android.support.HasSupportFragmentInjector
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -116,6 +117,7 @@ class TagsSearchBottomSheetDialogFragment : BottomSheetDialogFragment(),
 }
 
 
+@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 class TagsOpsViewModel(
     private val fetchTagsInteractor: FetchTagsInteractor,
@@ -171,6 +173,15 @@ class TagsOpsViewModel(
         launch {
             tagOpsInteractor.request(
                 TagOp.Rename(id, newName),
+                errorHandler
+            )
+        }
+    }
+
+    fun deleteTag(id: String) {
+        launch {
+            tagOpsInteractor.request(
+                TagOp.Delete(id),
                 errorHandler
             )
         }
