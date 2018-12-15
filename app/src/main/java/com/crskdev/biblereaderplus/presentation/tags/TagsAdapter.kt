@@ -3,7 +3,7 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
-package com.crskdev.biblereaderplus.presentation.favorite
+package com.crskdev.biblereaderplus.presentation.tags
 
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -43,7 +43,13 @@ class TagsAdapter(private val inflater: LayoutInflater,
     override fun getItemId(position: Int): Long = getItem(position).id.toLong()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TagVH =
-        TagVH(inflater.inflate(R.layout.item_tag, parent, false), tagBehaviour, action)
+        TagVH(
+            inflater.inflate(
+                R.layout.item_tag,
+                parent,
+                false
+            ), tagBehaviour, action
+        )
 
     override fun onBindViewHolder(holder: TagVH, position: Int) =
         holder.bind(getItem(position))
@@ -74,7 +80,12 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
             if (tagBehaviour.isClosable) {
                 isCloseIconVisible = true
                 setOnCloseIconClickListener {
-                    model?.let { action(it, TagSelectAction.CLOSE) }
+                    model?.let {
+                        action(
+                            it,
+                            TagSelectAction.CLOSE
+                        )
+                    }
                 }
             }
 
@@ -84,7 +95,12 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
                     it.setOnMenuItemClickListener {
                         when (it.itemId) {
                             R.id.action_tag_select -> {
-                                model?.let { action(it, TagSelectAction.SELECT) }
+                                model?.let {
+                                    action(
+                                        it,
+                                        TagSelectAction.SELECT
+                                    )
+                                }
                             }
                             R.id.action_tag_rename -> {
                                 model?.let { tag ->
@@ -99,7 +115,12 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
                                 }
                             }
                             R.id.action_tag_remove -> {
-                                model?.let { action(it, TagSelectAction.CONTEXT_MENU_REMOVE) }
+                                model?.let {
+                                    action(
+                                        it,
+                                        TagSelectAction.CONTEXT_MENU_REMOVE
+                                    )
+                                }
                             }
                         }
                         true
@@ -110,7 +131,12 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
             when (tagBehaviour.selectPolicy) {
                 TagBehaviour.SelectPolicy.SELECT_ON_TAP -> {
                     setOnClickListener {
-                        model?.let { action(it, TagSelectAction.SELECT) }
+                        model?.let {
+                            action(
+                                it,
+                                TagSelectAction.SELECT
+                            )
+                        }
                     }
                 }
                 else -> Unit
