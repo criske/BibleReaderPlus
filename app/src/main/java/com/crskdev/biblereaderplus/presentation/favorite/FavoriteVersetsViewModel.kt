@@ -103,8 +103,7 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
         //observe the changes done to tags on the backend(ie. rename, delete), then update the
         //local filter data accordingly
         launch {
-            val channel = ChannelWith<String?>()
-            fetchTagsInteractor.request(channel) { observedTags ->
+            fetchTagsInteractor.request(ChannelWith()) { observedTags ->
                 val existentTags = filterLiveData.value?.tags ?: emptySet()
                 val updatedTags = mutableSetOf<Tag>().apply {
                     existentTags.forEach { t ->

@@ -29,8 +29,10 @@ import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_search_favorite.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import javax.inject.Inject
 
+@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 class FavoriteVersetsFragment : DaggerFragment() {
 
@@ -91,7 +93,25 @@ class FavoriteVersetsFragment : DaggerFragment() {
         val selectedTagsAdapter = TagsAdapter(
             inflater,
             TagBehaviour(isClosable = true)
-        ) { t, _ ->
+        ) { t, a ->
+            when (a) {
+                TagSelectAction.CLOSE -> {
+                    viewModel.filter(FilterSource.TagAction(t, false))
+                }
+                TagSelectAction.CONTEXT_MENU_RENAME -> {
+                    tagOpsViewModel.renameTag(t.id, t.name)
+                }
+                TagSelectAction.CONTEXT_MENU_REMOVE -> {
+                    tagOpsViewModel.deleteTag(t.id)
+                }
+                TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
+
+                }
+                TagSelectAction.SELECT -> {
+
+                }
+            }
+
             viewModel.filter(FilterSource.TagAction(t, add = false))
         }
         with(recyclerFavoritesSelectedTags) {

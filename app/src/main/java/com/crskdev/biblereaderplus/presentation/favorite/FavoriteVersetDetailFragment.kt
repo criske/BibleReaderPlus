@@ -29,8 +29,10 @@ import kotlinx.android.synthetic.main.fragment_favorite_verset_detail.*
 import kotlinx.android.synthetic.main.title_layout_default_content.*
 import kotlinx.android.synthetic.main.titled_layout.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 import javax.inject.Inject
 
+@ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 class FavoriteVersetDetailFragment : DaggerFragment() {
 
@@ -115,10 +117,13 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                         tagOpsViewModel.renameTag(t.id, t.name)
                     }
                     TagSelectAction.CONTEXT_MENU_REMOVE -> {
+                        tagOpsViewModel.deleteTag(t.id)
                     }
                     TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
+
                     }
                     TagSelectAction.SELECT -> {
+
                     }
                 }
             }
