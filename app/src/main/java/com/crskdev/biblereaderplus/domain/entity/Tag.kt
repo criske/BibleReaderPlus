@@ -11,6 +11,7 @@ package com.crskdev.biblereaderplus.domain.entity
 data class Tag(val id: String, val name: String, val color: String = "#000000") {
     companion object {
         fun crateTransientTag(name: String): Tag = Tag("", name)
+        val NONE = Tag("", "")
     }
 }
 

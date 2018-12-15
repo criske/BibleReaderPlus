@@ -216,7 +216,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         updateDatabasePost {
             copy(
                 tags = tags.filter { it.id != id }.toSet(),
-                versetTags = versetTags.filter { it.tagId == id }.toSet()
+                versetTags = versetTags.filter { it.tagId != id }.toSet()
             )
         }
     }

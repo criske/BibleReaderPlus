@@ -68,11 +68,11 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                 .onNext {
                     savingInstanceForKillProcess = it
                 }
-                .distinctUntilChanged { prev, curr ->
-                    prev.query != curr.query
-                            || prev.asc != curr.asc
-                            || prev.tags.map { it.id } != curr.tags.map { it.id }
-                }
+//                .distinctUntilChanged { prev, curr ->
+//                    prev.query != curr.query
+//                            || prev.asc != curr.asc
+//                            || prev.tags.map { it.id } != curr.tags.map { it.id }
+//                }
                 .toChannel {
                     val mapper: (FavoriteFilter, Read.Verset) -> Read.Verset = { _, v ->
                         val chain = charSequenceTransformerFactory
