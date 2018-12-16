@@ -90,10 +90,15 @@ class TagsSearchBottomSheetDialogFragment : BottomSheetDialogFragment(),
                         tagSelectViewModel.selectedTagLiveData.value = it.tag
                     }
                     is TagsSearchView.Action.Create -> {
-                        tagsOpsViewModel.createTag(it.tagName)
+                        //  tagsOpsViewModel.createTag(it.tagName)
                     }
                     is TagsSearchView.Action.Rename -> {
-                        tagsOpsViewModel.renameTag(it.tag.id, it.tag.name)
+                        //  tagsOpsViewModel.renameTag(it.tag.id, it.tag.name)
+                    }
+                    is TagsSearchView.Action.Delete -> {
+                        TagOpsUI.showConfirmationDialogOnDelete(view.context, it.tag) { t ->
+                            // tagsOpsViewModel.deleteTag(t.id)
+                        }
                     }
                     is TagsSearchView.Action.Color -> {
                         tagsOpsViewModel.changeColor(it.tag.id, it.tag.color)
