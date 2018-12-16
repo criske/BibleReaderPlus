@@ -62,13 +62,18 @@ inline fun Context.showSimpleInputDialog(title: String, crossinline onSubmit: (E
     simpleInputDialog(title, onSubmit).create().show()
 }
 
-fun Context.showSimpleAlertDialog(title: String) {
+inline fun Context.simpleAlertDialog(title: String, msg: String, crossinline onConfirm: () -> Unit): AlertDialog.Builder =
     AlertDialog.Builder(this)
         .setTitle(title)
+        .setMessage(msg)
         .setCancelable(true)
         .setPositiveButton(android.R.string.ok) { d, _ ->
+            onConfirm()
             d.dismiss()
-        }.create().show()
+        }
+
+inline fun Context.showSimpleAlertDialog(title: String, msg: String, crossinline onConfirm: () -> Unit) {
+    simpleAlertDialog(title, msg, onConfirm).create().show()
 }
 
 fun Context.showSimpleToast(title: String, duration: Int = Toast.LENGTH_SHORT) {

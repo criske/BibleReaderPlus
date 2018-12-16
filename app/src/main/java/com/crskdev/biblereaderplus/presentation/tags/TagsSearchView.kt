@@ -96,5 +96,6 @@ class TagsSearchView : ConstraintLayout {
         class Query(val query: String) : Action()
         class Create(val tagName: String) : Action()
         class Rename(val tag: Tag) : Action()
+        class Delete(val tag: Tag) : Action()
     }
 }

@@ -22,6 +22,7 @@ import androidx.transition.TransitionSet
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.castIf
 import com.crskdev.biblereaderplus.presentation.tags.*
+import com.crskdev.biblereaderplus.presentation.util.arch.navigateUp
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
@@ -103,6 +104,9 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                 }
                 true
             }
+            setNavigationOnClickListener {
+                navigateUp()
+            }
         }
         with(recyclerVersetDetailTags) {
             adapter = TagsAdapter(
@@ -117,7 +121,9 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                         tagOpsViewModel.renameTag(t.id, t.name)
                     }
                     TagSelectAction.CONTEXT_MENU_REMOVE -> {
-                        tagOpsViewModel.deleteTag(t.id)
+                        TagOpsUI.showConfirmationDialogOnDelete(context, t) {
+                            tagOpsViewModel.deleteTag(it.id)
+                        }
                     }
                     TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
 

@@ -21,6 +21,7 @@ import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.presentation.common.parcelize
 import com.crskdev.biblereaderplus.presentation.tags.*
+import com.crskdev.biblereaderplus.presentation.util.arch.navigateUp
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
 import com.crskdev.biblereaderplus.presentation.util.view.ADDED_SEARCH_ID
 import com.crskdev.biblereaderplus.presentation.util.view.addSearch
@@ -102,7 +103,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                     tagOpsViewModel.renameTag(t.id, t.name)
                 }
                 TagSelectAction.CONTEXT_MENU_REMOVE -> {
-                    tagOpsViewModel.deleteTag(t.id)
+                    TagOpsUI.showConfirmationDialogOnDelete(view.context, t) {
+                        tagOpsViewModel.deleteTag(it.id)
+                    }
                 }
                 TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
 
@@ -111,8 +114,6 @@ class FavoriteVersetsFragment : DaggerFragment() {
 
                 }
             }
-
-            viewModel.filter(FilterSource.TagAction(t, add = false))
         }
         with(recyclerFavoritesSelectedTags) {
             adapter = selectedTagsAdapter
@@ -136,6 +137,9 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 R.string.search,
                 onClear = { viewModel.filter(FilterSource.Query(null)) }) {
                 viewModel.filter(FilterSource.Query(it))
+            }
+            setNavigationOnClickListener {
+                navigateUp()
             }
         }
         //interactions with vm
