@@ -2,9 +2,16 @@
   ~ License: MIT
   ~ Copyright (c)  Pela Cristian 2018.
   -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".presentation.MainActivity" />
+    tools:context=".presentation.MainActivity">
+
+    <com.crskdev.biblereaderplus.presentation.common.colorpicker.ColorPickerView
+        android:id="@+id/colorPicker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</androidx.core.widget.NestedScrollView>
