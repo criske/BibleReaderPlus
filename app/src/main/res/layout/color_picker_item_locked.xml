@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/colorPickerSelectedColorText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@+id/colorPickerSelectedColorView"
+        app:layout_constraintTop_toTopOf="@+id/colorPickerSelectedColorView"
+        tools:text="#00000" />
+
+    <ImageView
+        android:id="@+id/colorPickerImgLock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        app:layout_constraintBottom_toBottomOf="@+id/colorPickerSelectedColorView"
+        app:layout_constraintEnd_toEndOf="@+id/colorPickerSelectedColorView"
+        app:srcCompat="@drawable/ic_clear_black_24dp"
+        tools:ignore="ContentDescription" />
+
+    <View
+        android:id="@+id/colorPickerSelectedColorView"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

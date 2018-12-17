@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2018.
+  -->
+
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
+    android:layout_height="match_parent">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/colorPickerRecylerLocked"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        tools:listitem="@layout/color_picker_item_locked"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/colorPickerSelectedColorText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="@+id/colorPickerSelectedColorView"
+        app:layout_constraintTop_toTopOf="@+id/colorPickerSelectedColorView"
+        tools:text="#00000" />
+
+    <ImageView
+        android:id="@+id/colorPickerImgLock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:alpha="0.5"
+        app:layout_constraintBottom_toBottomOf="@+id/colorPickerSelectedColorView"
+        app:layout_constraintEnd_toEndOf="@+id/colorPickerSelectedColorView"
+        app:srcCompat="@drawable/ic_lock_closed_black_24dp"
+        tools:ignore="ContentDescription" />
+
+    <View
+        android:id="@+id/colorPickerSelectedColorView"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorPickerRecylerLocked" />
+
+
+    <TextView
+        android:id="@+id/colorPickerLblR"
+        android:layout_width="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="R"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorPickerSelectedColorView"
+        tools:ignore="HardcodedText" />
+
+
+    <SeekBar
+        android:id="@+id/colorPickerSeekR"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/colorPickerLblR"
+        app:layout_constraintTop_toTopOf="@+id/colorPickerLblR" />
+
+    <TextView
+        android:id="@+id/colorPickerLblG"
+        android:layout_width="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="G"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorPickerLblR"
+        tools:ignore="HardcodedText" />
+
+    <SeekBar
+        android:id="@+id/colorPickerSeekG"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/colorPickerLblG"
+        app:layout_constraintTop_toTopOf="@+id/colorPickerLblG" />
+
+    <TextView
+        android:id="@+id/colorPickerLblB"
+        android:layout_width="10dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="B"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/colorPickerLblG"
+        tools:ignore="HardcodedText" />
+
+    <SeekBar
+        android:id="@+id/seekBar3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/colorPickerLblB"
+        app:layout_constraintTop_toTopOf="@+id/colorPickerLblB" />
+
+
+</merge>

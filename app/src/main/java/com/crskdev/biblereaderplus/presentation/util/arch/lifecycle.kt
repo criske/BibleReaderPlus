@@ -5,6 +5,11 @@
 
 package com.crskdev.biblereaderplus.presentation.util.arch
 
+import android.view.View
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+
 /**
  * Created by Cristian Pela on 30.11.2018.
  */
@@ -20,3 +25,26 @@ package com.crskdev.biblereaderplus.presentation.util.arch
 //        throw IllegalArgumentException("Delegation reference must be a LifeCycleOwner")
 //    }
 //}
+
+class ViewLifecycleOwner(view: View) : LifecycleOwner {
+
+    private var registry: LifecycleRegistry = LifecycleRegistry(this)
+
+    init {
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+
+            override fun onViewDetachedFromWindow(v: View?) {
+                registry.markState(Lifecycle.State.STARTED)
+            }
+
+            override fun onViewAttachedToWindow(v: View?) {
+                registry.markState(Lifecycle.State.DESTROYED)
+            }
+
+        })
+    }
+
+
+    override fun getLifecycle(): Lifecycle = registry
+
+}
