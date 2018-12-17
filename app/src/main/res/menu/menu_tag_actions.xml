@@ -13,4 +13,7 @@
     <item
         android:id="@+id/action_tag_remove"
         android:title="@string/remove" />
+    <item
+        android:id="@+id/action_tag_color"
+        android:title="@string/color" />
 </menu>

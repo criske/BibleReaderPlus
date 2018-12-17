@@ -3,6 +3,8 @@
  * Copyright (c)  Pela Cristian 2018.
  */
 
+@file:Suppress("unused")
+
 package com.crskdev.biblereaderplus.presentation.common.colorpicker
 
 import android.content.Context
@@ -30,7 +32,7 @@ import kotlinx.android.synthetic.main.color_picker_layout.view.*
  */
 class ColorPickerView : ConstraintLayout {
 
-    private var colorPickListener: ((Int) -> Unit)? = null
+    private var colorPickListener: ((String) -> Unit)? = null
 
     private var viewModel: ColorPickerViewModel = ColorPickerViewModel()
 
@@ -156,11 +158,14 @@ class ColorPickerView : ConstraintLayout {
         super.onRestoreInstanceState(BaseSavedState.EMPTY_STATE)
     }
 
-    fun setOnColorPickListener(colorPickListener: (Int) -> Unit) {
+    fun setOnColorPickListener(colorPickListener: (String) -> Unit) {
         this.colorPickListener = colorPickListener
     }
 
-    fun getPickedColor(): Int = viewModel.selectedColorLiveData.value!!.intColor
+    fun setSelectedColor(color: String) =
+        viewModel.setSelectedColor(PickedColor(Color.parseColor(color)))
+
+    fun getPickedColor(): String = viewModel.selectedColorLiveData.value!!.toString()
 
     internal class State(superState: Parcelable?,
                          val color: Int,

@@ -16,7 +16,6 @@ import androidx.annotation.ColorRes
 import androidx.annotation.IdRes
 import androidx.annotation.MenuRes
 import androidx.annotation.StringRes
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.SearchView
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -25,6 +24,7 @@ import androidx.core.view.iterator
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.presentation.common.CollapsibleSearchView
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
+import com.crskdev.biblereaderplus.presentation.util.system.withTheme
 
 /**
  * Created by Cristian Pela on 26.11.2018.
@@ -75,12 +75,7 @@ inline fun Menu.addSearch(context: Context, @StringRes title: Int, expandedByDef
                           crossinline onSubmit: (String) -> Unit = {}) {
 
     add(Menu.NONE, ADDED_SEARCH_ID, 10000, title).apply {
-        actionView = CollapsibleSearchView(
-            ContextThemeWrapper(
-                context,
-                R.style.AppTheme
-            )
-        ).apply {
+        actionView = CollapsibleSearchView(context.withTheme(R.style.AppTheme)).apply {
             setIconifiedByDefault(false)
             val sv = this
             setOnCloseListener {

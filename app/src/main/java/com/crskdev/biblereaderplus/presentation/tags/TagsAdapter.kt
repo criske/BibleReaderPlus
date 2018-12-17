@@ -116,10 +116,23 @@ class TagVH(v: View, private val tagBehaviour: TagBehaviour, private val action:
                             }
                             R.id.action_tag_remove -> {
                                 model?.let {
-                                    action(
-                                        it,
-                                        TagSelectAction.CONTEXT_MENU_REMOVE
-                                    )
+                                    TagOpsUI.showConfirmationDialogOnDelete(context, it) {
+                                        action(
+                                            it,
+                                            TagSelectAction.CONTEXT_MENU_REMOVE
+                                        )
+                                    }
+                                }
+                            }
+                            R.id.action_tag_color -> {
+                                model?.let {
+                                    TagOpsUI.showColorPicker(context, it) { t ->
+                                        action(
+                                            t,
+                                            TagSelectAction.CONTEXT_MENU_CHANGE_COLOR
+                                        )
+                                    }
+
                                 }
                             }
                         }

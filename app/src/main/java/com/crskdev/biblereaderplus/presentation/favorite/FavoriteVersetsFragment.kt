@@ -103,15 +103,12 @@ class FavoriteVersetsFragment : DaggerFragment() {
                     tagOpsViewModel.renameTag(t.id, t.name)
                 }
                 TagSelectAction.CONTEXT_MENU_REMOVE -> {
-                    TagOpsUI.showConfirmationDialogOnDelete(view.context, t) {
-                        tagOpsViewModel.deleteTag(it.id)
-                    }
+                    tagOpsViewModel.deleteTag(t.id)
                 }
                 TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> {
-
+                    tagOpsViewModel.changeColor(t.id, t.color)
                 }
                 TagSelectAction.SELECT -> {
-
                 }
             }
         }
