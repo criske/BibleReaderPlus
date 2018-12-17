@@ -34,11 +34,12 @@ class ViewLifecycleOwner(view: View) : LifecycleOwner {
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
 
             override fun onViewDetachedFromWindow(v: View?) {
-                registry.markState(Lifecycle.State.STARTED)
+                registry.markState(Lifecycle.State.DESTROYED)
             }
 
             override fun onViewAttachedToWindow(v: View?) {
-                registry.markState(Lifecycle.State.DESTROYED)
+                registry.markState(Lifecycle.State.CREATED)
+                registry.markState(Lifecycle.State.STARTED)
             }
 
         })

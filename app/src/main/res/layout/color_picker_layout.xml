@@ -7,57 +7,67 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:parentTag="androidx.constraintlayout.widget.ConstraintLayout">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/colorPickerRecylerLocked"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="4dp"
-        tools:listitem="@layout/color_picker_item_locked"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/color_picker_item_locked" />
 
-    <TextView
-        android:id="@+id/colorPickerSelectedColorText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.5"
-        android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="@+id/colorPickerSelectedColorView"
-        app:layout_constraintTop_toTopOf="@+id/colorPickerSelectedColorView"
-        tools:text="#00000" />
-
-    <ImageView
-        android:id="@+id/colorPickerImgLock"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:alpha="0.5"
-        app:layout_constraintBottom_toBottomOf="@+id/colorPickerSelectedColorView"
-        app:layout_constraintEnd_toEndOf="@+id/colorPickerSelectedColorView"
-        app:srcCompat="@drawable/ic_lock_closed_black_24dp"
-        tools:ignore="ContentDescription" />
-
-    <View
+    <androidx.cardview.widget.CardView
         android:id="@+id/colorPickerSelectedColorView"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="8dp"
+        android:layout_width="128dp"
+        android:layout_height="128dp"
+        android:layout_marginTop="24dp"
+        app:cardCornerRadius="5dp"
+        app:cardElevation="3dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/colorPickerRecylerLocked" />
+        app:layout_constraintTop_toBottomOf="@+id/colorPickerRecylerLocked">
+
+        <TextView
+            android:id="@+id/colorPickerSelectedColorText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|start"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:alpha="0.5"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            tools:text="#00000" />
+
+        <ImageView
+            android:id="@+id/colorPickerImgLock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:alpha="0.5"
+            android:tint="@android:color/darker_gray"
+            app:srcCompat="@drawable/ic_lock_open_black_24dp"
+            tools:ignore="ContentDescription" />
+    </androidx.cardview.widget.CardView>
 
 
     <TextView
         android:id="@+id/colorPickerLblR"
-        android:layout_width="10dp"
+        android:layout_width="12dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
         android:text="R"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/colorPickerSelectedColorView"
         tools:ignore="HardcodedText" />
@@ -67,16 +77,20 @@
         android:id="@+id/colorPickerSeekR"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:max="255"
+        app:layout_constraintBottom_toBottomOf="@+id/colorPickerLblR"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/colorPickerLblR"
         app:layout_constraintTop_toTopOf="@+id/colorPickerLblR" />
 
     <TextView
         android:id="@+id/colorPickerLblG"
-        android:layout_width="10dp"
+        android:layout_width="12dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
         android:text="G"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/colorPickerLblR"
         tools:ignore="HardcodedText" />
@@ -85,24 +99,30 @@
         android:id="@+id/colorPickerSeekG"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:max="255"
+        app:layout_constraintBottom_toBottomOf="@+id/colorPickerLblG"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/colorPickerLblG"
         app:layout_constraintTop_toTopOf="@+id/colorPickerLblG" />
 
     <TextView
         android:id="@+id/colorPickerLblB"
-        android:layout_width="10dp"
+        android:layout_width="12dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
         android:text="B"
+        android:textSize="18sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/colorPickerLblG"
         tools:ignore="HardcodedText" />
 
     <SeekBar
-        android:id="@+id/seekBar3"
+        android:id="@+id/colorPickerSeekB"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:max="255"
+        app:layout_constraintBottom_toBottomOf="@+id/colorPickerLblB"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/colorPickerLblB"
         app:layout_constraintTop_toTopOf="@+id/colorPickerLblB" />

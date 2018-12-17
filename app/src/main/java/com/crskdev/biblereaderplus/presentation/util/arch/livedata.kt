@@ -128,6 +128,7 @@ inline fun <T, R> LiveData<T>.splitAndMerge(block: LiveData<T>.() -> List<LiveDa
 
 inline fun <T, R> LiveData<T>.scan(initialValue: R, crossinline mapper: (R, T) -> R): LiveData<R> {
     val mutableLiveData: MediatorLiveData<R> = MediatorLiveData()
+    mutableLiveData.value = initialValue
     mutableLiveData.addSource(this, object : Observer<T> {
         var accValue = initialValue
         override fun onChanged(t: T) {
