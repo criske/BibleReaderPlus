@@ -11,6 +11,8 @@ import android.util.TypedValue
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.StyleRes
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 
@@ -33,5 +35,7 @@ fun Context.getDrawableCompat(@DrawableRes id: Int): Drawable? = ContextCompat.g
 
 @ColorInt
 fun Context.getColorCompat(@ColorRes id: Int): Int = ContextCompat.getColor(this, id)
+
+fun Context.withTheme(@StyleRes id: Int): Context = ContextThemeWrapper(this, id)
 
 fun Int.colorResToInt(context: Context) = context.getColorCompat(this)

@@ -17,7 +17,6 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.getSystemService
 import com.crskdev.biblereaderplus.R
@@ -44,7 +43,7 @@ fun Activity.hideSoftKeyboard() {
 @SuppressLint("RestrictedApi")
 inline fun Context.simpleInputDialog(title: String, crossinline onSubmit: (Editable) -> Unit): AlertDialog.Builder {
     val margin = 16.dpToPx(resources)
-    val inputText = AppCompatEditText(ContextThemeWrapper(this, R.style.AppTheme))
+    val inputText = AppCompatEditText(withTheme(R.style.AppTheme))
         .apply {
             setSingleLine()
         }
@@ -57,6 +56,7 @@ inline fun Context.simpleInputDialog(title: String, crossinline onSubmit: (Edita
             inputText.text?.let { onSubmit(it) }
         }
 }
+
 
 inline fun Context.showSimpleInputDialog(title: String, crossinline onSubmit: (Editable) -> Unit) {
     simpleInputDialog(title, onSubmit).create().show()

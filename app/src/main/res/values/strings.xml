@@ -18,4 +18,5 @@
     <string name="remove">Remove</string>
 
     <string name="rename_title">Rename "%1$s"</string>
+    <string name="color">Color</string>
 </resources>

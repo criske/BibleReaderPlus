@@ -15,6 +15,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.presentation.util.system.withTheme
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
 /**
@@ -32,14 +33,14 @@ class TagsSearchView : ConstraintLayout {
     //@formatter:off
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
             super(context, attrs, defStyleAttr) {
-        val inflater = LayoutInflater.from(context)
+        val inflater = LayoutInflater.from(context.withTheme(R.style.AppTheme))
         inflater.inflate(R.layout.tag_search_view_layout, this, true)
         suggestionsAdapter = TagsAdapter(inflater, TagBehaviour(TagBehaviour.SelectPolicy.SELECT_ON_TAP)) { t, a ->
             when(a){
                 TagSelectAction.CLOSE -> {}
-                TagSelectAction.CONTEXT_MENU_RENAME ->  listener(Action.Rename(t))
-                TagSelectAction.CONTEXT_MENU_REMOVE -> TODO()
-                TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> TODO()
+                TagSelectAction.CONTEXT_MENU_RENAME -> listener(Action.Rename(t))
+                TagSelectAction.CONTEXT_MENU_REMOVE -> listener(Action.Delete(t))
+                TagSelectAction.CONTEXT_MENU_CHANGE_COLOR -> listener(Action.Color(t))
                 TagSelectAction.SELECT -> listener(Action.Select(t))
             }
         }
@@ -97,5 +98,6 @@ class TagsSearchView : ConstraintLayout {
         class Create(val tagName: String) : Action()
         class Rename(val tag: Tag) : Action()
         class Delete(val tag: Tag) : Action()
+        class Color(val tag: Tag) : Action()
     }
 }
