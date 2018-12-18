@@ -22,6 +22,7 @@ import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.system.showSimpleInputDialog
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
+import com.crskdev.biblereaderplus.presentation.util.view.ColorUtilsExtra
 import com.google.android.material.chip.Chip
 
 /**
@@ -171,8 +172,9 @@ fun Chip.setContrastingTextColor(@ColorInt color: Int) {
     chipBackgroundColor = ColorStateList.valueOf(color)
     chipStrokeColor = ColorStateList.valueOf(ColorUtils.blendARGB(Color.WHITE, color, 0.5f))
     setTextColor(
-        ColorUtils.calculateLuminance(color).takeIf { it < 0.5 }?.let {
-            context.getColorCompat(R.color.secondaryTextColor)
-        } ?: context.getColorCompat(R.color.primaryTextColor)
+        ColorUtilsExtra.contrastColor(color)(
+            context.getColorCompat(R.color.secondaryTextColor),
+            context.getColorCompat(R.color.primaryTextColor)
+        )
     )
 }
