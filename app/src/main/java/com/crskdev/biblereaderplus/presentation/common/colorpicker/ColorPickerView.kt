@@ -17,6 +17,7 @@ import android.view.LayoutInflater
 import android.widget.SeekBar
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.edit
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.toColorFilter
 import androidx.core.os.bundleOf
@@ -32,11 +33,19 @@ import kotlinx.android.synthetic.main.color_picker_layout.view.*
  */
 class ColorPickerView : ConstraintLayout {
 
+    companion object {
+        private const val KEY_LOCKED_COLORS = "KEY_LOCKED_COLORS"
+    }
+
     private var colorPickListener: ((String) -> Unit)? = null
 
-    private var viewModel: ColorPickerViewModel = ColorPickerViewModel()
+    private lateinit var viewModel: ColorPickerViewModel
 
     private val lifecycleOwner = ViewLifecycleOwner(this)
+
+    private val storage by lazy {
+        context.getSharedPreferences("color_picker_locked_colors", Context.MODE_PRIVATE)
+    }
 
     constructor(context: Context) : this(context, null)
 
@@ -53,6 +62,9 @@ class ColorPickerView : ConstraintLayout {
     //@formatter:on
 
     private fun observeViewModel() {
+        viewModel = ColorPickerViewModel(storage.getStringSet(KEY_LOCKED_COLORS, emptySet())!!.map {
+            PickedColor(it.toInt())
+        }.toSet())
         val lockedAdapter =
             LockedPickedColorAdapter(LayoutInflater.from(context)) { picked, action ->
                 when (action) {
@@ -78,13 +90,14 @@ class ColorPickerView : ConstraintLayout {
         })
 
         viewModel.selectedColorLiveData.observe(lifecycleOwner, Observer {
-            val contrastColor = ColorUtils.calculateLuminance(it.intColor).let {
-                if (it < 0.5) {
-                    Color.WHITE
-                } else {
-                    Color.DKGRAY
+            val contrastColor = ColorUtils.calculateLuminance(it.intColor)
+                .let {
+                    if (it < 0.5) {
+                        Color.WHITE
+                    } else {
+                        Color.DKGRAY
+                    }
                 }
-            }
             colorPickerSelectedColorView.cast<CardView>().setCardBackgroundColor(it.intColor)
             with(colorPickerSelectedColorText) {
                 setTextColor(contrastColor)
@@ -138,12 +151,21 @@ class ColorPickerView : ConstraintLayout {
         })
     }
 
+    override fun onDetachedFromWindow() {
+        storage.edit {
+            putStringSet(
+                KEY_LOCKED_COLORS,
+                viewModel.lockedColorsLiveData.value?.map { it.intColor.toString() }?.toSet()
+            )
+        }
+        super.onDetachedFromWindow()
+    }
+
     override fun onSaveInstanceState(): Parcelable? {
         return bundleOf(
-            State.STATE_KEY to State.serialized(
+            State.STATE_KEY to State(
                 super.onSaveInstanceState(),
-                viewModel.selectedColorLiveData.value!!.intColor,
-                viewModel.lockedColorsLiveData.value!!.map { it.intColor }
+                viewModel.selectedColorLiveData.value!!.intColor
             )
         )
     }
@@ -151,7 +173,7 @@ class ColorPickerView : ConstraintLayout {
     override fun onRestoreInstanceState(restoredState: Parcelable?) {
         if (restoredState is Bundle?) {
             restoredState?.getParcelable<State>(State.STATE_KEY)?.let {
-                viewModel.restore(it.color, it.deserializeLockedColors())
+                viewModel.restore(PickedColor(it.color))
                 super.onRestoreInstanceState(it.superState)
             }
         }
@@ -168,27 +190,9 @@ class ColorPickerView : ConstraintLayout {
     fun getPickedColor(): String = viewModel.selectedColorLiveData.value!!.toString()
 
     internal class State(superState: Parcelable?,
-                         val color: Int,
-                         val lockedColors: String) : BaseSavedState(superState) {
-
+                         val color: Int) : BaseSavedState(superState) {
         companion object {
             const val STATE_KEY = "ColorPickerState_Key"
-            private const val DELIM = ";"
-            fun serialized(superState: Parcelable?,
-                           selectedColor: Int,
-                           lockedColors: List<Int>): State =
-                State(superState, selectedColor, buildString {
-                    lockedColors.forEachIndexed { i, c ->
-                        val d = if (i < lockedColors.size - 1) DELIM else ""
-                        append("$c$d")
-                    }
-                })
-        }
-
-        fun deserializeLockedColors(): List<Int> = mutableListOf<Int>().apply {
-            lockedColors.split(DELIM).forEach {
-                add(it.toInt())
-            }
         }
     }
 
