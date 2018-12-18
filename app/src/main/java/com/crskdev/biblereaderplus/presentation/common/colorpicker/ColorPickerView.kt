@@ -7,6 +7,8 @@
 
 package com.crskdev.biblereaderplus.presentation.common.colorpicker
 
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Color
 import android.graphics.PorterDuff
@@ -14,6 +16,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.animation.DecelerateInterpolator
 import android.widget.SeekBar
 import androidx.cardview.widget.CardView
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -26,6 +29,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.arch.ViewLifecycleOwner
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
+import com.crskdev.biblereaderplus.presentation.util.view.ColorUtilsExtra
 import kotlinx.android.synthetic.main.color_picker_layout.view.*
 
 /**
@@ -35,6 +39,7 @@ class ColorPickerView : ConstraintLayout {
 
     companion object {
         private const val KEY_LOCKED_COLORS = "KEY_LOCKED_COLORS"
+        private const val ANIMATION_DURATION_MS = 400L
     }
 
     private var colorPickListener: ((String) -> Unit)? = null
@@ -46,6 +51,8 @@ class ColorPickerView : ConstraintLayout {
     private val storage by lazy {
         context.getSharedPreferences("color_picker_locked_colors", Context.MODE_PRIVATE)
     }
+
+    private val accentColor by lazy { context.getColorCompat(R.color.secondaryColor) }
 
     constructor(context: Context) : this(context, null)
 
@@ -87,17 +94,23 @@ class ColorPickerView : ConstraintLayout {
 
         viewModel.lockedColorsLiveData.observe(lifecycleOwner, Observer {
             lockedAdapter.submitList(it.toList())
+            colorPickerRecylerLocked.smoothScrollToPosition(it.size - 1)
         })
 
         viewModel.selectedColorLiveData.observe(lifecycleOwner, Observer {
-            val contrastColor = ColorUtils.calculateLuminance(it.intColor)
-                .let {
-                    if (it < 0.5) {
-                        Color.WHITE
-                    } else {
-                        Color.DKGRAY
-                    }
-                }
+            val contrastColor = ColorUtilsExtra.defaultContrastColor(it.intColor)
+//            if (it.pickType == PickedColor.SELECT) {
+//                ObjectAnimator.ofInt(
+//                    colorPickerSelectedColorView, "cardBackgroundColor",
+//                    it.intColor
+//                ).apply {
+//                    setEvaluator(ArgbEvaluator())
+//                    interpolator = LinearInterpolator()
+//                    duration = ANIMATION_DURATION_MS * 2
+//                }.start()
+//            } else {
+//                colorPickerSelectedColorView.cast<CardView>().setCardBackgroundColor(it.intColor)
+//            }
             colorPickerSelectedColorView.cast<CardView>().setCardBackgroundColor(it.intColor)
             with(colorPickerSelectedColorText) {
                 setTextColor(contrastColor)
@@ -106,27 +119,47 @@ class ColorPickerView : ConstraintLayout {
             colorPickerImgLock.setColorFilter(contrastColor)
 
         })
-        val accentColor = context.getColorCompat(R.color.secondaryColor)
-        viewModel.rChannelLiveData.observe(lifecycleOwner, Observer {
-            decorateSeekBar(colorPickerSeekR, accentColor, it, ColorPickerViewModel.R)
-        })
-        viewModel.gChannelLiveData.observe(lifecycleOwner, Observer {
-            decorateSeekBar(colorPickerSeekG, accentColor, it, ColorPickerViewModel.G)
-        })
-        viewModel.bChannelLiveData.observe(lifecycleOwner, Observer {
-            decorateSeekBar(colorPickerSeekB, accentColor, it, ColorPickerViewModel.B)
+        viewModel.channelLiveData.observe(lifecycleOwner, Observer {
+            setSeekBarsProgress(it)
+            decorateSeekBars(it)
         })
         registerSeekListener(colorPickerSeekR, ColorPickerViewModel.R)
         registerSeekListener(colorPickerSeekG, ColorPickerViewModel.G)
         registerSeekListener(colorPickerSeekB, ColorPickerViewModel.B)
     }
 
-    private fun decorateSeekBar(seekBar: SeekBar, foregroundColor: Int, channelColor: Int, channel: Int) {
+    private fun setSeekBarsProgress(rgbChannels: RGBPickChannels) {
+        val type = rgbChannels.first.pickType
+        if (type == PickedColor.SELECT) {
+            val rAnim = ObjectAnimator
+                .ofInt(colorPickerSeekR, "progress", rgbChannels.first.value)
+            val gAnim = ObjectAnimator
+                .ofInt(colorPickerSeekG, "progress", rgbChannels.second.value)
+            val bAnim = ObjectAnimator
+                .ofInt(colorPickerSeekB, "progress", rgbChannels.third.value)
+            AnimatorSet().apply {
+                interpolator = DecelerateInterpolator()
+                duration = ANIMATION_DURATION_MS
+                playTogether(rAnim, gAnim, bAnim)
+            }.start()
+        } else {
+            colorPickerSeekR.progress = rgbChannels.first.value
+            colorPickerSeekG.progress = rgbChannels.second.value
+            colorPickerSeekB.progress = rgbChannels.third.value
+        }
+    }
+
+    private fun decorateSeekBars(rgbChannels: RGBPickChannels) {
+        decorateSeekBar(colorPickerSeekR, accentColor, rgbChannels.first)
+        decorateSeekBar(colorPickerSeekG, accentColor, rgbChannels.second)
+        decorateSeekBar(colorPickerSeekB, accentColor, rgbChannels.third)
+    }
+
+    private fun decorateSeekBar(seekBar: SeekBar, foregroundColor: Int, pickChannel: PickChannel) {
         val color = arrayOf(0, 0, 0).apply {
-            this[channel] = channelColor
+            this[pickChannel.type] = pickChannel.value
         }.let { Color.rgb(it[0], it[1], it[2]) }
         with(seekBar) {
-            progress = channelColor
             thumb.colorFilter = PorterDuff.Mode.SRC_ATOP.toColorFilter(
                 ColorUtils.compositeColors(
                     ColorUtils.setAlphaComponent(color, 50),
@@ -173,7 +206,7 @@ class ColorPickerView : ConstraintLayout {
     override fun onRestoreInstanceState(restoredState: Parcelable?) {
         if (restoredState is Bundle?) {
             restoredState?.getParcelable<State>(State.STATE_KEY)?.let {
-                viewModel.restore(PickedColor(it.color))
+                viewModel.setSelectedColor(PickedColor(it.color))
                 super.onRestoreInstanceState(it.superState)
             }
         }

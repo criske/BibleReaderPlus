@@ -5,8 +5,11 @@
 
 package com.crskdev.biblereaderplus.presentation.util.view
 
+import android.graphics.Color
 import android.graphics.Rect
 import android.view.View
+import androidx.annotation.ColorInt
+import androidx.core.graphics.ColorUtils
 
 
 /**
@@ -28,4 +31,28 @@ fun View.getDrawingRect(): Rect = Rect().apply {
 
 fun View.getHitRect(): Rect = Rect().apply {
     getHitRect(this)
+}
+
+object ColorUtilsExtra {
+
+    /**
+     * Obtain the light or dark color based on test color and a light threshold
+     *
+     * When the test color is too dark (<lightThreshold) it will choose the first curry argument (the lightColor)
+     * else the darkColor (2nd curry argument)
+     */
+    fun contrastColor(@ColorInt testColor: Int, lightThreshold: Double = 0.5): (Int, Int) -> Int {
+        val lightFactor = ColorUtils.calculateLuminance(testColor)
+        return { lightColor, darkColor ->
+            if (lightFactor <= lightThreshold) {
+                lightColor
+            } else {
+                darkColor
+            }
+        }
+    }
+
+    fun defaultContrastColor(testColor: Int): Int =
+        contrastColor(testColor)(Color.WHITE, Color.DKGRAY)
+
 }

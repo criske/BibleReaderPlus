@@ -33,24 +33,20 @@ internal class ColorPickerViewModel(
             value = DEFAULT_PICKED
         }
 
-    val rChannelLiveData: LiveData<Int> = selectedColorLiveData.map {
-        Color.red(it())
-    }
-
-    val gChannelLiveData: LiveData<Int> = selectedColorLiveData.map {
-        Color.green(it())
-    }
-
-    val bChannelLiveData: LiveData<Int> = selectedColorLiveData.map {
-        Color.blue(it())
+    val channelLiveData: LiveData<RGBPickChannels> = selectedColorLiveData.map {
+        Triple(
+            PickChannel(Color.red(it()), ColorPickerViewModel.R, it.pickType),
+            PickChannel(Color.green(it()), ColorPickerViewModel.G, it.pickType),
+            PickChannel(Color.blue(it()), ColorPickerViewModel.B, it.pickType)
+        )
     }
 
     fun setChannelValue(value: Int, channel: Int) {
-        val prevColor = selectedColorLiveData.value ?: DEFAULT_PICKED
+        val prevColor = (selectedColorLiveData.value ?: DEFAULT_PICKED)()
         val rgb = mutableListOf(
-            Color.red(prevColor()),
-            Color.green(prevColor()),
-            Color.blue(prevColor())
+            Color.red(prevColor),
+            Color.green(prevColor),
+            Color.blue(prevColor)
         ).apply {
             this[channel] = value
         }
@@ -59,12 +55,9 @@ internal class ColorPickerViewModel(
                 rgb[0],
                 rgb[1],
                 rgb[2]
-            )
+            ),
+            PickedColor.CHANNEL_CHANGE
         )
-    }
-
-    fun restore(selectedColor: PickedColor) {
-        selectedColorLiveData.cast<MutableLiveData<PickedColor>>().value = selectedColor
     }
 
     fun lockColor() {
