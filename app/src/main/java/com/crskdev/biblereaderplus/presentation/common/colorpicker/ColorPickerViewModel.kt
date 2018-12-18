@@ -12,7 +12,9 @@ import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.arch.map
 
-internal class ColorPickerViewModel() : ViewModel() {
+internal class ColorPickerViewModel(
+    lockedColors: Set<PickedColor>
+) : ViewModel() {
 
     companion object {
         const val R = 0
@@ -23,7 +25,7 @@ internal class ColorPickerViewModel() : ViewModel() {
 
     val lockedColorsLiveData: LiveData<Set<PickedColor>> =
         MutableLiveData<Set<PickedColor>>().apply {
-            value = emptySet()
+            value = lockedColors
         }
 
     val selectedColorLiveData: LiveData<PickedColor> = MutableLiveData<PickedColor>()
@@ -61,14 +63,8 @@ internal class ColorPickerViewModel() : ViewModel() {
         )
     }
 
-    fun restore(selectedColor: Int, lockedColors: List<Int>) {
-        selectedColorLiveData.cast<MutableLiveData<PickedColor>>().value =
-                PickedColor(
-                    selectedColor
-                )
-        lockedColorsLiveData.cast<MutableLiveData<Set<PickedColor>>>().value = lockedColors.map {
-            PickedColor(it)
-        }.toSet()
+    fun restore(selectedColor: PickedColor) {
+        selectedColorLiveData.cast<MutableLiveData<PickedColor>>().value = selectedColor
     }
 
     fun lockColor() {
