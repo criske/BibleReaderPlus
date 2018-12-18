@@ -5,16 +5,15 @@
 
 package com.crskdev.biblereaderplus.presentation.common.colorpicker
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.cardview.widget.CardView
-import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
+import com.crskdev.biblereaderplus.presentation.util.view.ColorUtilsExtra
 import kotlinx.android.synthetic.main.color_picker_item_locked.view.*
 
 /**
@@ -69,13 +68,7 @@ internal class PickedColorVH(view: View,
 
     override fun onBind(model: PickedColor) {
         with(itemView as CardView) {
-            val contrastColor = ColorUtils.calculateLuminance(model.intColor).let {
-                if (it < 0.5) {
-                    Color.WHITE
-                } else {
-                    Color.DKGRAY
-                }
-            }
+            val contrastColor = ColorUtilsExtra.defaultContrastColor(model.intColor)
             setCardBackgroundColor(model.intColor)
             colorPickerLockedColorBtnRemove.setColorFilter(contrastColor)
         }
