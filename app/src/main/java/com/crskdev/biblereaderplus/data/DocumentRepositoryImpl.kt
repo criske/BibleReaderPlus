@@ -94,9 +94,8 @@ class DocumentRepositoryImpl : DocumentRepository {
             }
             value = Database(
                 versets, tags.toSet(), setOf(
-                    VersetTag(versets.first().key, tags.first().id),
-                    VersetTag(versets.first().key, tags[1].id),
-                    VersetTag(versets[1].key, tags.first().id)
+                    VersetTag(versets.first { it.isFavorite }.key, tags.first().id),
+                    VersetTag(versets.first { it.isFavorite }.key, tags[1].id)
                 )
             )
         }
@@ -121,13 +120,18 @@ class DocumentRepositoryImpl : DocumentRepository {
 
     override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
         updateDatabasePost {
-            copy(versets = versets.map {
-                if (it.key == versetKey) {
-                    it.copy(isFavorite = add)
-                } else {
-                    it
-                }
-            })
+            copy(
+                versets = versets.map {
+                    if (it.key == versetKey) {
+                        it.copy(isFavorite = add)
+                    } else {
+                        it
+                    }
+                },
+                versetTags = if (!add) versetTags.filter {
+                    it.versetKey != versetKey
+                }.toSet() else versetTags
+            )
         }
     }
 
