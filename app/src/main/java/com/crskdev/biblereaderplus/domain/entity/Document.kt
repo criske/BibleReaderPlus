@@ -14,7 +14,7 @@ sealed class Read(val id: Int) {
 
         class Book(id: Int, val name: String) : Content(id)
 
-        class Chapter(val key: ChapterKey, val bookId: Int, val number: Int) : Content(key.id) {
+        class Chapter(val key: ChapterKey, val number: Int) : Content(key.id) {
             data class Key(val id: Int, val bookId: Int)
         }
 
