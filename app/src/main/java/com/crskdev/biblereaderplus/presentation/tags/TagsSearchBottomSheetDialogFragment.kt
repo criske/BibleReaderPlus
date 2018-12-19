@@ -27,7 +27,6 @@ import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
 import com.crskdev.biblereaderplus.presentation.util.arch.interval
 import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
-import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import dagger.android.AndroidInjector
 import dagger.android.DispatchingAndroidInjector
@@ -117,7 +116,7 @@ class TagsSearchBottomSheetDialogFragment : BottomSheetDialogFragment(),
             tagsSearchView.submitSuggestions(it)
         })
         tagsOpsViewModel.errorsLiveData.observe(this, Observer {
-            context?.showSimpleToast("${it.javaClass.simpleName}: ${it.err ?: ""}")
+            TagOpsUI.showError(view.context, it)
         })
     }
 
@@ -135,7 +134,7 @@ class TagsOpsViewModel(
 
     sealed class ErrorVM(val err: Throwable?) {
         object EmptyTagName : ErrorVM(null)
-        object ShortTagName : ErrorVM(null)
+        class ShortTagName(val name: String, val requiredLength: Int) : ErrorVM(null)
         class Unknown(err: Throwable?) : ErrorVM(err)
     }
 
@@ -148,7 +147,7 @@ class TagsOpsViewModel(
     private val errorHandler: (ResponseError) -> Unit = {
         val err = when (it) {
             is ResponseError.EmptyTagName -> ErrorVM.EmptyTagName
-            is ResponseError.ShortTagName -> ErrorVM.ShortTagName
+            is ResponseError.ShortTagName -> ErrorVM.ShortTagName(it.name, it.lengthRequired)
             is ResponseError.Unknown -> ErrorVM.Unknown(it.err)
         }
         errorsLiveData.postValue(err)

@@ -210,10 +210,9 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
     override fun tagCreate(newTag: Tag) {
-//        updateDatabasePost {
-//            copy(tags = tags + newTag)
-//        }
-        TODO("Oops! Need to implement tag creation")
+        updateDatabasePost {
+            copy(tags = tags + newTag)
+        }
     }
 
     override fun tagDelete(id: String) {
