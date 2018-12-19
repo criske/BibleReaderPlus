@@ -15,7 +15,6 @@ import androidx.core.graphics.toColorFilter
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.transition.AutoTransition
 import androidx.transition.ChangeTransform
 import androidx.transition.TransitionSet
@@ -25,6 +24,9 @@ import com.crskdev.biblereaderplus.presentation.tags.*
 import com.crskdev.biblereaderplus.presentation.util.arch.navigateUp
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.view.setup
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_favorite_verset_detail.*
 import kotlinx.android.synthetic.main.title_layout_default_content.*
@@ -48,7 +50,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        postponeEnterTransition();
+        postponeEnterTransition()
         sharedElementEnterTransition = DetailsTransition().apply {
             duration = 300
         }
@@ -130,7 +132,10 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                     }
                 }
             }
-            layoutManager = StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL)
+            layoutManager = FlexboxLayoutManager(context).apply {
+                flexDirection = FlexDirection.ROW
+                justifyContent = JustifyContent.FLEX_START
+            }
         }
         btnVersetDetailFav.setOnClickListener {
             viewModel.addToFavorite(it.tag.castIf<Boolean>()?.not() ?: false)
@@ -150,7 +155,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
 
 class DetailsTransition : TransitionSet() {
     init {
-        ordering = ORDERING_TOGETHER;
+        ordering = ORDERING_TOGETHER
         addTransition(ChangeTransform())
             .addTransition(AutoTransition())
     }

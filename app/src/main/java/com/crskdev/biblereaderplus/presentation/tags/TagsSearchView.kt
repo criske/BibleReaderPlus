@@ -12,10 +12,12 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.isVisible
-import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.presentation.util.system.withTheme
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import kotlinx.android.synthetic.main.tag_search_view_layout.view.*
 
 /**
@@ -46,7 +48,10 @@ class TagsSearchView : ConstraintLayout {
         }
         with(recyclerTagSearch) {
             adapter = suggestionsAdapter
-            layoutManager = StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL)
+            layoutManager = FlexboxLayoutManager(context).apply {
+                flexDirection = FlexDirection.ROW
+                justifyContent = JustifyContent.FLEX_START
+            }
         }
         editTagSearch.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) = Unit
