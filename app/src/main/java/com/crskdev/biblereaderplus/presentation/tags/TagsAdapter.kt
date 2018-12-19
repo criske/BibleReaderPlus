@@ -37,12 +37,6 @@ class TagsAdapter(private val inflater: LayoutInflater,
         override fun areContentsTheSame(oldItem: Tag, newItem: Tag): Boolean = oldItem == newItem
     }) {
 
-    init {
-        setHasStableIds(true)
-    }
-
-    override fun getItemId(position: Int): Long = getItem(position).id.toLong()
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TagVH =
         TagVH(
             inflater.inflate(

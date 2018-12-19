@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.graphics.toColorFilter
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
@@ -96,7 +95,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
             viewModel.tagToFavoriteAction(it.id, true)
         })
         tagOpsViewModel.errorsLiveData.observe(this, Observer {
-            Toast.makeText(context, it.err?.message ?: "", Toast.LENGTH_SHORT).show()
+            TagOpsUI.showError(context!!, it)
         })
     }
 

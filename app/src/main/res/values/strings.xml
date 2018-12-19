@@ -19,4 +19,8 @@
 
     <string name="rename_title">Rename "%1$s"</string>
     <string name="color">Color</string>
+
+    <string name="err_unknown">Unknown error</string>
+    <string name="err_tag_short_name">Name \"%1$s\" is too short. Must be at least %2$d</string>
+    <string name="err_tag_empty">Name is empty.</string>
 </resources>
