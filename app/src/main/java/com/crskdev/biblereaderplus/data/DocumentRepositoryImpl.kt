@@ -31,6 +31,8 @@ import java.util.*
 class DocumentRepositoryImpl : DocumentRepository {
 
     private data class Database(
+        val books: List<Read.Content.Book>,
+        val chapters: List<Read.Content.Chapter>,
         val versets: List<Read.Verset>,
         val tags: Set<Tag>,
         val versetTags: Set<VersetTag>
@@ -44,34 +46,50 @@ class DocumentRepositoryImpl : DocumentRepository {
 
     init {
         dbLiveData = MutableLiveData<Database>().apply {
-            val versets = Random().let { r ->
-                val wordLengths = listOf(5, 10, 3, 2, 7, 15, 12)
-                (1..100)
-                    .map { id ->
+
+            val r = Random()
+            val wordLengths = listOf(5, 10, 3, 2, 7, 15, 12)
+            fun generateWord(random: Random, len: Int): String {
+                return sequence {
+                    while (true) {
+                        yield((random.nextInt(24) + 97).toChar())
+                    }
+                }.take(len).joinToString("")
+            }
+
+
+            val books = mutableListOf<Read.Content.Book>()
+            val chapters = mutableListOf<Read.Content.Chapter>()
+            val versets = mutableListOf<Read.Verset>()
+            var chapterId = 0
+            var versetId = 0
+            for (bookId in 1..20) {
+                books.add(Read.Content.Book(bookId, generateWord(r, wordLengths.random())))
+                for (c in 5..r.nextInt(20) + 5) {
+                    chapters.add(Read.Content.Chapter(ChapterKey(chapterId++, bookId), c))
+                    for (v in 10..r.nextInt(20) + 10) {
                         val paragraphLength = r.nextInt(10) + 50
                         var wordsCountDown = paragraphLength
                         val content = buildString {
                             while (wordsCountDown > 0) {
                                 val delim = if (wordsCountDown > 0) " " else ""
-                                val word = sequence {
-                                    while (true) {
-                                        yield((r.nextInt(24) + 97).toChar())
-                                    }
-                                }.take(wordLengths.random()).joinToString("") + delim
+                                val word = generateWord(r, wordLengths.random()) + delim
                                 append(word)
                                 wordsCountDown--
                             }
                         }
-                        Read.Verset(
-                            VersetKey(id, 1, 1, "remote$id"),
-                            id,
-                            content,
-                            r.nextBoolean(),
-                            ModifiedAt("")
+                        versets.add(
+                            Read.Verset(
+                                VersetKey(versetId++, bookId, chapterId, "remote$versetId"),
+                                v,
+                                content,
+                                r.nextBoolean(),
+                                ModifiedAt("")
+                            )
                         )
                     }
+                }
             }
-
             val tags = (listOf(
                 "#ffcc99",
                 "#cc66ff",
@@ -93,6 +111,8 @@ class DocumentRepositoryImpl : DocumentRepository {
                 }
             }
             value = Database(
+                books,
+                chapters,
                 versets, tags.toSet(), setOf(
                     VersetTag(versets.first { it.isFavorite }.key, tags.first().id),
                     VersetTag(versets.first { it.isFavorite }.key, tags[1].id)
@@ -136,13 +156,19 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
     override fun getVerset(versetKey: VersetKey): SelectedVerset? =
-        dbLiveData.value?.versets?.firstOrNull { it.key == versetKey }?.let {
-            SelectedVerset(
-                it.key, "Book${it.key.bookId}", it.key.chapterId,
-                it.key.id,
-                it.content,
-                it.isFavorite
-            )
+        dbLiveData.value?.let { db ->
+            db.versets.firstOrNull { it.key == versetKey }?.let { v ->
+                SelectedVerset(
+                    v.key,
+                    db.books.first { it.id == v.key.bookId }.name,
+                    db.chapters.first { it.id == v.key.chapterId }.number,
+                    v.number,
+                    v.content,
+                    v.isFavorite,
+                    db.versetTags.filter { it.versetKey == versetKey }
+                        .map { t -> db.tags.first { it.id == t.tagId } }
+                )
+            }
         }
 
     override suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit) =
@@ -156,14 +182,16 @@ class DocumentRepositoryImpl : DocumentRepository {
             val liveDataObserver = Observer<Database> { db ->
                 launch {
                     val v = db.versets.first { it.key == versetKey }
-                    val vts = db.versetTags.filter { it.versetKey == versetKey }
+                    val tags = db.versetTags.filter { it.versetKey == versetKey }
                         .map { t -> db.tags.first { it.id == t.tagId } }
                     val selected = SelectedVerset(
-                        v.key, "Book${v.key.bookId}", v.key.chapterId,
-                        v.key.id,
+                        v.key,
+                        db.books.first { it.id == v.key.bookId }.name,
+                        db.chapters.first { it.id == v.key.chapterId }.number,
+                        v.number,
                         v.content,
                         v.isFavorite,
-                        vts
+                        tags
                     )
                     actor.send(selected)
                 }
@@ -246,6 +274,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             InMemoryPagedListDataSource {
                 dbLiveData.value?.let { db ->
                     db.versets
+                        .filter { it.isFavorite }
                         .filter { v ->
                             filter.query?.let { v.content.contains(it, true) } ?: true
                         }
