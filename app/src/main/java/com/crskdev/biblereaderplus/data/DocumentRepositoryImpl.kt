@@ -49,12 +49,12 @@ class DocumentRepositoryImpl : DocumentRepository {
 
             val r = Random()
             val wordLengths = listOf(5, 10, 3, 2, 7, 15, 12)
-            fun generateWord(random: Random, len: Int): String {
+            fun generateWord(random: Random, len: Int, atLeastLen: Int = 2): String {
                 return sequence {
                     while (true) {
                         yield((random.nextInt(24) + 97).toChar())
                     }
-                }.take(len).joinToString("")
+                }.take(len.coerceAtLeast(atLeastLen)).joinToString("")
             }
 
 
@@ -64,9 +64,11 @@ class DocumentRepositoryImpl : DocumentRepository {
             var chapterId = 0
             var versetId = 0
             for (bookId in 1..20) {
-                books.add(Read.Content.Book(bookId, generateWord(r, wordLengths.random())))
+                val book = Read.Content.Book(bookId, generateWord(r, wordLengths.random(), 5))
+                books.add(book)
                 for (c in 5..r.nextInt(20) + 5) {
-                    chapters.add(Read.Content.Chapter(ChapterKey(chapterId++, bookId), c))
+                    val chapter = Read.Content.Chapter(ChapterKey(chapterId++, bookId), c)
+                    chapters.add(chapter)
                     for (v in 10..r.nextInt(20) + 10) {
                         val paragraphLength = r.nextInt(10) + 50
                         var wordsCountDown = paragraphLength
@@ -80,8 +82,10 @@ class DocumentRepositoryImpl : DocumentRepository {
                         }
                         versets.add(
                             Read.Verset(
-                                VersetKey(versetId++, bookId, chapterId, "remote$versetId"),
+                                VersetKey(versetId++, book.id, chapter.id, "remote$versetId"),
                                 v,
+                                book.name,
+                                chapter.number,
                                 content,
                                 r.nextBoolean(),
                                 ModifiedAt("")
@@ -160,8 +164,8 @@ class DocumentRepositoryImpl : DocumentRepository {
             db.versets.firstOrNull { it.key == versetKey }?.let { v ->
                 SelectedVerset(
                     v.key,
-                    db.books.first { it.id == v.key.bookId }.name,
-                    db.chapters.first { it.id == v.key.chapterId }.number,
+                    v.bookName,
+                    v.chapterNumber,
                     v.number,
                     v.content,
                     v.isFavorite,

@@ -72,6 +72,8 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
     }
 
     private fun observeVMEvents() {
+        textTitledLayoutDefault.text =
+                FavoriteVersetDetailFragmentArgs.fromBundle(arguments).content
         viewModel.versetDetailLiveData.observe(this, Observer {
             textTitledLayoutDefault.text = it.formattedContents
             titled_layout_text_title.text = it.title
