@@ -63,9 +63,6 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
         it.tags
     }
 
-
-    private val querySearchTagsLiveData: MutableLiveData<String?> = MutableLiveData()
-
     init {
         launch {
             favoriteVersetInteractor.request(versetKey) {
