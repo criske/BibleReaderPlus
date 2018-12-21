@@ -63,9 +63,18 @@ class CharSequenceTransformerFactory(
         fun transform(type: Type, args: CharSequenceTransformer.Args? = null): Chain =
             apply { content = factory.transform(type, content, args) }
 
+        fun add(otherChain: Chain): Chain =
+            apply {
+                content = ensureSpannable(content).append(
+                    otherChain.content,
+                    0,
+                    otherChain.content.length
+                )
+            }
     }
 
 }
+
 
 class IconAtEndTransformer(private val context: Context, @DrawableRes private val res: Int) :
     CharSequenceTransformer {
@@ -104,7 +113,12 @@ class HighLightContentTransformer : CharSequenceTransformer {
                     }
                     start = other.indexOf(it.what, end, ignoreCase = it.ignoreCase)
                 }
-            }
+            } ?: setSpan(
+                StyleSpan(Typeface.BOLD),
+                0,
+                other.length,
+                Spanned.SPAN_INCLUSIVE_EXCLUSIVE
+            )
         }
 }
 
