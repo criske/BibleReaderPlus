@@ -92,6 +92,11 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
                                     it
                                 }
                             }
+                            .add(
+                                charSequenceTransformerFactory
+                                    .startChain(" ${v.bookName} ${v.chapterNumber}:${v.number}")
+                                    .transform(CharSequenceTransformerFactory.Type.HIGHLIGHT)
+                            )
                         v.copy(content = chain.content)
                     }
                     versetsInteractor.request(it, mapper) {

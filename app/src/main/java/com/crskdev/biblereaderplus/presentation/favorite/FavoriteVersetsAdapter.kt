@@ -6,11 +6,6 @@
 package com.crskdev.biblereaderplus.presentation.favorite
 
 import android.animation.ObjectAnimator
-import android.graphics.Typeface
-import android.os.Build
-import android.text.Spannable
-import android.text.SpannableStringBuilder
-import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -124,21 +119,7 @@ class FavoriteVersetVH(view: View,
             adapterPosition = this@FavoriteVersetVH.adapterPosition
         }
         with(itemView) {
-            textItemFavVerset.text = SpannableStringBuilder(model.content)
-                .let {
-                    //move this logic to vm
-                    val info = "[${model.bookName} ${model.chapterNumber}:${model.number}]"
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        it.append(
-                            info,
-                            StyleSpan(Typeface.BOLD),
-                            Spannable.SPAN_INCLUSIVE_INCLUSIVE
-                        )
-                    } else {
-                        it.append(info)
-                    }
-                }
-
+            textItemFavVerset.text = model.content
             ViewCompat.setTransitionName(textItemFavVerset, "detailTransition$adapterPosition")
             val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
                 btnItemVersetFav.isEnabled = this
