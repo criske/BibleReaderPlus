@@ -16,7 +16,6 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import dagger.android.support.DaggerFragment
-import javax.inject.Inject
 
 class PagesFragment : DaggerFragment() {
 
@@ -28,6 +27,6 @@ class PagesFragment : DaggerFragment() {
 
 }
 
-class PagesViewModel @Inject constructor() : ViewModel() {
+class PagesViewModel() : ViewModel() {
 
 }

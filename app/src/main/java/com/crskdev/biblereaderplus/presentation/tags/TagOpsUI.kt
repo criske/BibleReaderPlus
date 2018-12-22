@@ -23,8 +23,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
  * Created by Cristian Pela on 15.12.2018.
  */
 
-@ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
+
 object TagOpsUI {
     inline fun showConfirmationDialogOnDelete(context: Context, tag: Tag, crossinline onConfirm: (Tag) -> Unit) {
         context.simpleAlertDialog("Warning!", "Permanently delete tag \"${tag.name}\"") {
@@ -60,6 +59,8 @@ object TagOpsUI {
             }.create().show()
     }
 
+    @ExperimentalCoroutinesApi
+    @ObsoleteCoroutinesApi
     fun showError(context: Context, error: TagsOpsViewModel.ErrorVM) {
         val msg = when (error) {
             TagsOpsViewModel.ErrorVM.EmptyTagName -> context.getString(R.string.err_tag_empty)

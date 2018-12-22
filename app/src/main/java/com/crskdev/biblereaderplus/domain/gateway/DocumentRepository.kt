@@ -7,7 +7,6 @@ package com.crskdev.biblereaderplus.domain.gateway
 
 import androidx.annotation.MainThread
 import androidx.paging.DataSource
-import androidx.paging.PagedList
 import com.crskdev.biblereaderplus.domain.entity.*
 
 /**
@@ -17,11 +16,11 @@ interface DocumentRepository {
 
     fun save(reads: List<Read>)
 
-    fun read(reader: (PagedList<Read>) -> Unit)
+    fun read(): DataSource.Factory<Int, Read>
 
     fun contents(): List<Read.Content>
 
-    fun filter(contains: String): List<Read.Content>
+    fun filterContents(contains: String): List<Read.Content>
 
     //local
     fun getVerset(versetKey: VersetKey): SelectedVerset?
