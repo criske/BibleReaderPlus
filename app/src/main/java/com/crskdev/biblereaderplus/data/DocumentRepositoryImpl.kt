@@ -8,7 +8,6 @@ package com.crskdev.biblereaderplus.data
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.DataSource
-import androidx.paging.PagedList
 import com.crskdev.arch.coroutines.paging.dataSourceFactory
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.domain.entity.*
@@ -130,7 +129,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun read(reader: (PagedList<Read>) -> Unit) {
+    override fun read(): DataSource.Factory<Int, Read> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -138,7 +137,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun filter(contains: String): List<Read.Content> {
+    override fun filterContents(contains: String): List<Read.Content> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

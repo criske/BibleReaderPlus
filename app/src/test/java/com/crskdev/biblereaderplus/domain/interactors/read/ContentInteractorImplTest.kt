@@ -1,7 +1,10 @@
+/*
+ * License: MIT
+ * Copyright (c)  Pela Cristian 2018.
+ */
+
 package com.crskdev.biblereaderplus.domain.interactors.read
 
-import com.crskdev.biblereaderplus.common.util.cast
-import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.testutil.TestDispatchers
 import io.mockk.MockKAnnotations
@@ -10,10 +13,9 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.*
-import org.junit.Test
-
+import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Test
 
 /**
  * Created by Cristian Pela on 14.11.2018.
@@ -62,10 +64,10 @@ class ContentInteractorImplTest {
 
     @Test
     fun `should filter when query is not empty and length is at least larger than 3`() {
-        every { repository.filter(any()) } returns emptyList()
+        every { repository.filterContents(any()) } returns emptyList()
         runBlocking {
             contentInteractor.request("aaa")
-            verify { repository.filter(any()) }
+            verify { repository.filterContents(any()) }
         }
     }
 }

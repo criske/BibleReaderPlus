@@ -9,6 +9,10 @@ import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
 import com.crskdev.biblereaderplus.domain.interactors.favorite.*
+import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
+import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractorImpl
+import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
+import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor
@@ -25,6 +29,16 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @Module
 class InteractorsModule {
+
+    @Provides
+    fun provideReadAllInteractor(dispatchers: GatewayDispatchers,
+                                 repository: DocumentRepository): ReadInteractor =
+        ReadInteractorImpl(dispatchers, repository)
+
+    @Provides
+    fun provideContentsInteractor(dispatchers: GatewayDispatchers,
+                                  repository: DocumentRepository): ContentInteractor =
+        ContentInteractorImpl(dispatchers, repository)
 
     @Provides
     fun provideFetchFavoriteVersetsInteractor(dispatchers: GatewayDispatchers,

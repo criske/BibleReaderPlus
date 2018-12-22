@@ -6,8 +6,7 @@
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
 import androidx.paging.PagedList
-import com.crskdev.arch.coroutines.paging.onPaging
-import com.crskdev.arch.coroutines.paging.setupPagedListBuilder
+import com.crskdev.biblereaderplus.common.util.pagedlist.onPagingWithDefaultPagedListBuilder
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
@@ -52,12 +51,8 @@ class FetchFavoriteVersetsInteractorImpl @Inject constructor(
                             launch(job) {
                                 repository.favorites(it)
                                     .mapByPage { l -> l.map { v -> decorator(it, v) } }
-                                    .setupPagedListBuilder {
-                                        config(10)
-                                        fetchDispatcher = dispatchers.DEFAULT
-                                    }
-                                    .onPaging { page, _ ->
-                                        sendChannel.offer(page)
+                                    .onPagingWithDefaultPagedListBuilder(dispatchers.DEFAULT) {
+                                        sendChannel.offer(it)
                                     }
                             }
                         }
