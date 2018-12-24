@@ -17,18 +17,23 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
     abstract fun setHasScrollPosition(value: Boolean): ReadUI
     abstract fun setIsBookmarked(value: Boolean): ReadUI
 
+    abstract class ContentUI(id: Int, val name: String,
+                             hasScrollPosition: HasScrollPosition,
+                             isBookmarked: IsBookmarked) :
+        ReadUI(id, hasScrollPosition, isBookmarked)
+
     class BookUI(
         id: Int,
-        val name: String,
+        name: String,
         hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
         isBookmarked: IsBookmarked = IsBookmarked(false)
-    ) :
-        ReadUI(id, hasScrollPosition, isBookmarked) {
+    ) : ContentUI(id, name, hasScrollPosition, isBookmarked) {
 
         override fun setHasScrollPosition(value: Boolean): ReadUI =
             BookUI(id, name, value.hasScrollPosition(), isBookmarked)
 
-        override fun setIsBookmarked(value: Boolean) = BookUI(id, name, hasScrollPosition, value.isBookmarked())
+        override fun setIsBookmarked(value: Boolean) =
+            BookUI(id, name, hasScrollPosition, value.isBookmarked())
 
         override fun getKey(): ReadKey = ReadKey("$id")
     }
@@ -36,11 +41,11 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
     class ChapterUI(
         id: Int,
         val bookId: Int,
-        val name: String,
+        name: String,
         hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
         isBookmarked: IsBookmarked = IsBookmarked(false)
     ) :
-        ReadUI(id, hasScrollPosition, isBookmarked) {
+        ContentUI(id, name, hasScrollPosition, isBookmarked) {
         override fun setHasScrollPosition(value: Boolean): ReadUI =
             ChapterUI(id, bookId, name, value.hasScrollPosition(), isBookmarked)
 
@@ -61,10 +66,26 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
     ) :
         ReadUI(id, hasScrollPosition, isBookmarked) {
         override fun setHasScrollPosition(value: Boolean): ReadUI =
-            VersetUI(id, bookId, chapterId, number, contents, value.hasScrollPosition(), isBookmarked)
+            VersetUI(
+                id,
+                bookId,
+                chapterId,
+                number,
+                contents,
+                value.hasScrollPosition(),
+                isBookmarked
+            )
 
         override fun setIsBookmarked(value: Boolean) =
-            VersetUI(id, bookId, chapterId, number, contents, hasScrollPosition, value.isBookmarked())
+            VersetUI(
+                id,
+                bookId,
+                chapterId,
+                number,
+                contents,
+                hasScrollPosition,
+                value.isBookmarked()
+            )
 
         override fun getKey(): ReadKey = ReadKey("$bookId-$chapterId-$id")
     }

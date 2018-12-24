@@ -10,15 +10,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.arch.distinctUntilChanged
+import dagger.android.support.DaggerFragment
 
-class ReadFragment : Fragment() {
+class ReadFragment : DaggerFragment() {
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,11 +30,12 @@ class ReadFragment : Fragment() {
 
 }
 
-internal class ReadViewModel : ViewModel() {
+class ReadViewModel : ViewModel() {
 
-    val scrollReadLiveData: LiveData<ScrollData> = MutableLiveData<ScrollData>().distinctUntilChanged { p, c ->
-        p.readKey() != c.readKey()
-    }
+    val scrollReadLiveData: LiveData<ScrollData> =
+        MutableLiveData<ScrollData>().distinctUntilChanged { p, c ->
+            p.readKey() != c.readKey()
+        }
 
     fun scrollTo(source: Int, readKey: ReadKey) {
         scrollReadLiveData.cast<MutableLiveData<ScrollData>>().value = ScrollData(source, readKey)

@@ -10,41 +10,37 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
+import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.domain.entity.Read
+import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
-import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
+import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_pages.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class PagesFragment : Fragment() {
+class PagesFragment : DaggerFragment() {
 
     companion object {
         const val SCROLL_SOURCE = 2
     }
 
-    private lateinit var sharedViewModel: ReadViewModel
+    @Inject
+    lateinit var sharedViewModel: ReadViewModel
 
-    private lateinit var pagesViewModel: PagesViewModel
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedViewModel = viewModelFromProvider(parentFragment!!) {
-            ReadViewModel()
-        }
-        pagesViewModel = viewModelFromProvider(this) {
-            PagesViewModel()
-        }
-    }
+    @Inject
+    lateinit var pagesViewModel: PagesViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -68,8 +64,8 @@ class PagesFragment : Fragment() {
                         layoutManager?.cast<LinearLayoutManager>()
                             ?.findFirstCompletelyVisibleItemPosition()
                             ?.let { position ->
-                                adapter?.cast<PagesAdapter>()?.getItemAt(position)?.let {
-                                    sharedViewModel.scrollTo(SCROLL_SOURCE, it.getKey())
+                                adapter?.cast<PagesAdapter>()?.getKeyAt(position)?.let {
+                                    sharedViewModel.scrollTo(SCROLL_SOURCE, it)
                                 }
                             }
                     }
@@ -87,18 +83,51 @@ class PagesFragment : Fragment() {
                 ?.scrollToPositionWithOffset(it, 0)
         })
         pagesViewModel.pagesLiveData.observe(this, Observer {
-            recyclerPages.adapter?.cast<PagesAdapter>()?.submit(it)
+            recyclerPages.adapter?.cast<PagesAdapter>()?.submitList(it)
         })
     }
 
 }
 
-class PagesViewModel : CoroutineScopedViewModel() {
+class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScopedViewModel() {
 
     val scrollPositionLiveData: LiveData<Int> = SingleLiveEvent<Int>()
 
-    val pagesLiveData: LiveData<List<ReadUI>> = MutableLiveData<List<ReadUI>>().apply {
-        value = MOCKED_BIBLE_DATA_SOURCE
+    val pagesLiveData: LiveData<PagedList<ReadUI>> = MutableLiveData<PagedList<ReadUI>>()
+
+    init {
+        launch {
+            readInteractor.request(
+                decorator = {
+                    when (it) {
+                        is Read.Content.Book -> ReadUI.BookUI(
+                            it.id,
+                            it.name,
+                            HasScrollPosition(false),
+                            IsBookmarked(false)
+                        )
+                        is Read.Content.Chapter -> ReadUI.ChapterUI(
+                            it.id,
+                            it.key.bookId,
+                            "Chapter ${it.number}",
+                            HasScrollPosition(false),
+                            IsBookmarked(false)
+                        )
+                        is Read.Verset -> ReadUI.VersetUI(
+                            it.id,
+                            it.key.bookId,
+                            it.key.chapterId,
+                            it.number,
+                            it.content,
+                            HasScrollPosition(false),
+                            IsBookmarked(false)
+                        )
+                    }
+                }
+            ) {
+                pagesLiveData.cast<MutableLiveData<PagedList<ReadUI>>>().postValue(it)
+            }
+        }
     }
 
     fun scrollTo(readKey: ReadKey) {

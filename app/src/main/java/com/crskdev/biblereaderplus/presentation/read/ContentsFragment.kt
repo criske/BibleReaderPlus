@@ -12,39 +12,34 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.domain.entity.Read
+import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.*
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.crskdev.biblereaderplus.presentation.util.system.hideSoftKeyboard
+import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_contents.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 
-class ContentsFragment : Fragment() {
+class ContentsFragment : DaggerFragment() {
 
     companion object {
         const val SCROLL_SOURCE = 1
     }
 
-    private lateinit var sharedViewModel: ReadViewModel
+    @Inject
+    lateinit var sharedViewModel: ReadViewModel
 
-    private lateinit var contentsViewModel: ContentsViewModel
-
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        sharedViewModel = viewModelFromProvider(parentFragment!!) {
-            ReadViewModel()
-        }
-        contentsViewModel = viewModelFromProvider(this) {
-            ContentsViewModel()
-        }
-    }
+    @Inject
+    lateinit var contentsViewModel: ContentsViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -98,49 +93,71 @@ class ContentsFragment : Fragment() {
             recyclerContents.smoothScrollToPosition(it)
         })
         contentsViewModel.contentsLiveData.observe(this, Observer {
-            recyclerContents.adapter?.cast<ContentsAdapter>()?.submit(it)
+            recyclerContents.adapter?.cast<ContentsAdapter>()?.submitList(it)
         })
     }
 
 }
 
 
-class ContentsViewModel : CoroutineScopedViewModel() {
+class ContentsViewModel(private val contentInteractor: ContentInteractor) :
+    CoroutineScopedViewModel() {
 
     private val searchBookLiveData: MutableLiveData<String> = MutableLiveData<String>()
         .apply { value = "" }
 
-    private val dataSourceLiveData: LiveData<List<ReadUI>> =
-        searchBookLiveData.switchMap { bookTerm ->
-            val original = MOCKED_BIBLE_DATA_SOURCE.filter { it !is ReadUI.VersetUI }
-            val dataSource = if (bookTerm.isEmpty() || bookTerm.length < 3) {
-                original
-            } else {
-                val candidates = original
-                    .filter { it is ReadUI.BookUI && it.name.contains(bookTerm, true) }
-                    .map { it.cast<ReadUI.BookUI>() }
-                original.filter { read ->
-                    if (read is ReadUI.ChapterUI) {
-                        candidates.any { read.cast<ReadUI.ChapterUI>().bookId == it.id }
-                    } else
-                        candidates.contains(read)
-                }
-            }
-            LiveDataCompanions.just(dataSource)
-        }
+    private val contentLiveData: LiveData<List<ReadUI.ContentUI>> =
+        MutableLiveData<List<ReadUI.ContentUI>>()
 
     private val scrollReadLiveData: MutableLiveData<ReadKey> = MutableLiveData<ReadKey>().apply {
         value = ReadKey.INITIAL
     }
 
-    private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI>>) -> (IntToListReadUI) =
+    init {
+        launch {
+            searchBookLiveData.toChannel {
+                contentInteractor.request(it) { r ->
+                    when (r) {
+                        is ContentInteractor.Response.OK -> {
+                            val contentsUI = r.result!!.map {
+                                when (it) {
+                                    is Read.Content.Book -> ReadUI.BookUI(
+                                        it.id,
+                                        it.name,
+                                        HasScrollPosition(false),
+                                        IsBookmarked(false)
+                                    )
+                                    is Read.Content.Chapter -> ReadUI.ChapterUI(
+                                        it.id,
+                                        it.key.bookId,
+                                        it.number.toString(),
+                                        HasScrollPosition(false),
+                                        IsBookmarked(false)
+                                    )
+                                }
+                            }
+                            contentLiveData
+                                .cast<MutableLiveData<List<ReadUI.ContentUI>>>()
+                                .postValue(contentsUI)
+                        }
+                        is ContentInteractor.Response.Error -> {
+                            //no-op}
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI.ContentUI>>) -> (IntToListReadUI) =
         { pair ->
             //TODO go functional with this logic
             val key = pair.first
             var position = -1
             val (b, ch, v) = key
             var selected = false
-            val source = pair.second
+            val source: List<ReadUI.ContentUI> = pair.second
                 .mapIndexed { index, item ->
                     if (selected)
                         item
@@ -156,18 +173,18 @@ class ContentsViewModel : CoroutineScopedViewModel() {
                     }
 
                 }
-                .toList()
+                .map { it as ReadUI.ContentUI }
             position to source
         }
 
     private val scrollPositionAndContentsLiveData: LiveData<IntToListReadUI> =
         scrollReadLiveData
-            .combineLatest(dataSourceLiveData)
+            .combineLatest(contentLiveData)
             .map(positionAndSelectionMapping)
 
     val scrollPositionLiveData: LiveData<Int> =
         scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
-    val contentsLiveData: LiveData<List<ReadUI>> =
+    val contentsLiveData: LiveData<List<ReadUI.ContentUI>> =
         scrollPositionAndContentsLiveData.map { it.second }
 
 
@@ -182,6 +199,6 @@ class ContentsViewModel : CoroutineScopedViewModel() {
 
 }
 
-typealias IntToListReadUI = Pair<Int, List<ReadUI>>
+typealias IntToListReadUI = Pair<Int, List<ReadUI.ContentUI>>
 
 

@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.DataSource
 import com.crskdev.arch.coroutines.paging.dataSourceFactory
+import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.domain.entity.*
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
@@ -21,6 +22,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import java.lang.Thread.sleep
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Created by Cristian Pela on 21.11.2018.
@@ -34,14 +36,33 @@ class DocumentRepositoryImpl : DocumentRepository {
         val chapters: List<Read.Content.Chapter>,
         val versets: List<Read.Verset>,
         val tags: Set<Tag>,
-        val versetTags: Set<VersetTag>
-    )
+        val versetTags: Set<VersetTag>) {
+        fun allReads(): List<Read> {
+            val all = mutableListOf<Read>()
+            books.forEach { b ->
+                all.add(b)
+                val ch = chapters.filter { c ->
+                    c.key.bookId == b.id
+                }
+                ch.forEach { c ->
+                    all.add(c)
+                    all.addAll(versets.filter { it.key.chapterId == c.id })
+                }
+            }
+            return all
+        }
+    }
 
     private data class VersetTag(val versetKey: VersetKey, val tagId: String)
 
-    private var dataSource: DataSource<Int, Read.Verset>? = null
+    private val dataSourceManager = DataSourceManager()
 
     private val dbLiveData: MutableLiveData<Database>
+
+    companion object {
+        private const val KEY_DS_READ = 0
+        private const val KEY_DS_FAVORITE_VERSETS = 1
+    }
 
     init {
         dbLiveData = MutableLiveData<Database>().apply {
@@ -65,7 +86,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             for (bookId in 1..20) {
                 val book = Read.Content.Book(bookId, generateWord(r, wordLengths.random(), 5))
                 books.add(book)
-                for (c in 5..r.nextInt(20) + 5) {
+                for (c in 1..r.nextInt(20) + 5) {
                     val chapter = Read.Content.Chapter(ChapterKey(chapterId++, bookId), c)
                     chapters.add(chapter)
                     for (v in 10..r.nextInt(20) + 10) {
@@ -129,17 +150,35 @@ class DocumentRepositoryImpl : DocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun read(): DataSource.Factory<Int, Read> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun read(): DataSource.Factory<Int, Read> =
+        dataSourceFactory {
+            InMemoryPagedListDataSource {
+                dbLiveData?.value?.allReads() ?: emptyList()
+            }.apply {
+                dataSourceManager.addOrReplace(KEY_DS_READ, this)
+            }
+        }
 
-    override fun contents(): List<Read.Content> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    override fun contents(): List<Read.Content> =
+        dbLiveData.value
+            ?.allReads()
+            ?.filter { it is Read.Content }
+            ?.map { it as Read.Content }
+            ?: emptyList()
 
     override fun filterContents(contains: String): List<Read.Content> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val originals = contents()
+        val bookCandidates = originals
+            .filter { it is Read.Content.Book && it.name.contains(contains, true) }
+            .map { it.cast<Read.Content.Book>() }
+        return originals.filter { read ->
+            if (read is Read.Content.Chapter) {
+                bookCandidates.any { read.cast<Read.Content.Chapter>().key.bookId == it.id }
+            } else
+                bookCandidates.contains(read)
+        }
     }
+
 
     override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
         updateDatabasePost {
@@ -288,7 +327,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                         }
                 } ?: emptyList()
             }.apply {
-                dataSource = this
+                dataSourceManager.addOrReplace(KEY_DS_FAVORITE_VERSETS, this)
             }
         }
     }
@@ -299,7 +338,23 @@ class DocumentRepositoryImpl : DocumentRepository {
     private inline fun updateDatabasePost(block: Database.() -> Database) {
         dbLiveData.postValue(dbLiveData.value?.block())
         sleep(200)//gib time for da value to settle
-        dataSource?.invalidate()
+        dataSourceManager.invalidate()
     }
 
+}
+
+class DataSourceManager {
+
+    private val dataSources = ConcurrentHashMap<Int, DataSource<Int, *>>()
+
+    fun addOrReplace(key: Int, dataSource: DataSource<Int, *>) {
+        dataSources.put(key, dataSource)
+    }
+
+
+    fun invalidate() {
+        dataSources.values.forEach {
+            it.invalidate()
+        }
+    }
 }

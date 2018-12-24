@@ -29,6 +29,7 @@ fun LayoutInflater.prepInflate(parent: ViewGroup, attachToRoot: Boolean = false)
     inflate(it, parent, attachToRoot)
 }
 
+
 fun Activity.hideSoftKeyboard(lostFocusView: View? = null) {
     val imm = getSystemService(Activity.INPUT_METHOD_SERVICE).cast<InputMethodManager>()
     val view = lostFocusView ?: currentFocus ?: View(this)

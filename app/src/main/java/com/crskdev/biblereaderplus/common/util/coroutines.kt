@@ -7,7 +7,9 @@ package com.crskdev.biblereaderplus.common.util
 
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.selects.select
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -84,6 +86,20 @@ suspend fun CoroutineScope.launchIgnoreThrow(context: CoroutineContext = EmptyCo
 
 fun CoroutineScope.withDispatcher(dispatcher: CoroutineDispatcher): CoroutineContext =
     coroutineContext + dispatcher
+
+suspend fun <T> CoroutineScope.switchSelectOnReceive(receiveChannel: ReceiveChannel<T>,
+                                                     selectBlock: suspend (Job, T) -> Unit) {
+    var switchJob = Job()
+    while (true) {
+        select<Unit> {
+            receiveChannel.onReceive {
+                switchJob.cancel()
+                switchJob = Job()
+                selectBlock(switchJob, it)
+            }
+        }
+    }
+}
 
 suspend fun <T> ChannelWith(default: T? = null) = Channel<T?>(Channel.CONFLATED).apply {
     send(default)

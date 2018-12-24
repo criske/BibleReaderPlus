@@ -7,6 +7,8 @@ package com.crskdev.biblereaderplus.di.modules.presentation.read
 
 import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
+import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
+import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
 import com.crskdev.biblereaderplus.presentation.read.*
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
@@ -48,9 +50,9 @@ class ContentsModule {
 
     @PerChildFragment
     @Provides
-    fun provideViewModel(container: ReadFragment): ContentsViewModel =
+    fun provideViewModel(container: ReadFragment, contentInteractor: ContentInteractor): ContentsViewModel =
         viewModelFromProvider(container) {
-            ContentsViewModel()
+            ContentsViewModel(contentInteractor)
         }
 
 }
@@ -60,9 +62,9 @@ class PagesModule {
 
     @PerChildFragment
     @Provides
-    fun provideViewModel(container: ReadFragment): PagesViewModel =
+    fun provideViewModel(container: ReadFragment, readInteractor: ReadInteractor): PagesViewModel =
         viewModelFromProvider(container) {
-            PagesViewModel()
+            PagesViewModel(readInteractor)
         }
 
 

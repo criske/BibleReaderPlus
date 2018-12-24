@@ -18,7 +18,7 @@ import javax.inject.Inject
 
 interface ReadInteractor {
 
-    suspend fun request(decorator: (Read) -> Read, response: (PagedList<Read>) -> Unit)
+    suspend fun <R> request(decorator: (Read) -> R, response: (PagedList<R>) -> Unit)
 }
 
 /**
@@ -28,12 +28,12 @@ class ReadInteractorImpl @Inject constructor(
     private val dispatchers: GatewayDispatchers,
     private val documentRepository: DocumentRepository) : ReadInteractor {
 
-    override suspend fun request(decorator: (Read) -> Read, response: (PagedList<Read>) -> Unit) =
+    override suspend fun <R> request(decorator: (Read) -> R, response: (PagedList<R>) -> Unit) =
         coroutineScope {
             launch {
                 documentRepository.read()
                     .mapByPage { list -> list.map { decorator.invoke(it) } }
-                    .onPagingWithDefaultPagedListBuilder(dispatchers.DEFAULT, response)
+                    .onPagingWithDefaultPagedListBuilder<Int, R>(dispatchers.DEFAULT, response)
             }
             Unit
         }
