@@ -20,15 +20,23 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
 
     abstract class ContentUI(id: Int, val name: String,
                              hasScrollPosition: HasScrollPosition,
-                             isBookmarked: IsBookmarked) :
-        ReadUI(id, hasScrollPosition, isBookmarked)
+                             isBookmarked: IsBookmarked,
+                             val isExpanded: IsExpanded) :
+        ReadUI(id, hasScrollPosition, isBookmarked) {
+
+        abstract fun setExpanded(value: IsExpanded): ContentUI
+    }
 
     class BookUI(
         id: Int,
         name: String,
         hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
-        isBookmarked: IsBookmarked = IsBookmarked(false)
-    ) : ContentUI(id, name, hasScrollPosition, isBookmarked) {
+        isBookmarked: IsBookmarked = IsBookmarked(false),
+        isExpanded: IsExpanded = IsExpanded(true)
+    ) : ContentUI(id, name, hasScrollPosition, isBookmarked, isExpanded) {
+
+        override fun setExpanded(value: IsExpanded): ContentUI =
+            BookUI(id, name, hasScrollPosition, isBookmarked, value)
 
         override fun setHasScrollPosition(value: Boolean): ReadUI =
             BookUI(id, name, value.hasScrollPosition(), isBookmarked)
@@ -43,9 +51,14 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
         val bookId: Int,
         name: String,
         hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
-        isBookmarked: IsBookmarked = IsBookmarked(false)
+        isBookmarked: IsBookmarked = IsBookmarked(false),
+        isExpanded: IsExpanded = IsExpanded(true)
     ) :
-        ContentUI(id, name, hasScrollPosition, isBookmarked) {
+        ContentUI(id, name, hasScrollPosition, isBookmarked, isExpanded) {
+
+        override fun setExpanded(value: IsExpanded): ContentUI =
+            ChapterUI(id, bookId, name, hasScrollPosition, isBookmarked, value)
+
         override fun setHasScrollPosition(value: Boolean): ReadUI =
             ChapterUI(id, bookId, name, value.hasScrollPosition(), isBookmarked)
 
@@ -105,6 +118,11 @@ inline class HasScrollPosition(val value: Boolean) {
 
 inline class IsBookmarked(val value: Boolean) {
     operator fun invoke() = value
+}
+
+inline class IsExpanded(val value: Boolean) {
+    operator fun invoke() = value
+    operator fun not(): IsExpanded = IsExpanded(!value)
 }
 
 fun Boolean.isBookmarked(): IsBookmarked = IsBookmarked(this)

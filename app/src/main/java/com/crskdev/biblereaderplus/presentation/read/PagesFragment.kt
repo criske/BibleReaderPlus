@@ -102,25 +102,19 @@ class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScop
                     when (it) {
                         is Read.Content.Book -> ReadUI.BookUI(
                             it.id,
-                            it.name,
-                            HasScrollPosition(false),
-                            IsBookmarked(false)
+                            it.name
                         )
                         is Read.Content.Chapter -> ReadUI.ChapterUI(
                             it.id,
                             it.key.bookId,
-                            "Chapter ${it.number}",
-                            HasScrollPosition(false),
-                            IsBookmarked(false)
+                            "Chapter ${it.number}"
                         )
                         is Read.Verset -> ReadUI.VersetUI(
                             it.id,
                             it.key.bookId,
                             it.key.chapterId,
                             it.number,
-                            "${it.number}.${it.content}",
-                            HasScrollPosition(false),
-                            IsBookmarked(false)
+                            "${it.number}.${it.content}"
                         )
                     }
                 }

@@ -17,7 +17,8 @@ import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
 /**
  * Created by Cristian Pela on 22.12.2018.
  */
-class ContentsAdapter(private val inflater: LayoutInflater, private val action: (ReadUI.ContentUI) -> Unit) :
+class ContentsAdapter(private val inflater: LayoutInflater,
+                      private val action: (Action, ReadUI.ContentUI) -> Unit) :
     ListAdapter<ReadUI.ContentUI, ContentVH>(
         object : DiffUtil.ItemCallback<ReadUI.ContentUI>() {
             override fun areItemsTheSame(oldItem: ReadUI.ContentUI, newItem: ReadUI.ContentUI): Boolean =
@@ -54,17 +55,32 @@ class ContentsAdapter(private val inflater: LayoutInflater, private val action: 
         const val BOOK = 0
         const val CHAPTER = 1
     }
+
+    enum class Action {
+        SELECT, EXPAND
+    }
 }
 
-class ContentVH(v: View, val type: Int, private val action: (ReadUI.ContentUI) -> Unit) :
+@Suppress("RedundantLambdaArrow")
+class ContentVH(v: View, val type: Int, private val action: (ContentsAdapter.Action, ReadUI.ContentUI) -> Unit) :
     BindableViewHolder<ReadUI.ContentUI>(v) {
 
     init {
         itemView.setOnClickListener { _ ->
             model?.let {
-                action(it)
+                action(ContentsAdapter.Action.SELECT, it)
             }
         }
+        itemView.setOnLongClickListener { _ ->
+            if (type == ContentsAdapter.Type.BOOK) {
+                model?.let {
+                    action(ContentsAdapter.Action.EXPAND, it.setExpanded(!it.isExpanded))
+                }
+                true
+            } else
+                false
+        }
+
     }
 
 
@@ -74,10 +90,12 @@ class ContentVH(v: View, val type: Int, private val action: (ReadUI.ContentUI) -
             if (model.hasScrollPosition()) {
                 setBackgroundColor(Color.LTGRAY)
             }
+            tag = type
         }
     }
 
     override fun unbind() {
         itemView.setBackgroundColor(Color.TRANSPARENT)
+        itemView.tag = null
     }
 }

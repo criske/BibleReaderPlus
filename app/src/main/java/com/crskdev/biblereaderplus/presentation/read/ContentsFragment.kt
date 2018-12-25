@@ -68,10 +68,18 @@ class ContentsFragment : DaggerFragment() {
             }
         }
         recyclerContents.apply {
-            adapter = ContentsAdapter(LayoutInflater.from(context)) {
+            adapter = ContentsAdapter(LayoutInflater.from(context)) { action, item ->
                 textInputLayoutContents.editText?.clearFocus()
-                val readKey = it.getKey()
-                sharedViewModel.scrollTo(SCROLL_SOURCE, readKey)
+                when (action) {
+                    ContentsAdapter.Action.SELECT -> sharedViewModel.scrollTo(
+                        SCROLL_SOURCE,
+                        item.getKey()
+                    )
+                    ContentsAdapter.Action.EXPAND -> contentsViewModel.expand(
+                        item.getKey(),
+                        item.isExpanded
+                    )
+                }
             }
             addItemDecoration(object : RecyclerView.ItemDecoration() {
                 override fun getItemOffsets(
@@ -112,6 +120,10 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
         value = ReadKey.INITIAL
     }
 
+    private val expansionLiveData: MutableLiveData<Expansion> = MutableLiveData<Expansion>().apply {
+        value = ReadKey.INITIAL to IsExpanded(true)
+    }
+
     init {
         launch {
             searchBookLiveData.toChannel {
@@ -129,7 +141,7 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
                                     is Read.Content.Chapter -> ReadUI.ChapterUI(
                                         read.id,
                                         read.key.bookId,
-                                        read.number.toString(),
+                                        "Chapter ${read.number}", // TODO i18n pls!
                                         HasScrollPosition(false),
                                         IsBookmarked(false)
                                     )
@@ -170,9 +182,24 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
     private val scrollPositionAndContentsLiveData: LiveData<ReadPosToListReadUI> =
         scrollReadLiveData
             .combineLatest(contentLiveData)
+            .combineLatest(expansionLiveData) { l, r ->
+                r as Expansion
+                l.first to l.second.map {
+                    if (it is ReadUI.BookUI && it.id == r.first()
+                        || it is ReadUI.ChapterUI && it.bookId == r.first()
+                    ) {
+                        it.setExpanded(r.second)
+                    } else {
+                        it
+                    }
+                }
+            }
             .map(positionAndSelectionMapping)
             .distinctUntilChanged { prev, curr ->
-                prev.first != curr.first
+                prev.first != curr.first || prev.second != curr.second
+            }
+            .map {
+                it.first to it.second.filter { c -> c is ReadUI.BookUI || c is ReadUI.ChapterUI && c.isExpanded() }
             }
 
     val scrollPositionLiveData: LiveData<Int> =
@@ -190,8 +217,13 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
         searchBookLiveData.value = book
     }
 
+    fun expand(readKey: ReadKey, expanded: IsExpanded = IsExpanded(true)) {
+        expansionLiveData.value = readKey to expanded
+    }
+
 }
 
 typealias ReadPosToListReadUI = Pair<Int, List<ReadUI.ContentUI>>
+typealias Expansion = Pair<ReadKey, IsExpanded>
 
 

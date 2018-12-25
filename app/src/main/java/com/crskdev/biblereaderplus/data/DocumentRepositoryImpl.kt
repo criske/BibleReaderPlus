@@ -72,13 +72,13 @@ class DocumentRepositoryImpl : DocumentRepository {
             val versets = mutableListOf<Read.Verset>()
             var idGen = -0
 
-            for (bookId in 1..numberSeed) {
+            for (i in 1..numberSeed) {
                 val book = Read.Content.Book(idGen++, generateWord(r, wordLengths.random(), 5))
                 books.add(book)
-                for (c in 1..r.nextInt(numberSeed) + 5) {
-                    val chapter = Read.Content.Chapter(ChapterKey(idGen++, bookId), c)
+                for (j in 1..r.nextInt(numberSeed) + 5) {
+                    val chapter = Read.Content.Chapter(ChapterKey(idGen++, book.id), j)
                     chapters.add(chapter)
-                    for (v in 1..r.nextInt(numberSeed) + 10) {
+                    for (k in 1..r.nextInt(numberSeed) + 10) {
                         val paragraphLength = r.nextInt(10) + 50
                         var wordsCountDown = paragraphLength
                         val content = buildString {
@@ -92,7 +92,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                         versets.add(
                             Read.Verset(
                                 VersetKey(idGen++, book.id, chapter.id, "remote$idGen"),
-                                v,
+                                k,
                                 book.name,
                                 chapter.number,
                                 content,
