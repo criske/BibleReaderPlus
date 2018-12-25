@@ -32,8 +32,8 @@ class ReadFragment : DaggerFragment() {
 
 class ReadViewModel : ViewModel() {
 
-    val scrollReadLiveData: LiveData<ScrollData> =
-        MutableLiveData<ScrollData>().distinctUntilChanged { p, c ->
+    val scrollReadLiveData: LiveData<ScrollData> = MutableLiveData<ScrollData>()
+        .distinctUntilChanged { p, c ->
             p.readKey() != c.readKey()
         }
 

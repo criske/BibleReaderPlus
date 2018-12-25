@@ -118,7 +118,7 @@ class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScop
                             it.key.bookId,
                             it.key.chapterId,
                             it.number,
-                            it.content,
+                            "${it.number}.${it.content}",
                             HasScrollPosition(false),
                             IsBookmarked(false)
                         )
@@ -131,12 +131,7 @@ class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScop
     }
 
     fun scrollTo(readKey: ReadKey) {
-        val pages = pagesLiveData.value
-        pages?.indexOfFirst { it.getKey() == readKey }
-            ?.takeIf { it != -1 }
-            ?.let {
-                scrollPositionLiveData.cast<MutableLiveData<Int>>().value = it
-            }
+        scrollPositionLiveData.cast<MutableLiveData<Int>>().value = readKey()
     }
 
 }

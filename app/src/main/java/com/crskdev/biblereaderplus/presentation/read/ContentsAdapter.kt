@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.presentation.read
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -45,6 +46,10 @@ class ContentsAdapter(private val inflater: LayoutInflater, private val action: 
             action
         )
 
+    override fun onViewRecycled(holder: ContentVH) {
+        holder.unbind()
+    }
+
     object Type {
         const val BOOK = 0
         const val CHAPTER = 1
@@ -66,6 +71,13 @@ class ContentVH(v: View, val type: Int, private val action: (ReadUI.ContentUI) -
     override fun onBind(model: ReadUI.ContentUI) {
         with(itemView as TextView) {
             text = model.name
+            if (model.hasScrollPosition()) {
+                setBackgroundColor(Color.LTGRAY)
+            }
         }
+    }
+
+    override fun unbind() {
+        itemView.setBackgroundColor(Color.TRANSPARENT)
     }
 }

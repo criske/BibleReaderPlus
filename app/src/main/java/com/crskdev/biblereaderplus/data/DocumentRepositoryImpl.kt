@@ -37,20 +37,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         val versets: List<Read.Verset>,
         val tags: Set<Tag>,
         val versetTags: Set<VersetTag>) {
-        fun allReads(): List<Read> {
-            val all = mutableListOf<Read>()
-            books.forEach { b ->
-                all.add(b)
-                val ch = chapters.filter { c ->
-                    c.key.bookId == b.id
-                }
-                ch.forEach { c ->
-                    all.add(c)
-                    all.addAll(versets.filter { it.key.chapterId == c.id })
-                }
-            }
-            return all
-        }
+        fun allReads(): List<Read> = (books + chapters + versets).sortedBy { it.id }
     }
 
     private data class VersetTag(val versetKey: VersetKey, val tagId: String)
@@ -78,18 +65,20 @@ class DocumentRepositoryImpl : DocumentRepository {
             }
 
 
+            val numberSeed = 3
+
             val books = mutableListOf<Read.Content.Book>()
             val chapters = mutableListOf<Read.Content.Chapter>()
             val versets = mutableListOf<Read.Verset>()
-            var chapterId = 0
-            var versetId = 0
-            for (bookId in 1..20) {
-                val book = Read.Content.Book(bookId, generateWord(r, wordLengths.random(), 5))
+            var idGen = -0
+
+            for (bookId in 1..numberSeed) {
+                val book = Read.Content.Book(idGen++, generateWord(r, wordLengths.random(), 5))
                 books.add(book)
-                for (c in 1..r.nextInt(20) + 5) {
-                    val chapter = Read.Content.Chapter(ChapterKey(chapterId++, bookId), c)
+                for (c in 1..r.nextInt(numberSeed) + 5) {
+                    val chapter = Read.Content.Chapter(ChapterKey(idGen++, bookId), c)
                     chapters.add(chapter)
-                    for (v in 10..r.nextInt(20) + 10) {
+                    for (v in 1..r.nextInt(numberSeed) + 10) {
                         val paragraphLength = r.nextInt(10) + 50
                         var wordsCountDown = paragraphLength
                         val content = buildString {
@@ -102,7 +91,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                         }
                         versets.add(
                             Read.Verset(
-                                VersetKey(versetId++, book.id, chapter.id, "remote$versetId"),
+                                VersetKey(idGen++, book.id, chapter.id, "remote$idGen"),
                                 v,
                                 book.name,
                                 chapter.number,

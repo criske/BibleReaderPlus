@@ -85,10 +85,9 @@ class ContentsFragment : DaggerFragment() {
                 }
             })
         }
-        sharedViewModel.scrollReadLiveData
-            .observe(this, Observer {
-                contentsViewModel.scrollTo(it.readKey)
-            })
+        sharedViewModel.scrollReadLiveData.observe(this, Observer {
+            contentsViewModel.scrollTo(it.readKey)
+        })
         contentsViewModel.scrollPositionLiveData.observe(this, Observer {
             recyclerContents.smoothScrollToPosition(it)
         })
@@ -116,21 +115,21 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
     init {
         launch {
             searchBookLiveData.toChannel {
-                contentInteractor.request(it) { r ->
-                    when (r) {
+                contentInteractor.request(it) { response ->
+                    when (response) {
                         is ContentInteractor.Response.OK -> {
-                            val contentsUI = r.result!!.map {
-                                when (it) {
+                            val contentsUI = response.result!!.map { read ->
+                                when (read) {
                                     is Read.Content.Book -> ReadUI.BookUI(
-                                        it.id,
-                                        it.name,
+                                        read.id,
+                                        read.name,
                                         HasScrollPosition(false),
                                         IsBookmarked(false)
                                     )
                                     is Read.Content.Chapter -> ReadUI.ChapterUI(
-                                        it.id,
-                                        it.key.bookId,
-                                        it.number.toString(),
+                                        read.id,
+                                        read.key.bookId,
+                                        read.number.toString(),
                                         HasScrollPosition(false),
                                         IsBookmarked(false)
                                     )
@@ -150,37 +149,31 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
 
     }
 
-    private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI.ContentUI>>) -> (IntToListReadUI) =
+    private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI.ContentUI>>) -> (ReadPosToListReadUI) =
         { pair ->
             //TODO go functional with this logic
-            val key = pair.first
-            var position = -1
-            val (b, ch, v) = key
-            var selected = false
-            val source: List<ReadUI.ContentUI> = pair.second
-                .mapIndexed { index, item ->
-                    if (selected)
-                        item
-                    else {
-                        val (ib, ich, iv) = item.getKey()
-                        if ((ib == b && ich == ch)) {
-                            position = index
-                            selected = true
-                            item.setHasScrollPosition(true)
-                        } else {
-                            item
-                        }
-                    }
-
+            val positionKey = pair.first
+            var position = 0
+            var closestContentKey = ReadKey.INITIAL
+            val source = pair.second.toMutableList()
+            source.forEachIndexed { index, item ->
+                if (closestContentKey() <= positionKey()) {
+                    position = index
                 }
-                .map { it as ReadUI.ContentUI }
+                closestContentKey = item.getKey()
+                item
+            }
+            source[position] = source[position].setHasScrollPosition(true) as ReadUI.ContentUI
             position to source
         }
 
-    private val scrollPositionAndContentsLiveData: LiveData<IntToListReadUI> =
+    private val scrollPositionAndContentsLiveData: LiveData<ReadPosToListReadUI> =
         scrollReadLiveData
             .combineLatest(contentLiveData)
             .map(positionAndSelectionMapping)
+            .distinctUntilChanged { prev, curr ->
+                prev.first != curr.first
+            }
 
     val scrollPositionLiveData: LiveData<Int> =
         scrollPositionAndContentsLiveData.map { it.first }.filter { it != -1 }
@@ -199,6 +192,6 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
 
 }
 
-typealias IntToListReadUI = Pair<Int, List<ReadUI.ContentUI>>
+typealias ReadPosToListReadUI = Pair<Int, List<ReadUI.ContentUI>>
 
 

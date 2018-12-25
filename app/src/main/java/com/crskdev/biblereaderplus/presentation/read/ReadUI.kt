@@ -12,9 +12,10 @@ package com.crskdev.biblereaderplus.presentation.read
  */
 sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val isBookmarked: IsBookmarked) {
 
-    abstract fun getKey(): ReadKey
+    fun getKey(): ReadKey = ReadKey(id)
 
     abstract fun setHasScrollPosition(value: Boolean): ReadUI
+
     abstract fun setIsBookmarked(value: Boolean): ReadUI
 
     abstract class ContentUI(id: Int, val name: String,
@@ -35,7 +36,6 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
         override fun setIsBookmarked(value: Boolean) =
             BookUI(id, name, hasScrollPosition, value.isBookmarked())
 
-        override fun getKey(): ReadKey = ReadKey("$id")
     }
 
     class ChapterUI(
@@ -52,7 +52,6 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
         override fun setIsBookmarked(value: Boolean) =
             ChapterUI(id, bookId, name, hasScrollPosition, value.isBookmarked())
 
-        override fun getKey(): ReadKey = ReadKey("$bookId-$id")
     }
 
     class VersetUI(
@@ -87,20 +86,17 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
                 value.isBookmarked()
             )
 
-        override fun getKey(): ReadKey = ReadKey("$bookId-$chapterId-$id")
+
     }
 }
 
-inline class ReadKey(val value: String) {
+inline class ReadKey(val id: Int) {
 
     companion object {
-        val INITIAL = ReadKey("0")
+        val INITIAL = ReadKey(0)
     }
 
-    operator fun invoke() = value
-    operator fun component1(): Int = value.split("-").firstOrNull()?.toInt() ?: -1
-    operator fun component2(): Int = value.split("-").getOrNull(1)?.toInt() ?: -1
-    operator fun component3(): Int = value.split("-").getOrNull(2)?.toInt() ?: -1
+    operator fun invoke() = id
 }
 
 inline class HasScrollPosition(val value: Boolean) {
