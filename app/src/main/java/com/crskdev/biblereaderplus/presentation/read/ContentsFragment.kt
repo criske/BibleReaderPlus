@@ -151,17 +151,17 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
 
     private val positionAndSelectionMapping: (Pair<ReadKey, List<ReadUI.ContentUI>>) -> (ReadPosToListReadUI) =
         { pair ->
-            //TODO go functional with this logic
             val positionKey = pair.first
-            var position = 0
             var closestContentKey = ReadKey.INITIAL
+            var position = closestContentKey()
             val source = pair.second.toMutableList()
             source.forEachIndexed { index, item ->
+                closestContentKey = item.getKey()
                 if (closestContentKey() <= positionKey()) {
                     position = index
+                } else {
+                    return@forEachIndexed
                 }
-                closestContentKey = item.getKey()
-                item
             }
             source[position] = source[position].setHasScrollPosition(true) as ReadUI.ContentUI
             position to source
