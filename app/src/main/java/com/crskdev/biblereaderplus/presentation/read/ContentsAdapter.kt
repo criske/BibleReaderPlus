@@ -86,7 +86,7 @@ class ContentVH(v: View, val type: Int, private val action: (ContentsAdapter.Act
 
     override fun onBind(model: ReadUI.ContentUI) {
         with(itemView as TextView) {
-            text = model.name
+            text = model.name + " " + model.isExpanded()
             if (model.hasScrollPosition()) {
                 setBackgroundColor(Color.LTGRAY)
             }

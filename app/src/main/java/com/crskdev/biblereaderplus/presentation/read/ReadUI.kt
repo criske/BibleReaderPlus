@@ -10,7 +10,13 @@ package com.crskdev.biblereaderplus.presentation.read
 /**
  * Created by Cristian Pela on 31.10.2018.
  */
-sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val isBookmarked: IsBookmarked) {
+sealed class ReadUI {
+
+    abstract val id: Int
+
+    abstract val hasScrollPosition: HasScrollPosition
+
+    abstract val isBookmarked: IsBookmarked
 
     fun getKey(): ReadKey = ReadKey(id)
 
@@ -18,22 +24,22 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
 
     abstract fun setIsBookmarked(value: Boolean): ReadUI
 
-    abstract class ContentUI(id: Int, val name: String,
-                             hasScrollPosition: HasScrollPosition,
-                             isBookmarked: IsBookmarked,
-                             val isExpanded: IsExpanded) :
-        ReadUI(id, hasScrollPosition, isBookmarked) {
+    abstract class ContentUI : ReadUI() {
+
+        abstract val name: String
+
+        abstract val isExpanded: IsExpanded
 
         abstract fun setExpanded(value: IsExpanded): ContentUI
     }
 
-    class BookUI(
-        id: Int,
-        name: String,
-        hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
-        isBookmarked: IsBookmarked = IsBookmarked(false),
-        isExpanded: IsExpanded = IsExpanded(true)
-    ) : ContentUI(id, name, hasScrollPosition, isBookmarked, isExpanded) {
+    data class BookUI(
+        override val id: Int,
+        override val name: String,
+        override val hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
+        override val isBookmarked: IsBookmarked = IsBookmarked(false),
+        override val isExpanded: IsExpanded = IsExpanded(true)
+    ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =
             BookUI(id, name, hasScrollPosition, isBookmarked, value)
@@ -46,15 +52,14 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
 
     }
 
-    class ChapterUI(
-        id: Int,
+    data class ChapterUI(
+        override val id: Int,
         val bookId: Int,
-        name: String,
-        hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
-        isBookmarked: IsBookmarked = IsBookmarked(false),
-        isExpanded: IsExpanded = IsExpanded(true)
-    ) :
-        ContentUI(id, name, hasScrollPosition, isBookmarked, isExpanded) {
+        override val name: String,
+        override val hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
+        override val isBookmarked: IsBookmarked = IsBookmarked(false),
+        override val isExpanded: IsExpanded = IsExpanded(true)
+    ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =
             ChapterUI(id, bookId, name, hasScrollPosition, isBookmarked, value)
@@ -67,16 +72,15 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
 
     }
 
-    class VersetUI(
-        id: Int,
+    data class VersetUI(
+        override val id: Int,
         val bookId: Int,
         val chapterId: Int,
         val number: Int,
         val contents: CharSequence,
-        hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
-        isBookmarked: IsBookmarked = IsBookmarked(false)
-    ) :
-        ReadUI(id, hasScrollPosition, isBookmarked) {
+        override val hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
+        override val isBookmarked: IsBookmarked = IsBookmarked(false)
+    ) : ReadUI() {
         override fun setHasScrollPosition(value: Boolean): ReadUI =
             VersetUI(
                 id,
@@ -98,8 +102,6 @@ sealed class ReadUI(val id: Int, val hasScrollPosition: HasScrollPosition, val i
                 hasScrollPosition,
                 value.isBookmarked()
             )
-
-
     }
 }
 
