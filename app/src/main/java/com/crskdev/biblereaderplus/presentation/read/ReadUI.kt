@@ -42,13 +42,13 @@ sealed class ReadUI {
     ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =
-            BookUI(id, name, hasScrollPosition, isBookmarked, value)
+            copy(isExpanded = value)
 
         override fun setHasScrollPosition(value: Boolean): ReadUI =
-            BookUI(id, name, value.hasScrollPosition(), isBookmarked)
+            copy(hasScrollPosition = value.hasScrollPosition())
 
         override fun setIsBookmarked(value: Boolean) =
-            BookUI(id, name, hasScrollPosition, value.isBookmarked())
+            copy(isBookmarked = value.isBookmarked())
 
     }
 
@@ -62,13 +62,13 @@ sealed class ReadUI {
     ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =
-            ChapterUI(id, bookId, name, hasScrollPosition, isBookmarked, value)
+            copy(isExpanded = value)
 
         override fun setHasScrollPosition(value: Boolean): ReadUI =
-            ChapterUI(id, bookId, name, value.hasScrollPosition(), isBookmarked)
+            copy(hasScrollPosition = value.hasScrollPosition())
 
         override fun setIsBookmarked(value: Boolean) =
-            ChapterUI(id, bookId, name, hasScrollPosition, value.isBookmarked())
+            copy(isBookmarked = value.isBookmarked())
 
     }
 
