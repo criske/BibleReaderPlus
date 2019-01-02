@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2019.
+  -->
+
+<menu xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/action_nav_favorites"
+        android:icon="@drawable/ic_star_black_24dp"
+        android:title="Favorites"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_nav_read_search"
+        android:icon="@drawable/ic_search_black_24dp"
+        android:title="Read Search"
+        app:showAsAction="always" />
+</menu>

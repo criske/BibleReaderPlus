@@ -39,15 +39,22 @@ class ReadFragment : DaggerFragment() {
 
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        viewModel.openVersetLiveData.observe(this, Observer {
-            findNavController().navigate(
-                ReadFragmentDirections.actionReadFragmentToFavoriteVersetDetailFragment(
-                    it.versetId,
-                    it.content,
-                    it.name
-                ),
-                FragmentNavigatorExtras(it())
-            )
+        viewModel.openLiveData.observe(this, Observer {
+            when (it) {
+                is ReadViewModel.Open.Verset -> findNavController().navigate(
+                    ReadFragmentDirections.actionReadFragmentToFavoriteVersetDetailFragment(
+                        it.navInfo.versetId,
+                        it.navInfo.content,
+                        it.navInfo.name
+                    ),
+                    FragmentNavigatorExtras(it.navInfo())
+                )
+                ReadViewModel.Open.Favorites -> findNavController().navigate(
+                    ReadFragmentDirections.actionReadFragmentToFavoriteVersetsFragment()
+                )
+                ReadViewModel.Open.SearchRead -> TODO()
+            }
+
         })
     }
 }
@@ -59,18 +66,23 @@ class ReadViewModel : ViewModel() {
             p.readKey() != c.readKey()
         }
 
-    val openVersetLiveData: LiveData<VersetTransitions.NavInfoExtra> =
-        SingleLiveEvent<VersetTransitions.NavInfoExtra>()
+    val openLiveData: LiveData<Open> =
+        SingleLiveEvent<Open>()
 
     fun scrollTo(source: Int, readKey: ReadKey) {
         scrollReadLiveData.cast<MutableLiveData<ScrollData>>().value = ScrollData(source, readKey)
     }
 
-    fun openVerset(navInfo: VersetTransitions.NavInfoExtra) {
-        openVersetLiveData.cast<SingleLiveEvent<VersetTransitions.NavInfoExtra>>().value = navInfo
+    fun open(open: Open) {
+        openLiveData.cast<SingleLiveEvent<Open>>().value = open
     }
 
     class ScrollData(val source: Int, val readKey: ReadKey)
 
+    sealed class Open {
+        class Verset(val navInfo: VersetTransitions.NavInfoExtra) : Open()
+        object Favorites : Open()
+        object SearchRead : Open()
+    }
 }
 

@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.read
@@ -18,6 +18,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.crskdev.biblereaderplus.presentation.util.system.hideSoftKeyboard
+import com.crskdev.biblereaderplus.presentation.util.view.setup
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_contents.*
 import javax.inject.Inject
@@ -30,7 +31,7 @@ class ContentsFragment : DaggerFragment() {
     }
 
     @Inject
-    lateinit var sharedViewModel: ReadViewModel
+    lateinit var readViewModel: ReadViewModel
 
     @Inject
     lateinit var contentsViewModel: ContentsViewModel
@@ -44,6 +45,13 @@ class ContentsFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        toolbar.setup(R.menu.menu_contents) {
+            when (it.itemId) {
+                R.id.action_nav_favorites -> readViewModel.open(ReadViewModel.Open.Favorites)
+                R.id.action_nav_read_search -> readViewModel.open(ReadViewModel.Open.SearchRead)
+            }
+            true
+        }
         textInputLayoutContents?.editText?.apply {
             addTextChangedListener(object : TextWatcher {
                 override fun afterTextChanged(s: Editable) {
@@ -65,7 +73,7 @@ class ContentsFragment : DaggerFragment() {
             adapter = ContentsAdapter(LayoutInflater.from(context)) { action, item ->
                 textInputLayoutContents.editText?.clearFocus()
                 when (action) {
-                    ContentsAdapter.Action.SELECT -> sharedViewModel.scrollTo(
+                    ContentsAdapter.Action.SELECT -> readViewModel.scrollTo(
                         SCROLL_SOURCE,
                         item.getKey()
                     )
@@ -87,7 +95,7 @@ class ContentsFragment : DaggerFragment() {
                 }
             })
         }
-        sharedViewModel.scrollReadLiveData.observe(this, Observer {
+        readViewModel.scrollReadLiveData.observe(this, Observer {
             contentsViewModel.scrollTo(it.readKey)
         })
         contentsViewModel.scrollPositionLiveData.observe(this, Observer {

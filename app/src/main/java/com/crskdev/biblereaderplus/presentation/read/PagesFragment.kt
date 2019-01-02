@@ -38,7 +38,7 @@ class PagesFragment : DaggerFragment() {
     }
 
     @Inject
-    lateinit var sharedViewModel: ReadViewModel
+    lateinit var readViewModel: ReadViewModel
 
     @Inject
     lateinit var pagesViewModel: PagesViewModel
@@ -58,7 +58,7 @@ class PagesFragment : DaggerFragment() {
         recyclerPages.apply {
             adapter = PagesAdapter(LayoutInflater.from(context)) {
                 if (it is VersetTransitions.NavInfoExtra) {
-                    sharedViewModel.openVerset(it)
+                    readViewModel.open(ReadViewModel.Open.Verset(it))
                 }
             }
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
@@ -68,14 +68,14 @@ class PagesFragment : DaggerFragment() {
                             ?.findFirstCompletelyVisibleItemPosition()
                             ?.let { position ->
                                 adapter?.cast<PagesAdapter>()?.getKeyAt(position)?.let {
-                                    sharedViewModel.scrollTo(SCROLL_SOURCE, it)
+                                    readViewModel.scrollTo(SCROLL_SOURCE, it)
                                 }
                             }
                     }
                 }
             })
         }
-        sharedViewModel.scrollReadLiveData
+        readViewModel.scrollReadLiveData
             .filter { it?.source != SCROLL_SOURCE }//not interested of own scroll events
             .observe(this, Observer {
                 pagesViewModel.scrollTo(it.readKey)
@@ -135,6 +135,7 @@ class PagesViewModel(private val readInteractor: ReadInteractor,
     fun scrollTo(readKey: ReadKey) {
         scrollPositionLiveData.cast<MutableLiveData<Int>>().value = readKey()
     }
+
 
 }
 

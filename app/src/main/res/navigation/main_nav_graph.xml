@@ -22,6 +22,9 @@
         <action
             android:id="@+id/action_readFragment_to_favoriteVersetDetailFragment"
             app:destination="@id/favoriteVersetDetailFragment" />
+        <action
+            android:id="@+id/action_readFragment_to_favoriteVersetsFragment"
+            app:destination="@id/favoriteVersetsFragment" />
     </fragment>
     <fragment
         android:id="@+id/favoriteVersetsFragment"

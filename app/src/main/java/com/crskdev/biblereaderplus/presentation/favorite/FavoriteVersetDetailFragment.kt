@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.favorite
@@ -15,8 +15,7 @@ import androidx.core.graphics.toColorFilter
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
 import androidx.lifecycle.Observer
-import androidx.transition.AutoTransition
-import androidx.transition.ChangeTransform
+import androidx.transition.ChangeBounds
 import androidx.transition.TransitionSet
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.castIf
@@ -54,9 +53,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
         sharedElementEnterTransition = DetailsTransition().apply {
             duration = 300
         }
-        sharedElementReturnTransition = DetailsTransition().apply {
-            duration = 300
-        }
+        sharedElementReturnTransition = null
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -161,7 +158,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
 class DetailsTransition : TransitionSet() {
     init {
         ordering = ORDERING_TOGETHER
-        addTransition(ChangeTransform())
-            .addTransition(AutoTransition())
+        //addTransition(ChangeTransform())
+        addTransition(ChangeBounds())
     }
 }
