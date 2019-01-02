@@ -31,6 +31,7 @@ import java.util.concurrent.ConcurrentHashMap
 @ObsoleteCoroutinesApi
 class DocumentRepositoryImpl : DocumentRepository {
 
+
     private data class Database(
         val books: List<Read.Content.Book>,
         val chapters: List<Read.Content.Chapter>,

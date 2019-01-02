@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.read
@@ -72,9 +72,3 @@ class ContentInteractorImpl(
 
 }
 
-class ContentInteractorImpl: ContentInteractor{
-    override suspend fun request(query: String?): List<Read.Content> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-}

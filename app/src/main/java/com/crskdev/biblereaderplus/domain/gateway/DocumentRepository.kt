@@ -28,9 +28,6 @@ interface DocumentRepository {
     @MainThread
     suspend fun observeVerset(id: Int, observer: (SelectedVerset) -> Unit)
 
-    @MainThread
-    suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit)
-
     //remote?
     fun getVersetProps(versetKey: VersetKey): VersetProps
 

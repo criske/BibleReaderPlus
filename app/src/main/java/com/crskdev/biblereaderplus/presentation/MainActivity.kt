@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 package com.crskdev.biblereaderplus.presentation
 
@@ -19,7 +19,7 @@ class MainActivity : DaggerAppCompatActivity() {
         dynamicallyLoadNavGraph(
             R.id.container,
             R.navigation.main_nav_graph,
-            R.id.favoriteVersetsFragment,
+            R.id.readFragment,
             supportFragmentManager,
             savedInstanceState
         )
