@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.favorite
@@ -17,7 +17,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.presentation.util.system.dpToPx
 import com.crskdev.biblereaderplus.presentation.util.system.getColorCompat
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
@@ -63,34 +62,33 @@ class FavoriteVersetVH(view: View,
                        private val action: (FavoriteAction) -> Unit) :
     BindableViewHolder<Read.Verset>(view) {
 
-    companion object {
-        private const val TRANSITION_DETAIL_NAME_SUFFIX = "verset_transition_detail"
-    }
-
     internal var itemDetails: FavoriteVersetItemDetails =
         FavoriteVersetItemDetails(RecyclerView.NO_POSITION, null)
 
     init {
         with(itemView) {
-            textItemFavVerset.setOnLongClickListener {
+            textItemFavVerset.setOnLongClickListener { _ ->
                 model?.let {
                     action(
                         FavoriteAction.Info(
-                            it.key,
-                            it.content,
-                            textItemFavVerset to "$TRANSITION_DETAIL_NAME_SUFFIX$adapterPosition"
+                            it.key.id,
+                            VersetTransitions.navInfoExtra(
+                                it.id,
+                                textItemFavVerset,
+                                it.content.toString()
+                            )
                         )
                     )
                 }
                 true
             }
-            btnItemVersetFav.setOnTouchListener { v, event ->
+            btnItemVersetFav.setOnTouchListener { _, event ->
                 if (event.action == MotionEvent.ACTION_DOWN) {
                     model?.let {
                         val kind = if (it.isFavorite)
-                            FavoriteAction.Remove(it.key)
+                            FavoriteAction.Remove(it.key.id)
                         else
-                            FavoriteAction.Add(it.key)
+                            FavoriteAction.Add(it.key.id)
                         action(kind)
                     }
                 }
@@ -101,9 +99,12 @@ class FavoriteVersetVH(view: View,
                     model?.let {
                         action(
                             FavoriteAction.Info(
-                                it.key,
-                                it.content,
-                                textItemFavVerset to "$TRANSITION_DETAIL_NAME_SUFFIX$adapterPosition"
+                                it.key.id,
+                                VersetTransitions.navInfoExtra(
+                                    it.id,
+                                    textItemFavVerset,
+                                    it.content.toString()
+                                )
                             )
                         )
                     }
@@ -120,7 +121,7 @@ class FavoriteVersetVH(view: View,
         }
         with(itemView) {
             textItemFavVerset.text = model.content
-            ViewCompat.setTransitionName(textItemFavVerset, "detailTransition$adapterPosition")
+            ViewCompat.setTransitionName(textItemFavVerset, VersetTransitions.name(model.id))
             val isSelected = selectionTracker.isSelected(itemDetails.key).apply {
                 btnItemVersetFav.isEnabled = this
                 btnItemVersetInfo.isEnabled = this
@@ -159,9 +160,9 @@ class FavoriteVersetVH(view: View,
     }
 }
 
-sealed class FavoriteAction(val key: VersetKey) {
-    class Add(key: VersetKey) : FavoriteAction(key)
-    class Remove(key: VersetKey) : FavoriteAction(key)
-    class Info(key: VersetKey, val content: CharSequence, val transitionInfo: Pair<View, String>) :
-        FavoriteAction(key)
+sealed class FavoriteAction(val id: Int) {
+    class Add(id: Int) : FavoriteAction(id)
+    class Remove(id: Int) : FavoriteAction(id)
+    class Info(id: Int, val transitionInfo: VersetTransitions.NavInfoExtra) :
+        FavoriteAction(id)
 }

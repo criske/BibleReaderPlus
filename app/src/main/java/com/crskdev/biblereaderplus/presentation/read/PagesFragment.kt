@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.read
@@ -15,12 +15,13 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.paging.PagedList
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.RecyclerView
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
+import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
+import com.crskdev.biblereaderplus.presentation.favorite.VersetTransitions
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
@@ -51,12 +52,14 @@ class PagesFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        val snapTopSmoothScroller = object : LinearSmoothScroller(context) {
-            override fun getVerticalSnapPreference(): Int = LinearSmoothScroller.SNAP_TO_START
-        }
+//        val snapTopSmoothScroller = object : LinearSmoothScroller(context) {
+//            override fun getVerticalSnapPreference(): Int = LinearSmoothScroller.SNAP_TO_START
+//        }
         recyclerPages.apply {
             adapter = PagesAdapter(LayoutInflater.from(context)) {
-
+                if (it is VersetTransitions.NavInfoExtra) {
+                    sharedViewModel.openVerset(it)
+                }
             }
             addOnScrollListener(object : RecyclerView.OnScrollListener() {
                 override fun onScrollStateChanged(recyclerView: RecyclerView, newState: Int) {
@@ -89,7 +92,9 @@ class PagesFragment : DaggerFragment() {
 
 }
 
-class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScopedViewModel() {
+class PagesViewModel(private val readInteractor: ReadInteractor,
+                     private val charSequenceTransformerFactory: CharSequenceTransformerFactory)
+    : CoroutineScopedViewModel() {
 
     val scrollPositionLiveData: LiveData<Int> = SingleLiveEvent<Int>()
 
@@ -114,7 +119,10 @@ class PagesViewModel(private val readInteractor: ReadInteractor) : CoroutineScop
                             it.key.bookId,
                             it.key.chapterId,
                             it.number,
-                            "${it.number}.${it.content}"
+                            charSequenceTransformerFactory.transform(
+                                CharSequenceTransformerFactory.Type.LEAD_FIRST_LINE,
+                                "${it.number}.${it.content}"
+                            )
                         )
                     }
                 }

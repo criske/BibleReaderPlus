@@ -1,11 +1,10 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
@@ -20,7 +19,7 @@ import javax.inject.Inject
  */
 interface FavoriteActionsVersetInteractor {
 
-    suspend fun request(versetKey: VersetKey, action: Action)
+    suspend fun request(versetId: Int, action: Action)
 
     sealed class Action {
         class Favorite(val add: Boolean) : Action()
@@ -35,22 +34,22 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
     private val remoteRepository: RemoteDocumentRepository) : FavoriteActionsVersetInteractor {
 
     @ObsoleteCoroutinesApi
-    override suspend fun request(versetKey: VersetKey, action: Action) =
+    override suspend fun request(versetId: Int, action: Action) =
         coroutineScope {
             when (action) {
                 is Action.Favorite -> {
                     launch(dispatchers.DEFAULT) {
-                        localRepository.favoriteAction(versetKey, action.add)
+                        localRepository.favoriteAction(versetId, action.add)
                     }
                     launch(dispatchers.IO) {
-                        remoteRepository.favoriteAction(versetKey, action.add)
+                        remoteRepository.favoriteAction(versetId, action.add)
                     }
                 }
                 //@formatter:off
                 is Action.TagToFavorite -> {
                     //todo remote support
                     launch( dispatchers.DEFAULT) {
-                        localRepository.tagFavoriteVerset(versetKey, action.tagId, action.add)
+                        localRepository.tagFavoriteVerset(versetId, action.tagId, action.add)
                     }
                 }
                 //@formatter:on

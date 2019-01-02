@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.presentation.read
@@ -9,6 +9,7 @@ import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
 import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
 import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
+import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.read.*
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
@@ -62,9 +63,11 @@ class PagesModule {
 
     @PerChildFragment
     @Provides
-    fun provideViewModel(container: ReadFragment, readInteractor: ReadInteractor): PagesViewModel =
+    fun provideViewModel(container: ReadFragment,
+                         readInteractor: ReadInteractor,
+                         charSequenceTransformerFactory: CharSequenceTransformerFactory): PagesViewModel =
         viewModelFromProvider(container) {
-            PagesViewModel(readInteractor)
+            PagesViewModel(readInteractor, charSequenceTransformerFactory)
         }
 
 

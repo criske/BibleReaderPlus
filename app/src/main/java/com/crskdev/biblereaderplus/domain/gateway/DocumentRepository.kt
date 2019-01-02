@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
@@ -23,17 +23,17 @@ interface DocumentRepository {
     fun filterContents(contains: String): List<Read.Content>
 
     //local
-    fun getVerset(versetKey: VersetKey): SelectedVerset?
+    fun getVerset(id: Int): SelectedVerset?
 
     @MainThread
-    suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit)
+    suspend fun observeVerset(id: Int, observer: (SelectedVerset) -> Unit)
 
     //remote?
     fun getVersetProps(versetKey: VersetKey): VersetProps
 
     fun synchronize()
 
-    fun favoriteAction(versetKey: VersetKey, add: Boolean)
+    fun favoriteAction(id: Int, add: Boolean)
 
     fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
 
@@ -42,7 +42,7 @@ interface DocumentRepository {
     @MainThread
     suspend fun tagsObserve(contains: String?, observer: (Set<Tag>) -> Unit)
 
-    fun tagFavoriteVerset(versetKey: VersetKey, tagId: String, add: Boolean)
+    fun tagFavoriteVerset(versetId: Int, tagId: String, add: Boolean)
 
     fun tagDelete(id: String)
 

@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.read
@@ -86,7 +86,7 @@ class ContentVH(v: View, val type: Int, private val action: (ContentsAdapter.Act
 
     override fun onBind(model: ReadUI.ContentUI) {
         with(itemView as TextView) {
-            text = model.name + " " + model.isExpanded()
+            text = model.name
             if (model.hasScrollPosition()) {
                 setBackgroundColor(Color.LTGRAY)
             }

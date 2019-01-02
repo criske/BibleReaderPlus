@@ -1,12 +1,11 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.data
 
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.entity.VersetProps
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
 
@@ -23,7 +22,7 @@ class RemoteDocumentRepositoryImpl : RemoteDocumentRepository {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+    override fun favoriteAction(versetId: Int, add: Boolean) {
         //TODO: implement favorite Action
     }
 

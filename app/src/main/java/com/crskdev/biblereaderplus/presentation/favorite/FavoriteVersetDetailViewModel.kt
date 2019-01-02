@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.favorite
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  */
 interface FavoriteVersetDetailViewModel {
 
-    val versetKey: VersetKey
+    val versetId: Int
 
     val versetDetailLiveData: LiveData<SelectedVersetUI>
 
@@ -39,7 +39,7 @@ interface FavoriteVersetDetailViewModel {
 
 @ExperimentalCoroutinesApi
 @ObsoleteCoroutinesApi
-class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
+class FavoriteVersetDetailViewModelImpl(override val versetId: Int,
                                         private val favoriteActionsVersetInteractor: FavoriteActionsVersetInteractor,
                                         private val favoriteVersetInteractor: FavoriteVersetInteractor,
                                         private val charSequenceTransformerFactory: CharSequenceTransformerFactory)
@@ -65,7 +65,7 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
 
     init {
         launch {
-            favoriteVersetInteractor.request(versetKey) {
+            favoriteVersetInteractor.request(versetId) {
                 selectedVersetLiveData.postValue(it)
             }
         }
@@ -74,7 +74,7 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
     override fun addToFavorite(add: Boolean) {
         launch {
             favoriteActionsVersetInteractor.request(
-                versetKey,
+                versetId,
                 FavoriteActionsVersetInteractor.Action.Favorite(add)
             )
         }
@@ -83,7 +83,7 @@ class FavoriteVersetDetailViewModelImpl(override val versetKey: VersetKey,
     override fun tagToFavoriteAction(tagId: String, add: Boolean) {
         launch {
             favoriteActionsVersetInteractor.request(
-                versetKey,
+                versetId,
                 FavoriteActionsVersetInteractor.Action.TagToFavorite(tagId, add)
             )
         }

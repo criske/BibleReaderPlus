@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.favorite
@@ -13,7 +13,6 @@ import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteActionsVersetInteractor
 import com.crskdev.biblereaderplus.domain.interactors.favorite.FetchFavoriteVersetsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
@@ -34,9 +33,9 @@ interface FavoriteVersetsViewModel : RestorableViewModel<FavoriteFilter?> {
 
     fun filter(source: FilterSource)
 
-    fun favoriteAction(versetKey: VersetKey, add: Boolean)
+    fun favoriteAction(versetId: Int, add: Boolean)
 
-    fun tagToFavoriteAction(versetKey: VersetKey, tagId: String, add: Boolean)
+    fun tagToFavoriteAction(versetId: Int, tagId: String, add: Boolean)
 
 }
 
@@ -140,19 +139,19 @@ class FavoriteVersetsViewModelImpl(mainDispatcher: CoroutineDispatcher,
     }
 
 
-    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+    override fun favoriteAction(versetId: Int, add: Boolean) {
         launch {
             favoriteInteractor.request(
-                versetKey,
+                versetId,
                 FavoriteActionsVersetInteractor.Action.Favorite(add)
             )
         }
     }
 
-    override fun tagToFavoriteAction(versetKey: VersetKey, tagId: String, add: Boolean) {
+    override fun tagToFavoriteAction(versetId: Int, tagId: String, add: Boolean) {
         launch {
             favoriteInteractor.request(
-                versetKey, FavoriteActionsVersetInteractor.Action.TagToFavorite(
+                versetId, FavoriteActionsVersetInteractor.Action.TagToFavorite(
                     tagId, add
                 )
             )

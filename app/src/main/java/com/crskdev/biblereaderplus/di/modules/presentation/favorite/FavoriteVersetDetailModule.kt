@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.presentation.favorite
@@ -13,7 +13,6 @@ import com.crskdev.biblereaderplus.domain.interactors.favorite.FavoriteVersetInt
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
-import com.crskdev.biblereaderplus.presentation.common.deparcelize
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailFragment
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailFragmentArgs
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailViewModel
@@ -53,7 +52,7 @@ abstract class FavoriteVersetDetailModule {
                 : FavoriteVersetDetailViewModel =
             viewModelFromProvider(container) {
                 FavoriteVersetDetailViewModelImpl(
-                    FavoriteVersetDetailFragmentArgs.fromBundle(container.arguments).key.deparcelize(),
+                    FavoriteVersetDetailFragmentArgs.fromBundle(container.arguments).versetId,
                     favoriteActionsVersetInteractor,
                     favoriteVersetInteractor,
                     charSequenceTransformerFactory

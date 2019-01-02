@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!--
   ~ License: MIT
-  ~ Copyright (c)  Pela Cristian 2018.
+  ~ Copyright (c)  Pela Cristian 2019.
   -->
 
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
@@ -18,7 +18,11 @@
     <fragment
         android:id="@+id/readFragment"
         android:name="com.crskdev.biblereaderplus.presentation.read.ReadFragment"
-        android:label="ReadFragment" />
+        android:label="ReadFragment">
+        <action
+            android:id="@+id/action_readFragment_to_favoriteVersetDetailFragment"
+            app:destination="@id/favoriteVersetDetailFragment" />
+    </fragment>
     <fragment
         android:id="@+id/favoriteVersetsFragment"
         android:name="com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment"
@@ -34,8 +38,8 @@
         android:label="fragment_favorite_verset_detail"
         tools:layout="@layout/fragment_favorite_verset_detail">
         <argument
-            android:name="key"
-            app:argType="com.crskdev.biblereaderplus.presentation.common.ParcelableVersetKey" />
+            android:name="versetId"
+            app:argType="integer" />
         <argument
             android:name="content"
             app:argType="string" />

@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.data
@@ -40,7 +40,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         fun allReads(): List<Read> = (books + chapters + versets).sortedBy { it.id }
     }
 
-    private data class VersetTag(val versetKey: VersetKey, val tagId: String)
+    private data class VersetTag(val versetId: Int, val tagId: String)
 
     private val dataSourceManager = DataSourceManager()
 
@@ -127,8 +127,8 @@ class DocumentRepositoryImpl : DocumentRepository {
                 books,
                 chapters,
                 versets, tags.toSet(), setOf(
-                    VersetTag(versets.first { it.isFavorite }.key, tags.first().id),
-                    VersetTag(versets.first { it.isFavorite }.key, tags[1].id)
+                    VersetTag(versets.first { it.isFavorite }.key.id, tags.first().id),
+                    VersetTag(versets.first { it.isFavorite }.key.id, tags[1].id)
                 )
             )
         }
@@ -142,7 +142,7 @@ class DocumentRepositoryImpl : DocumentRepository {
     override fun read(): DataSource.Factory<Int, Read> =
         dataSourceFactory {
             InMemoryPagedListDataSource {
-                dbLiveData?.value?.allReads() ?: emptyList()
+                dbLiveData.value?.allReads() ?: emptyList()
             }.apply {
                 dataSourceManager.addOrReplace(KEY_DS_READ, this)
             }
@@ -169,26 +169,26 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
 
-    override fun favoriteAction(versetKey: VersetKey, add: Boolean) {
+    override fun favoriteAction(id: Int, add: Boolean) {
         updateDatabasePost {
             copy(
                 versets = versets.map {
-                    if (it.key == versetKey) {
+                    if (it.key.id == id) {
                         it.copy(isFavorite = add)
                     } else {
                         it
                     }
                 },
                 versetTags = if (!add) versetTags.filter {
-                    it.versetKey != versetKey
+                    it.versetId != id
                 }.toSet() else versetTags
             )
         }
     }
 
-    override fun getVerset(versetKey: VersetKey): SelectedVerset? =
+    override fun getVerset(id: Int): SelectedVerset? =
         dbLiveData.value?.let { db ->
-            db.versets.firstOrNull { it.key == versetKey }?.let { v ->
+            db.versets.firstOrNull { it.key.id == id }?.let { v ->
                 SelectedVerset(
                     v.key,
                     v.bookName,
@@ -196,13 +196,13 @@ class DocumentRepositoryImpl : DocumentRepository {
                     v.number,
                     v.content,
                     v.isFavorite,
-                    db.versetTags.filter { it.versetKey == versetKey }
+                    db.versetTags.filter { it.versetId == id }
                         .map { t -> db.tags.first { it.id == t.tagId } }
                 )
             }
         }
 
-    override suspend fun observeVerset(versetKey: VersetKey, observer: (SelectedVerset) -> Unit) =
+    override suspend fun observeVerset(id: Int, observer: (SelectedVerset) -> Unit) =
         coroutineScope {
             val actor = actor<SelectedVerset> {
                 for (rv in channel) {
@@ -212,8 +212,8 @@ class DocumentRepositoryImpl : DocumentRepository {
             }
             val liveDataObserver = Observer<Database> { db ->
                 launch {
-                    val v = db.versets.first { it.key == versetKey }
-                    val tags = db.versetTags.filter { it.versetKey == versetKey }
+                    val v = db.versets.first { it.key.id == id }
+                    val tags = db.versetTags.filter { it.versetId == id }
                         .map { t -> db.tags.first { it.id == t.tagId } }
                     val selected = SelectedVerset(
                         v.key,
@@ -228,7 +228,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                 }
             }
             dbLiveData
-                .filter { it?.versets?.any { it.key == versetKey } ?: false }
+                .filter { it?.versets?.any { it.key.id == id } ?: false }
                 .observeForever(liveDataObserver)
 
             actor.invokeOnClose {
@@ -261,9 +261,9 @@ class DocumentRepositoryImpl : DocumentRepository {
             Unit
         }
 
-    override fun tagFavoriteVerset(versetKey: VersetKey, tagId: String, add: Boolean) {
+    override fun tagFavoriteVerset(versetId: Int, tagId: String, add: Boolean) {
         updateDatabasePost {
-            val vt = VersetTag(versetKey, tagId)
+            val vt = VersetTag(versetId, tagId)
             copy(versetTags = if (add) versetTags + vt else versetTags - vt)
         }
     }
@@ -311,7 +311,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                         }
                         .filter { v ->
                             filter.tags.takeIf { it.isNotEmpty() }?.let { f ->
-                                db.versetTags.any { vt -> vt.versetKey == v.key && f.any { it.id == vt.tagId } }
+                                db.versetTags.any { vt -> vt.versetId == v.key.id && f.any { it.id == vt.tagId } }
                             } ?: true
                         }
                 } ?: emptyList()

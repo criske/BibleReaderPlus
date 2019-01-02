@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.read
@@ -9,9 +9,11 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import com.crskdev.biblereaderplus.R
+import com.crskdev.biblereaderplus.presentation.favorite.VersetTransitions
 import com.crskdev.biblereaderplus.presentation.util.system.getThemeAttribute
 import com.crskdev.biblereaderplus.presentation.util.system.prepInflate
 import com.crskdev.biblereaderplus.presentation.util.view.BindableViewHolder
@@ -22,7 +24,7 @@ import kotlinx.android.synthetic.main.item_verset.view.*
 /**
  * Created by Cristian Pela on 23.12.2018.
  */
-class PagesAdapter(private val inflater: LayoutInflater, private val action: (ReadUI) -> Unit) :
+class PagesAdapter(private val inflater: LayoutInflater, private val action: (Any) -> Unit) :
     PagedListAdapter<ReadUI, ReadVH<*>>(
         object : DiffUtil.ItemCallback<ReadUI>() {
             override fun areItemsTheSame(oldItem: ReadUI, newItem: ReadUI): Boolean =
@@ -70,9 +72,7 @@ class PagesAdapter(private val inflater: LayoutInflater, private val action: (Re
 
 
 abstract class ReadVH<R : ReadUI>(v: View, protected val action: (ReadUI) -> Unit) :
-    BindableViewHolder<R>(v) {
-
-}
+    BindableViewHolder<R>(v)
 
 class BookVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.BookUI>(v, action) {
 
@@ -154,11 +154,20 @@ class ChapterVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.ChapterUI>(v,
 
 }
 
-class VersetVH(v: View, action: (ReadUI) -> Unit) : ReadVH<ReadUI.VersetUI>(v, action) {
+class VersetVH(v: View, action: (Any) -> Unit) : ReadVH<ReadUI.VersetUI>(v, action) {
+
+    init {
+        itemView.setOnClickListener { v ->
+            model?.let {
+                action(VersetTransitions.navInfoExtra(it.id, v, it.contents.toString()))
+            }
+        }
+    }
 
     override fun onBind(model: ReadUI.VersetUI) {
         with(itemView) {
             textItemFavVerset.text = model.contents
+            ViewCompat.setTransitionName(itemView, VersetTransitions.name(model.id))
         }
     }
 

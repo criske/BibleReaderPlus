@@ -1,12 +1,11 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
 
 import com.crskdev.biblereaderplus.domain.entity.Tag
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.entity.VersetProps
 
 /**
@@ -18,5 +17,5 @@ interface RemoteDocumentRepository {
 
     fun getAllTags(): List<Tag>
 
-    fun favoriteAction(versetKey: VersetKey, add: Boolean)
+    fun favoriteAction(versetId: Int, add: Boolean)
 }

@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.favorite
@@ -19,7 +19,6 @@ import androidx.recyclerview.selection.SelectionPredicates
 import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.selection.StorageStrategy
 import com.crskdev.biblereaderplus.R
-import com.crskdev.biblereaderplus.presentation.common.parcelize
 import com.crskdev.biblereaderplus.presentation.tags.*
 import com.crskdev.biblereaderplus.presentation.util.arch.navigateUp
 import com.crskdev.biblereaderplus.presentation.util.system.getParcelableMixin
@@ -64,13 +63,14 @@ class FavoriteVersetsFragment : DaggerFragment() {
                 is FavoriteAction.Info -> findNavController().navigate(
                     FavoriteVersetsFragmentDirections
                         .actionFavoriteVersetsFragmentToFavoriteVersetDetailFragment(
-                            it.key.parcelize(),
-                            it.content.toString(), it.transitionInfo.second
+                            it.transitionInfo.versetId,
+                            it.transitionInfo.content,
+                            it.transitionInfo.name
                         ),
-                    FragmentNavigatorExtras(it.transitionInfo)
+                    FragmentNavigatorExtras(it.transitionInfo())
                 )
-                is FavoriteAction.Add -> viewModel.favoriteAction(it.key, true)
-                is FavoriteAction.Remove -> viewModel.favoriteAction(it.key, false)
+                is FavoriteAction.Add -> viewModel.favoriteAction(it.id, true)
+                is FavoriteAction.Remove -> viewModel.favoriteAction(it.id, false)
             }
         }
         val favoriteVersetKeyProvider = FavoriteVersetKeyProvider()
