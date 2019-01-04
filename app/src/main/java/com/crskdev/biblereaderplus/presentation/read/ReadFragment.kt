@@ -21,6 +21,7 @@ import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.presentation.favorite.VersetTransitions
 import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
 import com.crskdev.biblereaderplus.presentation.util.arch.distinctUntilChanged
+import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
 import dagger.android.support.DaggerFragment
 import javax.inject.Inject
 
@@ -52,7 +53,7 @@ class ReadFragment : DaggerFragment() {
                 ReadViewModel.Open.Favorites -> findNavController().navigate(
                     ReadFragmentDirections.actionReadFragmentToFavoriteVersetsFragment()
                 )
-                ReadViewModel.Open.SearchRead -> TODO()
+                ReadViewModel.Open.SearchRead -> context?.showSimpleToast("TODO()")
             }
 
         })
@@ -66,8 +67,7 @@ class ReadViewModel : ViewModel() {
             p.readKey() != c.readKey()
         }
 
-    val openLiveData: LiveData<Open> =
-        SingleLiveEvent<Open>()
+    val openLiveData: LiveData<Open> = SingleLiveEvent<Open>()
 
     fun scrollTo(source: Int, readKey: ReadKey) {
         scrollReadLiveData.cast<MutableLiveData<ScrollData>>().value = ScrollData(source, readKey)

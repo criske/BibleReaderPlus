@@ -27,6 +27,7 @@ import com.crskdev.biblereaderplus.presentation.util.arch.SingleLiveEvent
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_pages.*
+import kotlinx.android.synthetic.main.read_float_action_menu.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -52,6 +53,12 @@ class PagesFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        fabReadActionMenuFav.setOnClickListener {
+            readViewModel.open(ReadViewModel.Open.Favorites)
+        }
+        fabReadActionMenuSearch.setOnClickListener {
+            readViewModel.open(ReadViewModel.Open.SearchRead)
+        }
 //        val snapTopSmoothScroller = object : LinearSmoothScroller(context) {
 //            override fun getVerticalSnapPreference(): Int = LinearSmoothScroller.SNAP_TO_START
 //        }
