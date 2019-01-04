@@ -265,7 +265,19 @@ class DocumentRepositoryImpl : DocumentRepository {
     override fun tagFavoriteVerset(versetId: Int, tagId: String, add: Boolean) {
         updateDatabasePost {
             val vt = VersetTag(versetId, tagId)
-            copy(versetTags = if (add) versetTags + vt else versetTags - vt)
+            val maybeUpdateFavDb =
+                if (add && versets.any { it.id == versetId && !it.isFavorite }) { // add verset to favorites first if wasn't prior added
+                    copy(
+                        versets = versets.map {
+                            if (it.key.id == versetId) {
+                                it.copy(isFavorite = add)
+                            } else {
+                                it
+                            }
+                        })
+                } else
+                    this
+            maybeUpdateFavDb.copy(versetTags = if (add) versetTags + vt else versetTags - vt)
         }
     }
 
