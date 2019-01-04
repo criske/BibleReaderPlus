@@ -1,6 +1,6 @@
 <!--
   ~ License: MIT
-  ~ Copyright (c)  Pela Cristian 2018.
+  ~ Copyright (c)  Pela Cristian 2019.
   -->
 
 <resources>
@@ -23,4 +23,5 @@
     <string name="err_unknown">Unknown error</string>
     <string name="err_tag_short_name">Name \"%1$s\" is too short. Must be at least %2$d</string>
     <string name="err_tag_empty">Name is empty.</string>
+    <string name="favorites">Favorites</string>
 </resources>

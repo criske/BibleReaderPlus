@@ -1,6 +1,6 @@
 <!--
   ~ License: MIT
-  ~ Copyright (c)  Pela Cristian 2018.
+  ~ Copyright (c)  Pela Cristian 2019.
   -->
 
 <resources>
@@ -44,5 +44,22 @@
 
     <style name="SearchView" parent="Widget.AppCompat.SearchView">
         <item name="android:maxWidth">10000dp</item>
+    </style>
+
+    <style name="textFloatActionMenuStyle">
+        <item name="android:layout_width">75dp</item>
+        <item name="android:layout_height">25dp</item>
+        <item name="android:layout_marginEnd">8dp</item>
+        <item name="android:background">@color/secondaryColor</item>
+        <item name="android:gravity">center</item>
+        <item name="android:padding">4dp</item>
+        <item name="android:textColor">@color/backgroundColor</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="fabActionMenuChildStyle">
+        <item name="fabSize">mini</item>
+        <item name="android:clickable">true</item>
+        <item name="android:textColor">@color/backgroundColor</item>
     </style>
 </resources>

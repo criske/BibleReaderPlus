@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ License: MIT
+  ~ Copyright (c)  Pela Cristian 2019.
+  -->
+
+<MotionScene xmlns:motion="http://schemas.android.com/apk/res-auto">
+    <Transition
+        motion:constraintSetEnd="@layout/read_float_action_menu_end"
+        motion:constraintSetStart="@layout/read_float_action_menu_start"
+        motion:interpolator="linear">
+        <OnClick
+            motion:mode="toggle"
+            motion:target="@id/fabReadActionMenuMore" />
+    </Transition>
+</MotionScene>
