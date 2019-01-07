@@ -13,6 +13,7 @@ import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.dynamicallyLoadNavGraph
+import com.crskdev.biblereaderplus.presentation.util.system.onBackPressedToExit
 import dagger.android.support.DaggerAppCompatActivity
 import javax.inject.Inject
 
@@ -39,6 +40,11 @@ class MainActivity : DaggerAppCompatActivity() {
 
     override fun onSupportNavigateUp() = findNavController(R.id.container).navigateUp()
 
+    override fun onBackPressed() {
+        if (!onBackPressedToExit(isUsingNavHostFragment = true)) {
+            super.onBackPressed()
+        }
+    }
 }
 
 

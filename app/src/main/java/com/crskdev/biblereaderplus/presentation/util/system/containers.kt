@@ -17,10 +17,13 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.getSystemService
+import androidx.core.view.postDelayed
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
+import com.crskdev.biblereaderplus.common.util.castOrNull
 
 /**
  * Created by Cristian Pela on 01.11.2018.
@@ -40,6 +43,35 @@ fun Activity.hideSoftKeyboard() {
     val view = currentFocus ?: View(this);
     getSystemService<InputMethodManager>()?.hideSoftInputFromWindow(view.windowToken, 0);
 }
+
+fun AppCompatActivity.onBackPressedToExit(
+    message: String = "Please click BACK again to exit",
+    isUsingNavHostFragment: Boolean = false,
+    delayMs: Long = 2000): Boolean {
+    val fragmentManager = if (isUsingNavHostFragment) {
+        supportFragmentManager
+            .fragments
+            .first()
+            .childFragmentManager
+    } else {
+        supportFragmentManager
+    }
+    val isAboutToExit =
+        !(window.decorView.tag?.castOrNull<Boolean>() ?: false)
+                && (fragmentManager.backStackEntryCount == 0)
+    if (isAboutToExit) {
+        showSimpleToast(message)
+        with(window.decorView) {
+            tag = true
+            postDelayed(delayMs) {
+                tag = false
+            }
+            Unit
+        }
+    }
+    return isAboutToExit
+}
+
 
 @SuppressLint("RestrictedApi")
 inline fun Context.simpleInputDialog(title: String, crossinline onSubmit: (Editable) -> Unit): AlertDialog.Builder {
