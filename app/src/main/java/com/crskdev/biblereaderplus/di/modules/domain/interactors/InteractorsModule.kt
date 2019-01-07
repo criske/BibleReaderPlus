@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.domain.interactors
@@ -8,11 +8,14 @@ package com.crskdev.biblereaderplus.di.modules.domain.interactors
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
+import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
 import com.crskdev.biblereaderplus.domain.interactors.favorite.*
 import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
 import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
 import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractorImpl
+import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
+import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor
@@ -29,6 +32,10 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 @Module
 class InteractorsModule {
+
+    @Provides
+    fun provideCheckInitInteractor(setupCheckService: SetupCheckService): CheckInitInteractor =
+        CheckInitInteractorImpl(setupCheckService)
 
     @Provides
     fun provideReadAllInteractor(dispatchers: GatewayDispatchers,

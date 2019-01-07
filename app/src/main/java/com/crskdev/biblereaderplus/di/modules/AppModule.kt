@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules
@@ -11,6 +11,7 @@ import com.crskdev.biblereaderplus.di.modules.common.CommonModule
 import com.crskdev.biblereaderplus.di.modules.data.DataModule
 import com.crskdev.biblereaderplus.di.modules.domain.interactors.InteractorsModule
 import com.crskdev.biblereaderplus.di.modules.presentation.SingleActivityModule
+import com.crskdev.biblereaderplus.di.modules.services.ServicesModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.presentation.MainActivity
 import dagger.Binds
@@ -31,6 +32,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
         AndroidInjectionModule::class,
         CommonModule::class,
         DataModule::class,
+        ServicesModule::class,
         InteractorsModule::class
     ]
 )

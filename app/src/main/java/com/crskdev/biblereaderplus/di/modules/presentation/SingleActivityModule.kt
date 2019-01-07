@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.presentation
@@ -14,6 +14,9 @@ import com.crskdev.biblereaderplus.di.modules.presentation.read.ReadModule
 import com.crskdev.biblereaderplus.di.modules.presentation.setup.SetupModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
+import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
+import com.crskdev.biblereaderplus.presentation.MainActivity
+import com.crskdev.biblereaderplus.presentation.MainViewModel
 import com.crskdev.biblereaderplus.presentation.common.CharSequenceTransformerFactory
 import com.crskdev.biblereaderplus.presentation.common.HighLightContentTransformer
 import com.crskdev.biblereaderplus.presentation.common.IconAtEndTransformer
@@ -22,6 +25,7 @@ import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetDetailFra
 import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment
 import com.crskdev.biblereaderplus.presentation.read.ReadFragment
 import com.crskdev.biblereaderplus.presentation.setup.SetupFragment
+import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
@@ -72,6 +76,15 @@ abstract class SingleActivityModule {
                     }
                 }
             )
+
+        @JvmStatic
+        @PerActivity
+        @Provides
+        fun provideMainViewModel(activity: MainActivity,
+                                 checkInitInteractor: CheckInitInteractor): MainViewModel =
+            viewModelFromProvider(activity) {
+                MainViewModel(checkInitInteractor)
+            }
     }
 
 }
