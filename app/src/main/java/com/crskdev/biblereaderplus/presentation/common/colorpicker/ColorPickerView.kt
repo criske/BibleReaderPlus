@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 @file:Suppress("unused")
@@ -94,23 +94,13 @@ class ColorPickerView : ConstraintLayout {
 
         viewModel.lockedColorsLiveData.observe(lifecycleOwner, Observer {
             lockedAdapter.submitList(it.toList())
-            colorPickerRecylerLocked.smoothScrollToPosition(it.size - 1)
+            if (it.isNotEmpty()) {
+                colorPickerRecylerLocked.smoothScrollToPosition(it.size - 1)
+            }
         })
 
         viewModel.selectedColorLiveData.observe(lifecycleOwner, Observer {
             val contrastColor = ColorUtilsExtra.defaultContrastColor(it.intColor)
-//            if (it.pickType == PickedColor.SELECT) {
-//                ObjectAnimator.ofInt(
-//                    colorPickerSelectedColorView, "cardBackgroundColor",
-//                    it.intColor
-//                ).apply {
-//                    setEvaluator(ArgbEvaluator())
-//                    interpolator = LinearInterpolator()
-//                    duration = ANIMATION_DURATION_MS * 2
-//                }.start()
-//            } else {
-//                colorPickerSelectedColorView.cast<CardView>().setCardBackgroundColor(it.intColor)
-//            }
             colorPickerSelectedColorView.cast<CardView>().setCardBackgroundColor(it.intColor)
             with(colorPickerSelectedColorText) {
                 setTextColor(contrastColor)

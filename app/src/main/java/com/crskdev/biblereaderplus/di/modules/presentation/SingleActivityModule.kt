@@ -8,12 +8,14 @@ package com.crskdev.biblereaderplus.di.modules.presentation
 import android.content.Context
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.enumMap
+import com.crskdev.biblereaderplus.di.modules.domain.interactors.InteractorsModule
 import com.crskdev.biblereaderplus.di.modules.presentation.favorite.FavoriteVersetDetailModule
 import com.crskdev.biblereaderplus.di.modules.presentation.favorite.FavoriteVersetsModule
 import com.crskdev.biblereaderplus.di.modules.presentation.read.ReadModule
 import com.crskdev.biblereaderplus.di.modules.presentation.setup.SetupModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
+import com.crskdev.biblereaderplus.domain.gateway.AuthService
 import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
 import com.crskdev.biblereaderplus.presentation.MainActivity
 import com.crskdev.biblereaderplus.presentation.MainViewModel
@@ -26,6 +28,7 @@ import com.crskdev.biblereaderplus.presentation.favorite.FavoriteVersetsFragment
 import com.crskdev.biblereaderplus.presentation.read.ReadFragment
 import com.crskdev.biblereaderplus.presentation.setup.SetupFragment
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
+import com.crskdev.biblereaderplus.services.AuthServiceImpl
 import dagger.Module
 import dagger.Provides
 import dagger.android.ContributesAndroidInjector
@@ -36,7 +39,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
  * Created by Cristian Pela on 05.11.2018.
  */
 
-@Module
+@Module(includes = [InteractorsModule::class])
 @ObsoleteCoroutinesApi
 @ExperimentalCoroutinesApi
 abstract class SingleActivityModule {
@@ -85,6 +88,11 @@ abstract class SingleActivityModule {
             viewModelFromProvider(activity) {
                 MainViewModel(checkInitInteractor)
             }
+
+        @JvmStatic
+        @PerActivity
+        @Provides
+        fun provideAuthService(activity: MainActivity): AuthService = AuthServiceImpl(activity)
     }
 
 }

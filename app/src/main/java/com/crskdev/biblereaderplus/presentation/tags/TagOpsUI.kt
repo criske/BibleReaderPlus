@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.tags
@@ -25,6 +25,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 
 object TagOpsUI {
+
     inline fun showConfirmationDialogOnDelete(context: Context, tag: Tag, crossinline onConfirm: (Tag) -> Unit) {
         context.simpleAlertDialog("Warning!", "Permanently delete tag \"${tag.name}\"") {
             onConfirm(tag)

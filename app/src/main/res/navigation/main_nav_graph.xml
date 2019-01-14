@@ -7,13 +7,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/read_nav_graph"
-    app:startDestination="@id/favoriteVersetDetailFragment"
+    app:startDestination="@id/setupFragment"
     tools:ignore="InvalidNavigation">
 
     <fragment
         android:id="@+id/setupFragment"
         android:name="com.crskdev.biblereaderplus.presentation.setup.SetupFragment"
-        android:label="SetupFragment" />
+        android:label="SetupFragment">
+        <action
+            android:id="@+id/action_setupFragment_to_readFragment"
+            app:destination="@id/readFragment" />
+    </fragment>
 
     <fragment
         android:id="@+id/readFragment"

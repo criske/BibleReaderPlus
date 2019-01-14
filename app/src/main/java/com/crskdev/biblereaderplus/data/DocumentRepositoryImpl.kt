@@ -27,84 +27,61 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Created by Cristian Pela on 21.11.2018.
  */
-@ExperimentalCoroutinesApi
-@ObsoleteCoroutinesApi
-class DocumentRepositoryImpl : DocumentRepository {
 
+val MOCKED_DB: DocumentRepositoryImpl.Database  by lazy {
 
-    private data class Database(
-        val books: List<Read.Content.Book>,
-        val chapters: List<Read.Content.Chapter>,
-        val versets: List<Read.Verset>,
-        val tags: Set<Tag>,
-        val versetTags: Set<VersetTag>) {
-        fun allReads(): List<Read> = (books + chapters + versets).sortedBy { it.id }
-    }
-
-    private data class VersetTag(val versetId: Int, val tagId: String)
-
-    private val dataSourceManager = DataSourceManager()
-
-    private val dbLiveData: MutableLiveData<Database>
-
-    companion object {
-        private const val KEY_DS_READ = 0
-        private const val KEY_DS_FAVORITE_VERSETS = 1
-    }
-
-    init {
-        dbLiveData = MutableLiveData<Database>().apply {
-
-            val r = Random()
-            val wordLengths = listOf(5, 10, 3, 2, 7, 15, 12)
-            fun generateWord(random: Random, len: Int, atLeastLen: Int = 2): String {
-                return sequence {
-                    while (true) {
-                        yield((random.nextInt(24) + 97).toChar())
-                    }
-                }.take(len.coerceAtLeast(atLeastLen)).joinToString("")
+    val r = Random()
+    val wordLengths = listOf(5, 10, 3, 2, 7, 15, 12)
+    fun generateWord(random: Random, len: Int, atLeastLen: Int = 2): String {
+        return sequence {
+            while (true) {
+                yield((random.nextInt(24) + 97).toChar())
             }
+        }.take(len.coerceAtLeast(atLeastLen)).joinToString("")
+    }
 
 
-            val numberSeed = 3
+    val numberSeed = 3
 
-            val books = mutableListOf<Read.Content.Book>()
-            val chapters = mutableListOf<Read.Content.Chapter>()
-            val versets = mutableListOf<Read.Verset>()
-            var idGen = -0
+    val books = mutableListOf<Read.Content.Book>()
+    val chapters = mutableListOf<Read.Content.Chapter>()
+    val versets = mutableListOf<Read.Verset>()
+    var idGen = -0
 
-            for (i in 1..numberSeed) {
-                val book = Read.Content.Book(idGen++, generateWord(r, wordLengths.random(), 5))
-                books.add(book)
-                for (j in 1..r.nextInt(numberSeed) + 5) {
-                    val chapter = Read.Content.Chapter(ChapterKey(idGen++, book.id), j)
-                    chapters.add(chapter)
-                    for (k in 1..r.nextInt(numberSeed) + 10) {
-                        val paragraphLength = r.nextInt(10) + 50
-                        var wordsCountDown = paragraphLength
-                        val content = buildString {
-                            while (wordsCountDown > 0) {
-                                val delim = if (wordsCountDown > 0) " " else ""
-                                val word = generateWord(r, wordLengths.random()) + delim
-                                append(word)
-                                wordsCountDown--
-                            }
-                        }
-                        versets.add(
-                            Read.Verset(
-                                VersetKey(idGen++, book.id, chapter.id, "remote$idGen"),
-                                k,
-                                book.name,
-                                chapter.number,
-                                content,
-                                r.nextBoolean(),
-                                ModifiedAt("")
-                            )
-                        )
+    for (i in 1..numberSeed) {
+        val book = Read.Content.Book(idGen++, generateWord(r, wordLengths.random(), 5))
+        books.add(book)
+        for (j in 1..r.nextInt(numberSeed) + 5) {
+            val chapter = Read.Content.Chapter(ChapterKey(idGen++, book.id), j)
+            chapters.add(chapter)
+            for (k in 1..r.nextInt(numberSeed) + 10) {
+                val paragraphLength = r.nextInt(10) + 50
+                var wordsCountDown = paragraphLength
+                val content = buildString {
+                    while (wordsCountDown > 0) {
+                        val delim = if (wordsCountDown > 0) " " else ""
+                        val word = generateWord(r, wordLengths.random()) + delim
+                        append(word)
+                        wordsCountDown--
                     }
                 }
+                versets.add(
+                    Read.Verset(
+                        VersetKey(idGen++, book.id, chapter.id, "remote$idGen"),
+                        k,
+                        book.name,
+                        chapter.number,
+                        content,
+                        //r.nextBoolean(),
+                        false,
+                        ModifiedAt("")
+                    )
+                )
             }
-            val tags = (listOf(
+        }
+    }
+    val tags =
+            /*(listOf(
                 "#ffcc99",
                 "#cc66ff",
                 "#f7ffe6",
@@ -123,21 +100,59 @@ class DocumentRepositoryImpl : DocumentRepository {
                 (0..100).map {
                     Tag((it + 1).toString(), "Tag${it + 1}${tagPrefixes.random()}", colors.random())
                 }
-            }
-            value = Database(
-                books,
-                chapters,
-                versets, tags.toSet(), setOf(
-                    VersetTag(versets.first { it.isFavorite }.key.id, tags.first().id),
-                    VersetTag(versets.first { it.isFavorite }.key.id, tags[1].id)
-                )
+            }*/ emptyList<Tag>()
+
+    DocumentRepositoryImpl.Database(
+        books,
+        chapters,
+        versets,
+        tags.toSet(),
+        /*setOf(
+            DocumentRepositoryImpl.VersetTag(
+                versets.first { it.isFavorite }.key.id,
+                tags.first().id
+            ),
+            DocumentRepositoryImpl.VersetTag(
+                versets.first { it.isFavorite }.key.id,
+                tags[1].id
             )
+        )*/ emptySet()
+    )
+}
+
+
+@ExperimentalCoroutinesApi
+@ObsoleteCoroutinesApi
+class DocumentRepositoryImpl : DocumentRepository {
+
+    data class Database(
+        val books: List<Read.Content.Book>,
+        val chapters: List<Read.Content.Chapter>,
+        val versets: List<Read.Verset>,
+        val tags: Set<Tag>,
+        val versetTags: Set<VersetTag>) {
+        fun allReads(): List<Read> = (books + chapters + versets).sortedBy { it.id }
+    }
+
+    data class VersetTag(val versetId: Int, val tagId: String)
+
+    private val dataSourceManager = DataSourceManager()
+
+    private val dbLiveData: MutableLiveData<Database>
+
+    companion object {
+        private const val KEY_DS_READ = 0
+        private const val KEY_DS_FAVORITE_VERSETS = 1
+    }
+
+    init {
+        dbLiveData = MutableLiveData<Database>().apply {
+            value = MOCKED_DB
         }
     }
 
-
     override fun save(reads: List<Read>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+
     }
 
     override fun read(): DataSource.Factory<Int, Read> =
@@ -170,7 +185,7 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
 
-    override fun favoriteAction(id: Int, add: Boolean) {
+    override fun favoriteAction(add: Boolean, id: Int) {
         updateDatabasePost {
             copy(
                 versets = versets.map {
@@ -180,9 +195,22 @@ class DocumentRepositoryImpl : DocumentRepository {
                         it
                     }
                 },
-                versetTags = if (!add) versetTags.filter {
-                    it.versetId != id
-                }.toSet() else versetTags
+                versetTags = if (!add) versetTags.filter { it.versetId != id }.toSet() else versetTags
+            )
+        }
+    }
+
+    override fun favoriteActionBatch(add: Boolean, vararg ids: Int) {
+        updateDatabasePost {
+            copy(
+                versets = versets.map {
+                    if (ids.contains(it.key.id)) {
+                        it.copy(isFavorite = add)
+                    } else {
+                        it
+                    }
+                },
+                versetTags = if (!add) versetTags.filter { !ids.contains(it.versetId) }.toSet() else versetTags
             )
         }
     }
@@ -238,14 +266,6 @@ class DocumentRepositoryImpl : DocumentRepository {
             Unit
         }
 
-    override fun getVersetProps(versetKey: VersetKey): VersetProps {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun synchronize() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     //#####################################TAG OPERATIONS###########################################
 
     override suspend fun tagsObserve(contains: String?, observer: (Set<Tag>) -> Unit) =
@@ -262,7 +282,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             Unit
         }
 
-    override fun tagFavoriteVerset(versetId: Int, tagId: String, add: Boolean) {
+    override fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String) {
         updateDatabasePost {
             val vt = VersetTag(versetId, tagId)
             val maybeUpdateFavDb =
@@ -281,9 +301,34 @@ class DocumentRepositoryImpl : DocumentRepository {
         }
     }
 
-    override fun tagCreate(newTag: Tag) {
+    override fun tagFavoriteVersetBatch(add: Boolean, versetId: Int, vararg tagIds: String) {
         updateDatabasePost {
-            copy(tags = tags + newTag)
+            var updateVersets = this.versets
+            var updateVersetTags = this.versetTags
+            tagIds.forEach { t ->
+                val vt = VersetTag(versetId, t)
+                if (add) {
+                    if (updateVersets.any { it.id == versetId && !it.isFavorite }) {
+                        updateVersets = updateVersets.map {
+                            if (it.key.id == versetId) {
+                                it.copy(isFavorite = add)
+                            } else {
+                                it
+                            }
+                        }
+                    }
+                    updateVersetTags += vt
+                } else {
+                    updateVersetTags -= vt
+                }
+            }
+            copy(versets = updateVersets, versetTags = updateVersetTags)
+        }
+    }
+
+    override fun tagCreate(vararg newTags: Tag) {
+        updateDatabasePost {
+            copy(tags = tags + newTags)
         }
     }
 

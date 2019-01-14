@@ -5,7 +5,9 @@
 
 package com.crskdev.biblereaderplus.di.modules.services
 
+import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
+import com.crskdev.biblereaderplus.services.DownloadDocumentServiceImpl
 import com.crskdev.biblereaderplus.services.SetupCheckServiceImpl
 import dagger.Module
 import dagger.Provides
@@ -20,5 +22,8 @@ class ServicesModule {
     @Provides
     @Singleton
     fun provideSetupCheckService(): SetupCheckService = SetupCheckServiceImpl()
+
+    @Provides
+    fun provideDownloadDocumentService(): DownloadDocumentService = DownloadDocumentServiceImpl()
 
 }

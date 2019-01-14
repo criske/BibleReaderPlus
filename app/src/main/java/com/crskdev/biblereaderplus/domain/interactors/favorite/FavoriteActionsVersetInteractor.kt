@@ -39,7 +39,7 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
             when (action) {
                 is Action.Favorite -> {
                     launch(dispatchers.DEFAULT) {
-                        localRepository.favoriteAction(versetId, action.add)
+                        localRepository.favoriteAction(action.add, versetId)
                     }
                     launch(dispatchers.IO) {
                         remoteRepository.favoriteAction(versetId, action.add)
@@ -48,8 +48,11 @@ class FavoriteActionsVersetInteractorImpl @Inject constructor(
                 //@formatter:off
                 is Action.TagToFavorite -> {
                     //todo remote support
+                    launch(dispatchers.IO) {
+                        remoteRepository.tagFavoriteVerset(action.add, versetId, action.tagId)
+                    }
                     launch( dispatchers.DEFAULT) {
-                        localRepository.tagFavoriteVerset(versetId, action.tagId, action.add)
+                        localRepository.tagFavoriteVerset(action.add, versetId, action.tagId)
                     }
                 }
                 //@formatter:on

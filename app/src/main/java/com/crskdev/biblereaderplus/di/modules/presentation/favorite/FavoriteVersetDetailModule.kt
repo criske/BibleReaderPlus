@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.di.modules.presentation.favorite
 
+import android.os.Bundle
 import com.crskdev.biblereaderplus.di.modules.presentation.tag.TagOpsModule
 import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
@@ -52,7 +53,9 @@ abstract class FavoriteVersetDetailModule {
                 : FavoriteVersetDetailViewModel =
             viewModelFromProvider(container) {
                 FavoriteVersetDetailViewModelImpl(
-                    FavoriteVersetDetailFragmentArgs.fromBundle(container.arguments).versetId,
+                    FavoriteVersetDetailFragmentArgs.fromBundle(
+                        container.arguments ?: Bundle()
+                    ).versetId,
                     favoriteActionsVersetInteractor,
                     favoriteVersetInteractor,
                     charSequenceTransformerFactory

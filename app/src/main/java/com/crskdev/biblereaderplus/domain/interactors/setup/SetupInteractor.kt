@@ -1,16 +1,19 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.setup
 
 import com.crskdev.biblereaderplus.common.util.retryWhen
+import com.crskdev.biblereaderplus.common.util.switchSelectOnReceive
 import com.crskdev.biblereaderplus.domain.entity.DeviceAccountCredential
 import com.crskdev.biblereaderplus.domain.gateway.*
 import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor.Request
 import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor.Response
 import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.actor
 import kotlinx.coroutines.coroutineScope
@@ -18,10 +21,10 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 interface SetupInteractor {
-    suspend fun request(request: Request, response: (Response) -> Unit)
+    suspend fun request(request: ReceiveChannel<Request>, response: (Response) -> Unit)
     sealed class Request {
         object Check : SetupInteractor.Request()
-        class AuthPrompt(val deviceAccountCredential: DeviceAccountCredential) :
+        class AuthPromptSelection(val deviceAccountCredential: DeviceAccountCredential) :
             SetupInteractor.Request()
 
         object Retry : SetupInteractor.Request()
@@ -58,6 +61,8 @@ interface SetupInteractor {
         object Finished : SetupInteractor.Response(), SetupInteractor.Step
         @Suppress("unused")
         class Error(val errorMessage: String?) : SetupInteractor.Response()
+
+        class RetryableError(val errorMessage: String?) : SetupInteractor.Response()
     }
 }
 
@@ -70,26 +75,29 @@ class SetupInteractorImpl @Inject constructor(
     private val setupCheckService: SetupCheckService,
     private val authService: AuthService,
     private val downloadDocumentService: DownloadDocumentService,
-    private val documentRepository: DocumentRepository) : SetupInteractor {
+    private val documentRepository: DocumentRepository,
+    private val remoteDocumentRepository: RemoteDocumentRepository) : SetupInteractor {
 
-    override suspend fun request(request: Request, response: (Response) -> Unit) = coroutineScope {
-        val sendChannel = actor<Response> {
-            for (r in channel) {
-                response(r)
+    override suspend fun request(request: ReceiveChannel<Request>, response: (Response) -> Unit) =
+        coroutineScope {
+            val sendChannel = actor<Response> {
+                for (r in channel) {
+                    response(r)
+                }
             }
+            switchSelectOnReceive(request) { _, r ->
+                when (r) {
+                    is Request.Check,
+                    is Request.Retry ->
+                        handleRequestCheckRetry(sendChannel)
+                    is Request.AuthPromptSelection ->
+                        handleRequestAuthPrompt(r.deviceAccountCredential, sendChannel)
+                }
+            }
+            Unit
         }
-        when (request) {
-            is Request.Check,
-            is Request.Retry ->
-                handleRequestCheckRetry(sendChannel)
-            is Request.AuthPrompt ->
-                handleRequestAuthPrompt(request.deviceAccountCredential, sendChannel)
-        }
-        sendChannel.close()
-        Unit
-    }
 
-    private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>) {
+    private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>) = coroutineScope {
         val existentStep = withContext(dispatchers.DEFAULT) {
             setupCheckService.getStep()
         }
@@ -105,6 +113,9 @@ class SetupInteractorImpl @Inject constructor(
                     DeviceAccountCredential.Unauthorized,
                     channel
                 )
+            }
+            is SetupCheckService.Step.Synch -> {
+                resumeFromSync(channel)
             }
             is SetupCheckService.Step.Finished -> {
                 resumeFromFinished(channel)
@@ -191,18 +202,21 @@ class SetupInteractorImpl @Inject constructor(
             channel.send(Response.SynchStep.Prepare)
             when (deviceAccountCredential) {
                 is DeviceAccountCredential.Unauthorized -> {
-                    if (!authService.hasPermission()) {
-                        channel.send(Response.SynchStep.NeedPermission)
-                        authService.requestPermission()
+                    if (!authService.isAuthenticated()) {
+                        channel.send(Response.SynchStep.Authenticating)
+                        authService.requestAuthPermission()
                     } else {
                         channel.send(Response.SynchStep.Authenticating)
                         val (error, success) = withContext(coroutineContext + dispatchers.DEFAULT) {
-                            authService.authenticateWithPermissionGranted()
+                            withContext(coroutineContext + dispatchers.IO) {
+                                authService.authenticateWithPermissionGranted()
+                            }
                         }
                         if (success) {
                             channel.send(Response.SynchStep.Synchronizing)
                             withContext(coroutineContext + dispatchers.IO) {
-                                documentRepository.synchronize()
+                                setupCheckService.next(SetupCheckService.Step.Synch)
+                                resumeFromSync(channel)
                             }
                             channel.send(Response.SynchStep.Done)
                             resumeFromFinished(channel)
@@ -219,7 +233,8 @@ class SetupInteractorImpl @Inject constructor(
                     if (success) {
                         channel.send(Response.SynchStep.Synchronizing)
                         withContext(coroutineContext + dispatchers.IO) {
-                            documentRepository.synchronize()
+                            setupCheckService.next(SetupCheckService.Step.Synch)
+                            resumeFromSync(channel)
                         }
                         channel.send(Response.SynchStep.Done)
                         resumeFromFinished(channel)
@@ -228,6 +243,32 @@ class SetupInteractorImpl @Inject constructor(
                     }
                 }
             }
+        }
+
+    private suspend fun resumeFromSync(channel: SendChannel<SetupInteractor.Response>) =
+        coroutineScope {
+            channel.send(Response.SynchStep.Synchronizing)
+            val tagsPromise = async(coroutineContext + dispatchers.IO) {
+                remoteDocumentRepository.getAllTags()
+            }
+            val favoritesPromise = async(coroutineContext + dispatchers.IO) {
+                remoteDocumentRepository.getAllFavorites()
+            }
+            withContext(coroutineContext + dispatchers.DEFAULT) {
+                //TODO do it in transaction?
+                documentRepository.tagCreate(*tagsPromise.await().toTypedArray())
+                val favorites = favoritesPromise.await()
+                documentRepository.favoriteActionBatch(true, *favorites.map { it.id }.toIntArray())
+                favorites.forEach {
+                    documentRepository.tagFavoriteVersetBatch(
+                        true,
+                        it.id,
+                        *it.tagIds.toTypedArray()
+                    )
+                }
+            }
+            setupCheckService.next(SetupCheckService.Step.Initialized)
+            Unit
         }
 
     private suspend fun resumeFromUninitialized(channel: SendChannel<SetupInteractor.Response>) =

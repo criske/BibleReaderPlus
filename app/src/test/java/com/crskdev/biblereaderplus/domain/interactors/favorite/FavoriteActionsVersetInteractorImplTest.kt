@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.favorite
@@ -46,7 +46,7 @@ class FavoriteActionsVersetInteractorImplTest {
     fun `should call local and remote favorite action functions`() {
         runBlocking {
             interactor.request(versetKey, true)
-            verify { localRepository.favoriteAction(versetKey, true) }
+            verify { localRepository.favoriteAction(true, versetKey) }
             verify { remoteRepository.favoriteAction(versetKey, true) }
         }
     }

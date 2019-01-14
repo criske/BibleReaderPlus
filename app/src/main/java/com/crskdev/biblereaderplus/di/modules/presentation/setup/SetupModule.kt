@@ -1,12 +1,13 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.presentation.setup
 
 import com.crskdev.biblereaderplus.di.scopes.PerChildFragment
 import com.crskdev.biblereaderplus.di.scopes.PerFragment
+import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor
 import com.crskdev.biblereaderplus.presentation.setup.*
 import com.crskdev.biblereaderplus.presentation.util.arch.viewModelFromProvider
 import dagger.Module
@@ -36,9 +37,10 @@ abstract class SetupModule {
         @JvmStatic
         @Provides
         @PerFragment
-        fun provideViewModel(container: SetupFragment): SetupViewModel =
+        fun provideViewModel(container: SetupFragment,
+                             setupInteractor: SetupInteractor): SetupViewModel =
             viewModelFromProvider(container) {
-                SetupViewModel()
+                SetupViewModel(setupInteractor)
             }
     }
 

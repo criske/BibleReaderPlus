@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.setup
@@ -138,7 +138,7 @@ class SetupInteractorTest {
             launch {
                 val actual = collectEmitted<SetupInteractor.Response> {
                     setupInteractor.request(
-                        SetupInteractor.Request.AuthPrompt(
+                        SetupInteractor.Request.AuthPromptSelection(
                             DeviceAccountCredential.AuthorizationPayload(Unit)
                         )
                     ) {

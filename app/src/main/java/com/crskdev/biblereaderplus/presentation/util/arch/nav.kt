@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.util.arch
@@ -10,6 +10,7 @@ import androidx.annotation.IdRes
 import androidx.annotation.NavigationRes
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import androidx.navigation.NavArgument
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph
 import androidx.navigation.fragment.NavHostFragment
@@ -36,7 +37,14 @@ fun dynamicallyLoadNavGraph(@IdRes containerId: Int,
     }
     navHostFragment.navController.attachNavGraph(graphId) {
         this.startDestination = startDestination
-        arguments?.let { addDefaultArguments(it) }
+        arguments?.let { b ->
+            b.keySet().forEach { key ->
+                val navArg = NavArgument.Builder()
+                    .setDefaultValue(b.get(key))
+                    .build()
+                addArgument(key, navArg)
+            }
+        }
     }
     return navHostFragment
 }

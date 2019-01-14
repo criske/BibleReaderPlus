@@ -5,10 +5,7 @@
 
 package com.crskdev.biblereaderplus.di.modules.domain.interactors
 
-import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
-import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
-import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
-import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
+import com.crskdev.biblereaderplus.domain.gateway.*
 import com.crskdev.biblereaderplus.domain.interactors.favorite.*
 import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractor
 import com.crskdev.biblereaderplus.domain.interactors.read.ContentInteractorImpl
@@ -16,6 +13,8 @@ import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractor
 import com.crskdev.biblereaderplus.domain.interactors.read.ReadInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
 import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractorImpl
+import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor
+import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractor
 import com.crskdev.biblereaderplus.domain.interactors.tag.FetchTagsInteractorImpl
 import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor
@@ -36,6 +35,21 @@ class InteractorsModule {
     @Provides
     fun provideCheckInitInteractor(setupCheckService: SetupCheckService): CheckInitInteractor =
         CheckInitInteractorImpl(setupCheckService)
+
+    @Provides
+    fun provideSetupInteractor(dispatchers: GatewayDispatchers,
+                               setupCheckService: SetupCheckService,
+                               authService: AuthService,
+                               downloadDocumentService: DownloadDocumentService,
+                               documentRepository: DocumentRepository,
+                               remoteRepository: RemoteDocumentRepository): SetupInteractor =
+        SetupInteractorImpl(
+            dispatchers,
+            setupCheckService, authService,
+            downloadDocumentService,
+            documentRepository,
+            remoteRepository
+        )
 
     @Provides
     fun provideReadAllInteractor(dispatchers: GatewayDispatchers,

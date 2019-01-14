@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.di.modules.data
@@ -13,5 +13,4 @@ import dagger.Module
  * Created by Cristian Pela on 21.11.2018.
  */
 @Module(includes = [DiskModule::class, IOModule::class])
-class DataModule {
-}
+class DataModule

@@ -70,7 +70,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
 
     private fun observeVMEvents() {
         textTitledLayoutDefault.text =
-                FavoriteVersetDetailFragmentArgs.fromBundle(arguments).content
+                FavoriteVersetDetailFragmentArgs.fromBundle(arguments ?: Bundle()).content
         viewModel.versetDetailLiveData.observe(this, Observer {
             textTitledLayoutDefault.text = it.formattedContents
             titled_layout_text_title.text = it.title
@@ -145,7 +145,8 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
     }
 
     private fun startSharedTransition(view: View) {
-        val args = FavoriteVersetDetailFragmentArgs.fromBundle(arguments)
+        val args = FavoriteVersetDetailFragmentArgs
+            .fromBundle(arguments ?: Bundle())
         ViewCompat.setTransitionName(view, args.transitionName)
         (view.parent as? ViewGroup)?.doOnPreDraw {
             // Parent has been drawn. Start transitioning!

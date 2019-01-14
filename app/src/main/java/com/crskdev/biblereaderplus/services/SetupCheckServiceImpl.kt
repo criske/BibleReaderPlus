@@ -12,10 +12,14 @@ import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
  */
 class SetupCheckServiceImpl : SetupCheckService {
 
-    override fun getStep(): SetupCheckService.Step =
-        SetupCheckService.Step.Initialized
+    @Volatile
+    private var step: SetupCheckService.Step = SetupCheckService.Step.Uninitialized
+
+    override fun getStep(): SetupCheckService.Step = step
 
     override fun next(step: SetupCheckService.Step) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        synchronized(this) {
+            this.step = step
+        }
     }
 }

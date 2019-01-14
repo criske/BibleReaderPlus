@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.tag
@@ -15,7 +15,6 @@ import com.crskdev.biblereaderplus.domain.interactors.tag.TagOpsInteractor.Respo
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 import java.util.*
 
 /**
@@ -56,28 +55,42 @@ class TagOpsInteractorImpl(
             launch(coroutineErrHandler + dispatchers.DEFAULT) {
                 //todo: support for remote
                 when (tagOp) {
-                    is TagOp.Delete -> localRepository.tagDelete(tagOp.id)
+                    is TagOp.Delete -> {
+                        launch (dispatchers.IO){
+                            remoteRepository.tagDelete(tagOp.id)
+                        }
+                        localRepository.tagDelete(tagOp.id)
+                    }
                     is TagOp.Rename -> {
                         validateUpsert(tagOp.newName){
                             launch(dispatchers.IO) {
-                                //todo: remote rename
+                                remoteRepository.tagRename(tagOp.id, tagOp.newName)
                                 println("TagOpsInteractor: Remote rename for tag-id: ${tagOp.id}. New name: $it")
+
                             }
                             println("TagOpsInteractor: Local rename for tag-id: ${tagOp.id}. New name: $it")
                             localRepository.tagRename(tagOp.id, tagOp.newName.trim())
                         }
                     }
-                    is TagOp.Color  -> localRepository.tagColor(tagOp.id, tagOp.color)
+                    is TagOp.Color  -> {
+                        launch(dispatchers.IO) {
+                            remoteRepository.tagColor(tagOp.id, tagOp.color)
+                            println("TagOpsInteractor: Remote change color for tag-id: ${tagOp.id}. New color: ${tagOp.color}")
+                        }
+                        localRepository.tagColor(tagOp.id, tagOp.color)
+                    }
                     is TagOp.Create -> {
                          validateUpsert(tagOp.name){
-                             val remoteCreatedId = withContext(dispatchers.IO) {
-                                  //todo create remote first
-                                 val remoteId = UUID.randomUUID().toString()
-                                  println("TagOpsInteractor: Remote create for tag with name: $it and id: $remoteId")
-                                 remoteId
+
+                             val tag = Tag(UUID.randomUUID().toString(), tagOp.name)
+
+                             launch(dispatchers.IO) {
+                                 remoteRepository.tagCreate(tag).first().apply {
+                                      println("TagOpsInteractor: Remote create for tag with name: ${tag.name} and id: $this")
+                                 }
                              }
-                             println("TagOpsInteractor: Local create for tag with name: $it and remote id: $remoteCreatedId")
-                             localRepository.tagCreate(Tag(remoteCreatedId, it))
+                             println("TagOpsInteractor: Local create for tag with name: ${tag.name} and remote id: ${tag.id}")
+                             localRepository.tagCreate(tag)
                          }
 
                     }

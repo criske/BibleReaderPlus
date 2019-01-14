@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.entity
@@ -37,6 +37,8 @@ sealed class Read(val id: Int) {
 }
 
 class VersetProps(val key: VersetKey, val isFavorite: Boolean = false, val tags: List<String> = emptyList())
+
+class RemoteVerset(var id: Int = -1, var tagIds: List<String> = emptyList())
 
 inline class ModifiedAt(val date: String)
 

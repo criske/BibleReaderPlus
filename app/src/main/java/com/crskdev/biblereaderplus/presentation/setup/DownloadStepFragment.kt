@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.setup
@@ -15,7 +15,6 @@ import android.view.ViewGroup
 import androidx.lifecycle.ViewModel
 import com.crskdev.biblereaderplus.R
 import dagger.android.support.DaggerFragment
-import kotlinx.android.synthetic.main.fragment_scaffold_mock.*
 import javax.inject.Inject
 
 /**
@@ -36,8 +35,6 @@ class DownloadStepFragment : DaggerFragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        textScaffoldMock.text = downloadStepViewModel.hello + "  And parents: " +
-                setupViewModel.hello
     }
 
 }

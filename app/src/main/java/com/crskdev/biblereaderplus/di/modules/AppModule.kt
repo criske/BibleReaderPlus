@@ -9,7 +9,6 @@ import android.content.Context
 import com.crskdev.biblereaderplus.BibleReaderApplication
 import com.crskdev.biblereaderplus.di.modules.common.CommonModule
 import com.crskdev.biblereaderplus.di.modules.data.DataModule
-import com.crskdev.biblereaderplus.di.modules.domain.interactors.InteractorsModule
 import com.crskdev.biblereaderplus.di.modules.presentation.SingleActivityModule
 import com.crskdev.biblereaderplus.di.modules.services.ServicesModule
 import com.crskdev.biblereaderplus.di.scopes.PerActivity
@@ -32,8 +31,7 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
         AndroidInjectionModule::class,
         CommonModule::class,
         DataModule::class,
-        ServicesModule::class,
-        InteractorsModule::class
+        ServicesModule::class
     ]
 )
 abstract class AppModule {

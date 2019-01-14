@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.entity
@@ -10,5 +10,5 @@ package com.crskdev.biblereaderplus.domain.entity
  */
 sealed class DeviceAccountCredential {
     object Unauthorized : DeviceAccountCredential()
-    class AuthorizationPayload(val credentialData: Any) : DeviceAccountCredential()
+    class AuthorizationPayload(val credentialData: Any?) : DeviceAccountCredential()
 }

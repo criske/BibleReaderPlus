@@ -21,6 +21,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.core.content.getSystemService
 import androidx.core.view.postDelayed
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.castOrNull
@@ -72,6 +74,21 @@ fun AppCompatActivity.onBackPressedToExit(
     return isAboutToExit
 }
 
+private fun traverseFragmentsRec(fragmentManager: FragmentManager, cutPoint: (Fragment) -> Unit) {
+    fragmentManager.fragments.forEach {
+        cutPoint(it)
+        traverseFragmentsRec(it.childFragmentManager, cutPoint)
+    }
+}
+
+fun AppCompatActivity.traverseFragments(cutPoint: (Fragment) -> Unit) {
+    traverseFragmentsRec(supportFragmentManager, cutPoint)
+}
+
+fun Fragment.traverseFragments(cutPoint: (Fragment) -> Unit) {
+    traverseFragmentsRec(childFragmentManager, cutPoint)
+}
+
 
 @SuppressLint("RestrictedApi")
 inline fun Context.simpleInputDialog(title: String, crossinline onSubmit: (Editable) -> Unit): AlertDialog.Builder {
@@ -95,6 +112,7 @@ inline fun Context.showSimpleInputDialog(title: String, crossinline onSubmit: (E
     simpleInputDialog(title, onSubmit).create().show()
 }
 
+
 inline fun Context.simpleAlertDialog(title: String, msg: String, crossinline onConfirm: () -> Unit): AlertDialog.Builder =
     AlertDialog.Builder(this)
         .setTitle(title)
@@ -108,6 +126,25 @@ inline fun Context.simpleAlertDialog(title: String, msg: String, crossinline onC
 inline fun Context.showSimpleAlertDialog(title: String, msg: String, crossinline onConfirm: () -> Unit) {
     simpleAlertDialog(title, msg, onConfirm).create().show()
 }
+
+inline fun Context.simpleYesNoDialog(title: String, msg: String, crossinline onSelect: (Int) -> Unit): AlertDialog.Builder =
+    AlertDialog.Builder(this)
+        .setTitle(title)
+        .setMessage(msg)
+        .setCancelable(false)
+        .setNegativeButton(android.R.string.no) { d, which ->
+            onSelect(which)
+            d.dismiss()
+        }
+        .setPositiveButton(android.R.string.ok) { d, which ->
+            onSelect(which)
+            d.dismiss()
+        }
+
+inline fun Context.showSimpleYesNoDialog(title: String, msg: String, crossinline onSelect: (Int) -> Unit) {
+    simpleYesNoDialog(title, msg, onSelect).create().show()
+}
+
 
 fun Context.showSimpleToast(title: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, title, duration).show()

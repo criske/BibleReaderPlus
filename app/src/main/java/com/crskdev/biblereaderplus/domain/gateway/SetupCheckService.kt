@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
@@ -20,6 +20,7 @@ interface SetupCheckService {
         object DownloadStep : Step()
         object AuthStep : Step()
         object Finished : Step()
+        object Synch : Step()
         class Error(val err: Throwable) : Step()
     }
 }
