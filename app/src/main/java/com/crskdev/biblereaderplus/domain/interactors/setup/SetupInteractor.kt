@@ -97,39 +97,12 @@ class SetupInteractorImpl @Inject constructor(
             Unit
         }
 
-    private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>) = coroutineScope {
+    private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>): Unit =
+        coroutineScope {
         val existentStep = withContext(dispatchers.DEFAULT) {
             setupCheckService.getStep()
         }
-        when (existentStep) {
-            is SetupCheckService.Step.Uninitialized -> {
-                resumeFromUninitialized(channel)
-            }
-            is SetupCheckService.Step.DownloadStep -> {
-                resumeFromDownload(channel)
-            }
-            is SetupCheckService.Step.AuthStep -> {
-                resumeFromAuth(
-                    DeviceAccountCredential.Unauthorized,
-                    channel
-                )
-            }
-            is SetupCheckService.Step.Synch -> {
-                resumeFromSync(channel)
-            }
-            is SetupCheckService.Step.Finished -> {
-                resumeFromFinished(channel)
-            }
-            is SetupCheckService.Step.Initialized -> {
-                resumeFromInitialized(channel)
-            }
-            is SetupCheckService.Step.Error -> {
-                sendErrorResponse(
-                    channel,
-                    Response.Error(existentStep.err.message)
-                )
-            }
-        }
+            nextState(existentStep, channel)
     }
 
     private suspend fun handleRequestAuthPrompt(credential: DeviceAccountCredential, channel: SendChannel<Response>) {
@@ -145,16 +118,18 @@ class SetupInteractorImpl @Inject constructor(
     }
 
     private suspend fun resumeFromFinished(channel: SendChannel<Response>) = coroutineScope {
-        channel.send(Response.Finished)
-        withContext(coroutineContext + dispatchers.DEFAULT) {
+        withContext(dispatchers.DEFAULT) {
             setupCheckService.next(SetupCheckService.Step.Initialized)
         }
+        channel.send(Response.Finished)
     }
 
     private suspend fun resumeFromDownload(channel: SendChannel<Response>) =
         coroutineScope {
             channel.send(Response.DownloadStep.Prepare)
-
+            withContext(dispatchers.DEFAULT) {
+                setupCheckService.next(SetupCheckService.Step.DownloadStep)
+            }
             val documentResponse = retryWhen(
                 times = 3,
                 retryWhen = { _, r -> r is DownloadDocumentService.Error }) {
@@ -186,40 +161,38 @@ class SetupInteractorImpl @Inject constructor(
                 }
                 is DownloadDocumentService.Response.OKResponse -> {
                     channel.send(Response.DownloadStep.Persist)
-                    withContext(coroutineContext + dispatchers.DEFAULT) {
+                    withContext(dispatchers.DEFAULT) {
                         documentRepository.save(documentResponse.document)
-                        //transition to auth state
-                        setupCheckService.next(SetupCheckService.Step.AuthStep)
                     }
                     channel.send(Response.DownloadStep.Done)
+                    nextState(SetupCheckService.Step.DownloadStep, channel)
                 }
             }
+            Unit
 
         }
 
-    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential, channel: SendChannel<Response>) =
+    private suspend fun resumeFromAuth(deviceAccountCredential: DeviceAccountCredential = DeviceAccountCredential.Unauthorized,
+                                       channel: SendChannel<Response>) =
         coroutineScope {
-            channel.send(Response.SynchStep.Prepare)
+            channel.send(Response.SynchStep.Authenticating)
+            withContext(dispatchers.DEFAULT) {
+                setupCheckService.next(SetupCheckService.Step.AuthStep)
+            }
             when (deviceAccountCredential) {
                 is DeviceAccountCredential.Unauthorized -> {
                     if (!authService.isAuthenticated()) {
                         channel.send(Response.SynchStep.Authenticating)
+                        channel.send(Response.SynchStep.NeedPermission)
                         authService.requestAuthPermission()
                     } else {
-                        channel.send(Response.SynchStep.Authenticating)
-                        val (error, success) = withContext(coroutineContext + dispatchers.DEFAULT) {
-                            withContext(coroutineContext + dispatchers.IO) {
+                        val (error, success) = withContext(dispatchers.DEFAULT) {
+                            withContext(dispatchers.IO) {
                                 authService.authenticateWithPermissionGranted()
                             }
                         }
                         if (success) {
-                            channel.send(Response.SynchStep.Synchronizing)
-                            withContext(coroutineContext + dispatchers.IO) {
-                                setupCheckService.next(SetupCheckService.Step.Synch)
-                                resumeFromSync(channel)
-                            }
-                            channel.send(Response.SynchStep.Done)
-                            resumeFromFinished(channel)
+                            nextState(SetupCheckService.Step.AuthStep, channel)
                         } else {
                             channel.send(Response.SynchStep.Error(error?.message))
                         }
@@ -227,17 +200,11 @@ class SetupInteractorImpl @Inject constructor(
                 }
                 is DeviceAccountCredential.AuthorizationPayload -> {
                     channel.send(Response.SynchStep.Authenticating)
-                    val (error, success) = withContext(coroutineContext + dispatchers.DEFAULT) {
+                    val (error, success) = withContext(dispatchers.DEFAULT) {
                         authService.authenticate(deviceAccountCredential.credentialData)
                     }
                     if (success) {
-                        channel.send(Response.SynchStep.Synchronizing)
-                        withContext(coroutineContext + dispatchers.IO) {
-                            setupCheckService.next(SetupCheckService.Step.Synch)
-                            resumeFromSync(channel)
-                        }
-                        channel.send(Response.SynchStep.Done)
-                        resumeFromFinished(channel)
+                        nextState(SetupCheckService.Step.AuthStep, channel)
                     } else {
                         channel.send(Response.SynchStep.Error(error?.message))
                     }
@@ -247,14 +214,18 @@ class SetupInteractorImpl @Inject constructor(
 
     private suspend fun resumeFromSync(channel: SendChannel<SetupInteractor.Response>) =
         coroutineScope {
+            channel.send(Response.SynchStep.Prepare)
             channel.send(Response.SynchStep.Synchronizing)
-            val tagsPromise = async(coroutineContext + dispatchers.IO) {
+            withContext(dispatchers.DEFAULT) {
+                setupCheckService.next(SetupCheckService.Step.SynchStep)
+            }
+            val tagsPromise = async(dispatchers.IO) {
                 remoteDocumentRepository.getAllTags()
             }
-            val favoritesPromise = async(coroutineContext + dispatchers.IO) {
+            val favoritesPromise = async(dispatchers.IO) {
                 remoteDocumentRepository.getAllFavorites()
             }
-            withContext(coroutineContext + dispatchers.DEFAULT) {
+            withContext(dispatchers.DEFAULT) {
                 //TODO do it in transaction?
                 documentRepository.tagCreate(*tagsPromise.await().toTypedArray())
                 val favorites = favoritesPromise.await()
@@ -267,15 +238,28 @@ class SetupInteractorImpl @Inject constructor(
                     )
                 }
             }
-            setupCheckService.next(SetupCheckService.Step.Initialized)
+            channel.send(Response.SynchStep.Done)
+            nextState(SetupCheckService.Step.SynchStep, channel)
             Unit
         }
 
-    private suspend fun resumeFromUninitialized(channel: SendChannel<SetupInteractor.Response>) =
+    private suspend fun nextState(from: SetupCheckService.Step, channel: SendChannel<SetupInteractor.Response>): Unit =
         coroutineScope {
-            channel.send(Response.DownloadStep.Prepare)
-            withContext(coroutineContext + dispatchers.DEFAULT) {
-                setupCheckService.next(SetupCheckService.Step.DownloadStep)
+            when (from) {
+                SetupCheckService.Step.Initialized -> resumeFromInitialized(channel)
+                SetupCheckService.Step.Uninitialized -> resumeFromDownload(channel)
+                SetupCheckService.Step.DownloadStep -> resumeFromAuth(channel = channel)
+                SetupCheckService.Step.AuthStep -> resumeFromSync(channel)
+                SetupCheckService.Step.SynchStep -> resumeFromFinished(channel)
+                is SetupCheckService.Step.Error -> sendErrorResponse(
+                    channel,
+                    Response.Error(from.err.message)
+                )
+                else -> {
+                    //no-op
+                }
             }
+            Unit
         }
+
 }

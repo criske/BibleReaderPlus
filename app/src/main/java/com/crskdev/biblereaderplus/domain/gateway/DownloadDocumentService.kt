@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
@@ -16,7 +16,7 @@ interface DownloadDocumentService {
         private val EMPTY_DOCUMENT = emptyList<Read>()
     }
 
-    suspend fun download(): DownloadDocumentService.Response
+    fun download(): DownloadDocumentService.Response
 
     sealed class Error(val message: String?) {
         object None : Error(null)

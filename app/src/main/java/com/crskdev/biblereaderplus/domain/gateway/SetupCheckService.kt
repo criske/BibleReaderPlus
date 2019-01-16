@@ -20,7 +20,7 @@ interface SetupCheckService {
         object DownloadStep : Step()
         object AuthStep : Step()
         object Finished : Step()
-        object Synch : Step()
+        object SynchStep : Step()
         class Error(val err: Throwable) : Step()
     }
 }

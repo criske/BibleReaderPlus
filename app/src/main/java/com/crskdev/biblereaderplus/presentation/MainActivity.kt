@@ -8,12 +8,14 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.navigation.findNavController
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.domain.gateway.AuthService
 import com.crskdev.biblereaderplus.domain.interactors.setup.CheckInitInteractor
 import com.crskdev.biblereaderplus.presentation.awareness.IsPlatformAuthAware
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
+import com.crskdev.biblereaderplus.presentation.util.arch.dynamicallyLoadNavGraph
 import com.crskdev.biblereaderplus.presentation.util.system.onBackPressedToExit
 import com.crskdev.biblereaderplus.presentation.util.system.traverseFragments
 import dagger.android.support.DaggerAppCompatActivity
@@ -28,16 +30,16 @@ class MainActivity : DaggerAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-//        viewModel.isInitLiveData.observe(this, Observer {
-//            val loadGraph = if (it) R.id.readFragment else R.id.setupFragment
-//            dynamicallyLoadNavGraph(
-//                R.id.container,
-//                R.navigation.main_nav_graph,
-//                loadGraph,
-//                supportFragmentManager,
-//                savedInstanceState
-//            )
-//        })
+        viewModel.isInitLiveData.observe(this, Observer {
+            val loadGraph = if (it) R.id.readFragment else R.id.setupFragment
+            dynamicallyLoadNavGraph(
+                R.id.container,
+                R.navigation.main_nav_graph,
+                loadGraph,
+                supportFragmentManager,
+                savedInstanceState
+            )
+        })
     }
 
     override fun onSupportNavigateUp() = findNavController(R.id.container).navigateUp()

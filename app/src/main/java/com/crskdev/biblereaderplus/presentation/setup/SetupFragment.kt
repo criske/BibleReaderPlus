@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -55,8 +56,8 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                 is SetupInteractor.Response.DownloadStep.Error -> {
                     context?.showSimpleToast("Error ${it}")
                 }
-                is SetupInteractor.Response.Initialized -> {
-                    findNavController().navigate(SetupFragmentDirections.actionSetupFragmentToReadFragment())
+                is SetupInteractor.Response.Finished -> {
+                    btnSetupFinish.isVisible = true
                 }
                 is SetupInteractor.Response.SynchStep.NeedPermission -> {
                     context?.showSimpleYesNoDialog("Permission", "Permission to access ACCOUNTS") {
@@ -64,9 +65,13 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                 }
                 is SetupInteractor.Response.SynchStep.Authenticating -> {
                 }
-                else -> setupViewModel.next()
+                else -> {
+                }
             }
         })
+        btnSetupFinish.setOnClickListener {
+            findNavController().navigate(SetupFragmentDirections.actionSetupFragmentToReadFragment())
+        }
     }
 
     override fun onPlatformAuth(resultCode: Int, data: Intent?) {

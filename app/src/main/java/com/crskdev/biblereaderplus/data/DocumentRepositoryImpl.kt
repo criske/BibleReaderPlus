@@ -152,7 +152,7 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
     override fun save(reads: List<Read>) {
-
+        sleep(2000)
     }
 
     override fun read(): DataSource.Factory<Int, Read> =

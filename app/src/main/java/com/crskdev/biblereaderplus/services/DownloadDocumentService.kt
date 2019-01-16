@@ -6,11 +6,14 @@
 package com.crskdev.biblereaderplus.services
 
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
+import java.lang.Thread.sleep
 
 /**
  * Created by Cristian Pela on 07.01.2019.
  */
 class DownloadDocumentServiceImpl : DownloadDocumentService {
-    override suspend fun download(): DownloadDocumentService.Response =
-        DownloadDocumentService.Response.OKResponse(emptyList())
+    override fun download(): DownloadDocumentService.Response {
+        sleep(2000)
+        return DownloadDocumentService.Response.OKResponse(emptyList())
+    }
 }
