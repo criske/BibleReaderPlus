@@ -18,6 +18,6 @@ class CheckInitInteractorImpl(private val setupCheckService: SetupCheckService) 
     CheckInitInteractor {
 
     override fun requestIsInitialized(): Boolean = setupCheckService.getStep() ==
-            SetupCheckService.Step.Initialized
+            SetupCheckService.Step.INITIALIZED
 
 }

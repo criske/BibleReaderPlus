@@ -5,6 +5,8 @@
 
 package com.crskdev.biblereaderplus.domain.gateway
 
+import kotlin.math.sign
+
 /**
  * Created by Cristian Pela on 06.11.2018.
  */
@@ -12,15 +14,33 @@ interface SetupCheckService {
 
     fun getStep(): Step
 
-    fun next(step: Step)
+    fun save(step: Step)
 
-    sealed class Step {
-        object Initialized : Step()
-        object Uninitialized : Step()
-        object DownloadStep : Step()
-        object AuthStep : Step()
-        object Finished : Step()
-        object SynchStep : Step()
-        class Error(val err: Throwable) : Step()
+//    sealed class StepDeprecated {
+//        object Initialized : StepDeprecated()
+//        object Uninitialized : StepDeprecated()
+//
+//        object DownloadStep : StepDeprecated()
+//        object AuthStep : StepDeprecated()
+//        object SynchStep : StepDeprecated()
+//    }
+
+    enum class Step {
+
+        UNINITIALIZED, DOWNLOAD, AUTH, SYNCH, INITIALIZED;
+
+        companion object {
+            fun next(step: Step): Step = dir(step, 1)
+            fun previous(step: Step): Step = dir(step, -1)
+            private fun dir(step: Step, sign: Int): Step {
+                val values = Step.values()
+                val pos = (step.ordinal + sign.sign) % values.size
+                return values[pos]
+            }
+        }
     }
+
 }
+
+fun SetupCheckService.Step.next() = SetupCheckService.Step.next(this)
+fun SetupCheckService.Step.previous() = SetupCheckService.Step.previous(this)

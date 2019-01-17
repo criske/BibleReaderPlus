@@ -38,13 +38,13 @@ interface SetupInteractor {
             object Prepare : SetupInteractor.Response.DownloadStep(), SetupInteractor.Step
             object Persist : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
             object Done : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
-            sealed class Error : SetupInteractor.Response.DownloadStep(),
-                SetupInteractor.StepState {
-                object Network : SetupInteractor.Response.DownloadStep.Error()
-                object Timeout : SetupInteractor.Response.DownloadStep.Error()
-                object NotFound : SetupInteractor.Response.DownloadStep.Error()
-                class Other(val message: String?) : SetupInteractor.Response.DownloadStep.Error()
-            }
+//            sealed class Error : SetupInteractor.Response.DownloadStep(),
+//                SetupInteractor.StepState {
+//                object Network : SetupInteractor.Response.DownloadStep.Error()
+//                object Timeout : SetupInteractor.Response.DownloadStep.Error()
+//                object NotFound : SetupInteractor.Response.DownloadStep.Error()
+//                class Other(val message: String?) : SetupInteractor.Response.DownloadStep.Error()
+//            }
         }
 
         sealed class SynchStep : SetupInteractor.Response() {
@@ -53,16 +53,26 @@ interface SetupInteractor {
             object Authenticating : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
             object Synchronizing : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
             object Done : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
-            @Suppress("unused")
-            class Error(val errMessage: String? = null) : SetupInteractor.Response.SynchStep(),
-                SetupInteractor.StepState
+//            @Suppress("unused")
+//            class Error(val errMessage: String? = null) : SetupInteractor.Response.SynchStep(),
+//                SetupInteractor.StepState
         }
 
         object Finished : SetupInteractor.Response(), SetupInteractor.Step
-        @Suppress("unused")
-        class Error(val errorMessage: String?) : SetupInteractor.Response()
 
-        class RetryableError(val errorMessage: String?) : SetupInteractor.Response()
+
+        sealed class Error(val message: String? = null, val code: Int = UNKNOWN_CODE) : Response() {
+            companion object {
+                const val UNKNOWN_CODE = -1
+            }
+
+            class Once(message: String?, code: Int = UNKNOWN_CODE) :
+                SetupInteractor.Response.Error(message, code)
+
+            class Retryable(message: String?, code: Int = UNKNOWN_CODE) :
+                SetupInteractor.Response.Error(message, code)
+        }
+
     }
 }
 
@@ -99,18 +109,14 @@ class SetupInteractorImpl @Inject constructor(
 
     private suspend fun handleRequestCheckRetry(channel: SendChannel<Response>): Unit =
         coroutineScope {
-        val existentStep = withContext(dispatchers.DEFAULT) {
-            setupCheckService.getStep()
-        }
+            val existentStep = withContext(dispatchers.DEFAULT) {
+                setupCheckService.getStep()
+            }
             nextState(existentStep, channel)
-    }
+        }
 
     private suspend fun handleRequestAuthPrompt(credential: DeviceAccountCredential, channel: SendChannel<Response>) {
         resumeFromAuth(credential, channel)
-    }
-
-    private suspend fun sendErrorResponse(channel: SendChannel<Response>, err: Response.Error) {
-        channel.send(err)
     }
 
     private suspend fun resumeFromInitialized(channel: SendChannel<Response>) {
@@ -119,7 +125,7 @@ class SetupInteractorImpl @Inject constructor(
 
     private suspend fun resumeFromFinished(channel: SendChannel<Response>) = coroutineScope {
         withContext(dispatchers.DEFAULT) {
-            setupCheckService.next(SetupCheckService.Step.Initialized)
+            setupCheckService.save(SetupCheckService.Step.INITIALIZED)
         }
         channel.send(Response.Finished)
     }
@@ -128,7 +134,7 @@ class SetupInteractorImpl @Inject constructor(
         coroutineScope {
             channel.send(Response.DownloadStep.Prepare)
             withContext(dispatchers.DEFAULT) {
-                setupCheckService.next(SetupCheckService.Step.DownloadStep)
+                setupCheckService.save(SetupCheckService.Step.DOWNLOAD)
             }
             val documentResponse = retryWhen(
                 times = 3,
@@ -145,18 +151,21 @@ class SetupInteractorImpl @Inject constructor(
                         is DownloadDocumentService.Error.Http -> {
                             val code = err.code
                             when (code) {
-                                404 -> channel.send(Response.DownloadStep.Error.NotFound)
-                                408 -> channel.send(Response.DownloadStep.Error.Timeout)
-                                else -> channel.send(Response.DownloadStep.Error.Other(err.message))
+                                404 -> channel.send(Response.Error.Once(err.message, code))
+                                408 -> channel.send(Response.Error.Retryable(err.message, code))
+                                else -> channel.send(Response.Error.Once(err.message, code))
                             }
                         }
                         is DownloadDocumentService.Error.Network -> {
-                            channel.send(Response.DownloadStep.Error.Network)
+                            channel.send(Response.Error.Retryable(err.message))
                         }
                         is DownloadDocumentService.Error.Conversion,
                         is DownloadDocumentService.Error.Unexpected -> {
-                            channel.send(Response.DownloadStep.Error.Other(err.message))
+                            channel.send(Response.Error.Once(err.message))
                         }
+                    }
+                    withContext(dispatchers.DEFAULT) {
+                        setupCheckService.save(SetupCheckService.Step.DOWNLOAD.previous())
                     }
                 }
                 is DownloadDocumentService.Response.OKResponse -> {
@@ -165,7 +174,7 @@ class SetupInteractorImpl @Inject constructor(
                         documentRepository.save(documentResponse.document)
                     }
                     channel.send(Response.DownloadStep.Done)
-                    nextState(SetupCheckService.Step.DownloadStep, channel)
+                    nextState(SetupCheckService.Step.DOWNLOAD, channel)
                 }
             }
             Unit
@@ -177,7 +186,7 @@ class SetupInteractorImpl @Inject constructor(
         coroutineScope {
             channel.send(Response.SynchStep.Authenticating)
             withContext(dispatchers.DEFAULT) {
-                setupCheckService.next(SetupCheckService.Step.AuthStep)
+                setupCheckService.save(SetupCheckService.Step.AUTH)
             }
             when (deviceAccountCredential) {
                 is DeviceAccountCredential.Unauthorized -> {
@@ -192,9 +201,12 @@ class SetupInteractorImpl @Inject constructor(
                             }
                         }
                         if (success) {
-                            nextState(SetupCheckService.Step.AuthStep, channel)
+                            nextState(SetupCheckService.Step.AUTH, channel)
                         } else {
-                            channel.send(Response.SynchStep.Error(error?.message))
+                            channel.send(Response.Error.Retryable(error?.message))
+                            withContext(dispatchers.DEFAULT) {
+                                setupCheckService.save(SetupCheckService.Step.AUTH.previous())
+                            }
                         }
                     }
                 }
@@ -204,9 +216,12 @@ class SetupInteractorImpl @Inject constructor(
                         authService.authenticate(deviceAccountCredential.credentialData)
                     }
                     if (success) {
-                        nextState(SetupCheckService.Step.AuthStep, channel)
+                        nextState(SetupCheckService.Step.AUTH, channel)
                     } else {
-                        channel.send(Response.SynchStep.Error(error?.message))
+                        channel.send(Response.Error.Retryable(error?.message))
+                        withContext(dispatchers.DEFAULT) {
+                            setupCheckService.save(SetupCheckService.Step.AUTH.previous())
+                        }
                     }
                 }
             }
@@ -217,7 +232,7 @@ class SetupInteractorImpl @Inject constructor(
             channel.send(Response.SynchStep.Prepare)
             channel.send(Response.SynchStep.Synchronizing)
             withContext(dispatchers.DEFAULT) {
-                setupCheckService.next(SetupCheckService.Step.SynchStep)
+                setupCheckService.save(SetupCheckService.Step.SYNCH)
             }
             val tagsPromise = async(dispatchers.IO) {
                 remoteDocumentRepository.getAllTags()
@@ -239,22 +254,18 @@ class SetupInteractorImpl @Inject constructor(
                 }
             }
             channel.send(Response.SynchStep.Done)
-            nextState(SetupCheckService.Step.SynchStep, channel)
+            nextState(SetupCheckService.Step.SYNCH, channel)
             Unit
         }
 
     private suspend fun nextState(from: SetupCheckService.Step, channel: SendChannel<SetupInteractor.Response>): Unit =
         coroutineScope {
             when (from) {
-                SetupCheckService.Step.Initialized -> resumeFromInitialized(channel)
-                SetupCheckService.Step.Uninitialized -> resumeFromDownload(channel)
-                SetupCheckService.Step.DownloadStep -> resumeFromAuth(channel = channel)
-                SetupCheckService.Step.AuthStep -> resumeFromSync(channel)
-                SetupCheckService.Step.SynchStep -> resumeFromFinished(channel)
-                is SetupCheckService.Step.Error -> sendErrorResponse(
-                    channel,
-                    Response.Error(from.err.message)
-                )
+                SetupCheckService.Step.INITIALIZED -> resumeFromInitialized(channel)
+                SetupCheckService.Step.UNINITIALIZED -> resumeFromDownload(channel)
+                SetupCheckService.Step.DOWNLOAD -> resumeFromAuth(channel = channel)
+                SetupCheckService.Step.AUTH -> resumeFromSync(channel)
+                SetupCheckService.Step.SYNCH -> resumeFromFinished(channel)
                 else -> {
                     //no-op
                 }

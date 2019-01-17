@@ -58,7 +58,7 @@ class SetupInteractorTest {
     fun `when request check step is initialized should respond with initialized`() {
 
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.Initialized
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.Initialized
             launch {
                 val actual = collectEmitted<SetupInteractor.Response> {
                     setupInteractor.request(SetupInteractor.Request.Check) {
@@ -69,7 +69,7 @@ class SetupInteractorTest {
                     listOf(SetupInteractor.Response.Initialized),
                     actual
                 )
-                verify(exactly = 0) { setupService.next(SetupCheckService.Step.DownloadStep) }
+                verify(exactly = 0) { setupService.save(SetupCheckService.StepDeprecated.DownloadStep) }
             }
         }
     }
@@ -79,7 +79,7 @@ class SetupInteractorTest {
     fun `when request check is uninitialized should respond with download step`() {
 
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.Uninitialized
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.Uninitialized
             launch {
                 val actual = collectEmitted<SetupInteractor.Response> {
                     setupInteractor.request(SetupInteractor.Request.Check) {
@@ -91,7 +91,7 @@ class SetupInteractorTest {
                     listOf(SetupInteractor.Response.DownloadStep.Prepare),
                     actual
                 )
-                verify { setupService.next(SetupCheckService.Step.DownloadStep) }
+                verify { setupService.save(SetupCheckService.StepDeprecated.DownloadStep) }
             }
 
         }
@@ -101,7 +101,7 @@ class SetupInteractorTest {
     fun `when request check is auth and no permission should return need permission`() {
 
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.AuthStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.AuthStep
             every { authService.hasPermission() } returns false
             coEvery { authService.authenticate(any()) } returns Pair<Error?, Boolean>(null, true)
             coEvery { authService.authenticateWithPermissionGranted() } returns Pair<Error?, Boolean>(
@@ -131,7 +131,7 @@ class SetupInteractorTest {
     fun `when request check is auth and right after permission granted should authenticate with provided auth payload `() {
 
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.AuthStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.AuthStep
             every { authService.hasPermission() } returns true
             coEvery { authService.authenticate(any()) } returns Pair<Error?, Boolean>(null, true)
 
@@ -166,7 +166,7 @@ class SetupInteractorTest {
     fun `when request check is auth and already permission granted should authenticate and then synchronize with remote database `() {
 
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.AuthStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.AuthStep
             every { authService.hasPermission() } returns true
             every { authService.authenticateWithPermissionGranted() } returns Pair<Error?, Boolean>(
                 null,
@@ -200,7 +200,7 @@ class SetupInteractorTest {
     @Test
     fun `when request check is download and there is no internet connection should error`() {
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.DownloadStep
             coEvery { downloadDocService.download() } returns
                     DownloadDocumentService.Response.ErrorResponse(
                         DownloadDocumentService.Error.Network(
@@ -229,7 +229,7 @@ class SetupInteractorTest {
     @Test
     fun `when request check is download and there is not found should return error not found`() {
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.DownloadStep
             coEvery { downloadDocService.download() } returns
                     DownloadDocumentService.Response.ErrorResponse(
                         DownloadDocumentService.Error.Http(
@@ -259,7 +259,7 @@ class SetupInteractorTest {
     @Test
     fun `when request check is download and there is timeout should return error timeout`() {
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.DownloadStep
             coEvery { downloadDocService.download() } returns
                     DownloadDocumentService.Response.ErrorResponse(
                         DownloadDocumentService.Error.Http(
@@ -290,7 +290,7 @@ class SetupInteractorTest {
     @Test
     fun `when request check is download and there is timeout should return error other`() {
         runBlocking {
-            every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.DownloadStep
             coEvery { downloadDocService.download() } returns
                     DownloadDocumentService.Response.ErrorResponse(
                         DownloadDocumentService.Error.Conversion(
@@ -321,7 +321,7 @@ class SetupInteractorTest {
     fun `when request check is download and there is ok should download and store document`() {
         runBlocking {
             val document = listOf<Read>(Read.Content.Book(1, "Bookl"))
-            every { setupService.getStep() } returns SetupCheckService.Step.DownloadStep
+            every { setupService.getStep() } returns SetupCheckService.StepDeprecated.DownloadStep
             coEvery { downloadDocService.download() } returns DownloadDocumentService.Response.OKResponse(
                 document
             )
@@ -339,7 +339,7 @@ class SetupInteractorTest {
                     ),
                     actual
                 )
-                coVerify { setupService.next(SetupCheckService.Step.AuthStep) }
+                coVerify { setupService.save(SetupCheckService.StepDeprecated.AuthStep) }
                 coVerify { docRepository.save(document) }
 
             }

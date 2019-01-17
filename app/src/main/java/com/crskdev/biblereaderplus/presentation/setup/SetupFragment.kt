@@ -24,6 +24,7 @@ import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewMod
 import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
 import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
 import com.crskdev.biblereaderplus.presentation.util.system.showSimpleYesNoDialog
+import com.google.android.material.snackbar.Snackbar
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_setup.*
 import kotlinx.coroutines.launch
@@ -47,14 +48,14 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
         setupViewModel.setupStepLiveData.observe(this, Observer {
             txtSetup.text = it.toString()
             when (it) {
-                is SetupInteractor.Response.Error -> {
-                    context?.showSimpleToast("Error ${it.errorMessage}")
+                is SetupInteractor.Response.Error.Once -> {
+                    context?.showSimpleToast("Error ${it.message}")
                 }
-                is SetupInteractor.Response.SynchStep.Error -> {
-                    context?.showSimpleToast("Error ${it.errMessage}")
-                }
-                is SetupInteractor.Response.DownloadStep.Error -> {
-                    context?.showSimpleToast("Error ${it}")
+                is SetupInteractor.Response.Error.Retryable -> {
+                    Snackbar.make(view, it.message ?: "Unknown Error", Snackbar.LENGTH_INDEFINITE)
+                        .setAction(android.R.string.ok) {
+                            setupViewModel.next()
+                        }.show()
                 }
                 is SetupInteractor.Response.Finished -> {
                     btnSetupFinish.isVisible = true
@@ -62,8 +63,6 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                 is SetupInteractor.Response.SynchStep.NeedPermission -> {
                     context?.showSimpleYesNoDialog("Permission", "Permission to access ACCOUNTS") {
                     }
-                }
-                is SetupInteractor.Response.SynchStep.Authenticating -> {
                 }
                 else -> {
                 }
