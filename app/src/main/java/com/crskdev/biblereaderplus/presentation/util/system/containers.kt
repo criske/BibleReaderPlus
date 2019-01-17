@@ -11,11 +11,14 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Parcelable
 import android.text.Editable
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.TextView
 import android.widget.Toast
+import androidx.annotation.IntRange
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatEditText
@@ -26,6 +29,7 @@ import androidx.fragment.app.FragmentManager
 import com.crskdev.biblereaderplus.R
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.castOrNull
+import com.google.android.material.snackbar.Snackbar
 
 /**
  * Created by Cristian Pela on 01.11.2018.
@@ -148,6 +152,13 @@ inline fun Context.showSimpleYesNoDialog(title: String, msg: String, crossinline
 
 fun Context.showSimpleToast(title: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, title, duration).show()
+}
+
+fun Snackbar.setMaxLines(@IntRange(from = 3) lines: Int) = apply {
+    view.findViewById<TextView>(com.google.android.material.R.id.snackbar_text).apply {
+        maxLines = lines
+        ellipsize = TextUtils.TruncateAt.END
+    }
 }
 
 /**

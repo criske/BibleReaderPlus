@@ -22,7 +22,7 @@ import com.crskdev.biblereaderplus.domain.interactors.setup.SetupInteractor
 import com.crskdev.biblereaderplus.presentation.awareness.IsPlatformAuthAware
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
-import com.crskdev.biblereaderplus.presentation.util.system.showSimpleToast
+import com.crskdev.biblereaderplus.presentation.util.system.setMaxLines
 import com.crskdev.biblereaderplus.presentation.util.system.showSimpleYesNoDialog
 import com.google.android.material.snackbar.Snackbar
 import dagger.android.support.DaggerFragment
@@ -49,11 +49,21 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
             txtSetup.text = it.toString()
             when (it) {
                 is SetupInteractor.Response.Error.Once -> {
-                    context?.showSimpleToast("Error ${it.message}")
+                    val snack = Snackbar.make(
+                        view,
+                        it.message ?: "Unknown Error",
+                        Snackbar.LENGTH_INDEFINITE
+                    )
+                        .setMaxLines(10)
+                    snack.setAction(android.R.string.ok) {
+                        snack.dismiss()
+                    }
+                    snack.show()
                 }
                 is SetupInteractor.Response.Error.Retryable -> {
                     Snackbar.make(view, it.message ?: "Unknown Error", Snackbar.LENGTH_INDEFINITE)
-                        .setAction(android.R.string.ok) {
+                        .setMaxLines(10)
+                        .setAction(R.string.retry) {
                             setupViewModel.next()
                         }.show()
                 }
