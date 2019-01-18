@@ -5,7 +5,6 @@
 
 package com.crskdev.biblereaderplus.di.modules.services
 
-import android.content.Context
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService
 import com.crskdev.biblereaderplus.services.DownloadDocumentServiceImpl
@@ -25,7 +24,6 @@ class ServicesModule {
     fun provideSetupCheckService(): SetupCheckService = SetupCheckServiceImpl()
 
     @Provides
-    fun provideDownloadDocumentService(context: Context): DownloadDocumentService =
-        DownloadDocumentServiceImpl(context)
+    fun provideDownloadDocumentService(): DownloadDocumentService = DownloadDocumentServiceImpl()
 
 }

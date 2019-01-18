@@ -1,21 +1,11 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.read
 
-import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
-import com.crskdev.biblereaderplus.testutil.TestDispatchers
-import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
 
 /**
  * Created by Cristian Pela on 14.11.2018.
@@ -23,7 +13,7 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class ContentInteractorImplTest {
 
-    @MockK
+    /*@MockK
     lateinit var repository: DocumentRepository
 
     lateinit var contentInteractor: ContentInteractor
@@ -69,5 +59,5 @@ class ContentInteractorImplTest {
             contentInteractor.request("aaa")
             verify { repository.filterContents(any()) }
         }
-    }
+    }*/
 }

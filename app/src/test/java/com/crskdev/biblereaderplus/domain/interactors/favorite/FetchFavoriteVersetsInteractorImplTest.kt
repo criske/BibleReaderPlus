@@ -1,28 +1,12 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
-import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import com.crskdev.arch.coroutines.paging.dataSourceFactory
-import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
-import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
-import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
-import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
-import com.crskdev.biblereaderplus.testutil.InMemoryPagedListDataSource
-import com.crskdev.biblereaderplus.testutil.TestDispatchers
-import io.mockk.MockKAnnotations
-import io.mockk.every
-import io.mockk.impl.annotations.MockK
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.ObsoleteCoroutinesApi
 
 /**
  * Created by Cristian Pela on 20.11.2018.
@@ -31,7 +15,7 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class FetchFavoriteVersetsInteractorImplTest {
 
-    @Rule
+    /*@Rule
     @JvmField
     val instantTaskTestRule = InstantTaskExecutorRule()
 
@@ -89,5 +73,5 @@ class FetchFavoriteVersetsInteractorImplTest {
             Unit
 
         }
-    }
+    }*/
 }

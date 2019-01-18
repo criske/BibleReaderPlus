@@ -5,24 +5,33 @@
 
 package com.crskdev.biblereaderplus.services
 
-import android.content.Context
+import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageException
 import com.google.firebase.storage.StorageException.*
-import java.io.File
+import com.squareup.moshi.JsonReader
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
+import okio.ByteString
+import okio.Okio
 
 /**
  * Created by Cristian Pela on 07.01.2019.
  */
-class DownloadDocumentServiceImpl(context: Context) : DownloadDocumentService {
+class DownloadDocumentServiceImpl : DownloadDocumentService {
 
     private val firebaseStorage by lazy {
         FirebaseStorage.getInstance()
     }
 
-    private val cachedFile = File.createTempFile("ro_cornilescu", "json", context.cacheDir)
+    private val jsonAdapter by lazy {
+        val type = Types.newParameterizedType(List::class.java, BookJSON::class.java)
+        Moshi.Builder()
+            .build()
+            .adapter<List<BookJSON>>(type)
+    }
 
     override fun download(): DownloadDocumentService.Response {
 
@@ -31,8 +40,19 @@ class DownloadDocumentServiceImpl(context: Context) : DownloadDocumentService {
             .child("ro_cornilescu.json")
 
         return try {
-            Tasks.await(storeRef.getFile(cachedFile))
-            DownloadDocumentService.Response.OKResponse(emptyList())
+            val jsonInputStream = Tasks.await(storeRef.stream).stream
+            val jsonSource = Okio.buffer(Okio.source(jsonInputStream)).apply {
+                val utf8BOM = ByteString.decodeHex("EFBBBF")
+                if (rangeEquals(0, utf8BOM)) {
+                    skip(utf8BOM.size().toLong())
+                }
+            }
+            val bibleJson = jsonAdapter.fromJson(
+                JsonReader
+                    .of(jsonSource)
+                    .apply { isLenient = true })
+                ?: emptyList()
+            DownloadDocumentService.Response.OKResponse(response(bibleJson))
         } catch (ex: Exception) {
             val cause = ex.cause ?: ex
             when (cause) {
@@ -63,9 +83,23 @@ class DownloadDocumentServiceImpl(context: Context) : DownloadDocumentService {
                     )
                 }
             }
-
-
         }
 
     }
+
+    private fun response(json: List<BookJSON>): List<Read.Content.Book> {
+        //todo do conversion
+        json.forEach {
+            println(it)
+        }
+        return emptyList()
+    }
+
+    @Suppress("unused")
+    private class BookJSON {
+        lateinit var abbrev: String
+        lateinit var chapters: List<List<String>>
+        lateinit var name: String
+    }
+
 }

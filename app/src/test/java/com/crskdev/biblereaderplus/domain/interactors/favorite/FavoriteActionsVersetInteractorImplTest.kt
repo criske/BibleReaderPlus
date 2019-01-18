@@ -5,24 +5,12 @@
 
 package com.crskdev.biblereaderplus.domain.interactors.favorite
 
-import com.crskdev.biblereaderplus.domain.entity.VersetKey
-import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
-import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
-import com.crskdev.biblereaderplus.testutil.TestDispatchers
-import io.mockk.MockKAnnotations
-import io.mockk.impl.annotations.MockK
-import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import org.junit.Before
-import org.junit.Test
-
 /**
  * Created by Cristian Pela on 18.11.2018.
  */
 class FavoriteActionsVersetInteractorImplTest {
 
-    @MockK
+    /*@MockK
     lateinit var localRepository: DocumentRepository
     @MockK
     lateinit var remoteRepository: RemoteDocumentRepository
@@ -49,7 +37,7 @@ class FavoriteActionsVersetInteractorImplTest {
             verify { localRepository.favoriteAction(true, versetKey) }
             verify { remoteRepository.favoriteAction(versetKey, true) }
         }
-    }
+    }*/
 
 
 }

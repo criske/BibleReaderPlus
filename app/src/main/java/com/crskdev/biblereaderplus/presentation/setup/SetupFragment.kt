@@ -53,8 +53,9 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                         view,
                         it.message ?: "Unknown Error",
                         Snackbar.LENGTH_INDEFINITE
-                    )
-                        .setMaxLines(10)
+                    ).setMaxLines(10).apply {
+
+                    }
                     snack.setAction(android.R.string.ok) {
                         snack.dismiss()
                     }
