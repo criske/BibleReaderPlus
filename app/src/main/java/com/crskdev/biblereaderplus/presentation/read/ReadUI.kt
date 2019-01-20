@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 @file:Suppress("EXPERIMENTAL_FEATURE_WARNING")
@@ -38,7 +38,7 @@ sealed class ReadUI {
         override val name: String,
         override val hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
         override val isBookmarked: IsBookmarked = IsBookmarked(false),
-        override val isExpanded: IsExpanded = IsExpanded(true)
+        override val isExpanded: IsExpanded = IsExpanded(false)
     ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =
@@ -58,7 +58,7 @@ sealed class ReadUI {
         override val name: String,
         override val hasScrollPosition: HasScrollPosition = HasScrollPosition(false),
         override val isBookmarked: IsBookmarked = IsBookmarked(false),
-        override val isExpanded: IsExpanded = IsExpanded(true)
+        override val isExpanded: IsExpanded = IsExpanded(false)
     ) : ContentUI() {
 
         override fun setExpanded(value: IsExpanded): ContentUI =

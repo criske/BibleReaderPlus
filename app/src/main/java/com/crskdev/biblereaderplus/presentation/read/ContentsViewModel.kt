@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 package com.crskdev.biblereaderplus.presentation.read
@@ -29,7 +29,7 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
 
     private val expansionLiveData: MutableLiveData<Expansion> = MutableLiveData<Expansion>()
         .apply {
-            value = ReadKey.INITIAL to IsExpanded(true)
+            value = ReadKey.INITIAL to IsExpanded(false)
         }
 
     init {
@@ -104,15 +104,22 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
                 .scan(ExpansionAccumulator()) { acc, contentsToExpansion ->
                     val (list, expansion) = contentsToExpansion
                     acc.apply {
-                        this.contents = list
                         this.collapsedKeys.apply {
-                            if (expansion.second()) {
-                                remove(expansion.first())
+                            if (acc.contents.isEmpty()) { // first time we want to be all books collapsed
+                                list.forEach {
+                                    if (it is ReadUI.BookUI) {
+                                        add(it.getKey()())
+                                    }
+                                }
                             } else {
-                                add(expansion.first())
+                                if (expansion.second()) {
+                                    remove(expansion.first())
+                                } else {
+                                    add(expansion.first())
+                                }
                             }
-
                         }
+                        this.contents = list
                         acc
                     }
                 }
@@ -151,6 +158,7 @@ class ContentsViewModel(private val contentInteractor: ContentInteractor) :
 
     fun expand(readKey: ReadKey, expanded: IsExpanded = IsExpanded(true)) {
         expansionLiveData.value = readKey to expanded
+        scrollTo(readKey)
     }
 
     //Note use int instead of inline ReadKey the comparation is not working in sets
