@@ -5,7 +5,10 @@
 
 package com.crskdev.biblereaderplus.services
 
+import com.crskdev.biblereaderplus.domain.entity.ChapterKey
+import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.Read
+import com.crskdev.biblereaderplus.domain.entity.VersetKey
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
@@ -16,11 +19,14 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
 import okio.ByteString
 import okio.Okio
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Created by Cristian Pela on 07.01.2019.
  */
 class DownloadDocumentServiceImpl : DownloadDocumentService {
+
+    private val idGenererator: AtomicInteger = AtomicInteger()
 
     private val firebaseStorage by lazy {
         FirebaseStorage.getInstance()
@@ -47,12 +53,12 @@ class DownloadDocumentServiceImpl : DownloadDocumentService {
                     skip(utf8BOM.size().toLong())
                 }
             }
-            val bibleJson = jsonAdapter.fromJson(
+            val jsonBible = jsonAdapter.fromJson(
                 JsonReader
                     .of(jsonSource)
                     .apply { isLenient = true })
                 ?: emptyList()
-            DownloadDocumentService.Response.OKResponse(response(bibleJson))
+            DownloadDocumentService.Response.OKResponse(response(jsonBible))
         } catch (ex: Exception) {
             val cause = ex.cause ?: ex
             when (cause) {
@@ -87,12 +93,35 @@ class DownloadDocumentServiceImpl : DownloadDocumentService {
 
     }
 
-    private fun response(json: List<BookJSON>): List<Read.Content.Book> {
-        //todo do conversion
-        json.forEach {
-            println(it)
+    private fun response(json: List<BookJSON>): List<Read> {
+        //todo modified at decide stat
+        val reads = mutableListOf<Read>()
+        json.forEach { jsonBook ->
+            val book =
+                Read.Content.Book(idGenererator.incrementAndGet(), jsonBook.name, jsonBook.abbrev)
+            reads.add(book)
+            jsonBook.chapters.forEachIndexed { index, jsonChapter ->
+                val chapter = Read.Content.Chapter(
+                    ChapterKey(idGenererator.incrementAndGet(), book.id),
+                    index + 1
+                )
+                reads.add(chapter)
+                jsonChapter.forEachIndexed { index, jsonVerset ->
+                    val verset = Read.Verset(
+                        VersetKey(idGenererator.incrementAndGet(), book.id, chapter.id, ""),
+                        index + 1,
+                        book.abbreviation,
+                        chapter.number,
+                        jsonVerset,
+                        false,
+                        ModifiedAt("")
+
+                    )
+                    reads.add(verset)
+                }
+            }
         }
-        return emptyList()
+        return reads
     }
 
     @Suppress("unused")

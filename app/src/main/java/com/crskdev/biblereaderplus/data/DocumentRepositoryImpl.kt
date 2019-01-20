@@ -49,7 +49,8 @@ val MOCKED_DB: DocumentRepositoryImpl.Database  by lazy {
     var idGen = -0
 
     for (i in 1..numberSeed) {
-        val book = Read.Content.Book(idGen++, generateWord(r, wordLengths.random(), 5))
+        val bookName = generateWord(r, wordLengths.random(), 5)
+        val book = Read.Content.Book(idGen++, bookName, bookName.substring(0, 2))
         books.add(book)
         for (j in 1..r.nextInt(numberSeed) + 5) {
             val chapter = Read.Content.Chapter(ChapterKey(idGen++, book.id), j)
@@ -143,16 +144,30 @@ class DocumentRepositoryImpl : DocumentRepository {
     companion object {
         private const val KEY_DS_READ = 0
         private const val KEY_DS_FAVORITE_VERSETS = 1
+        val EMPTY = Database(emptyList(), emptyList(), emptyList(), emptySet(), emptySet())
     }
 
     init {
         dbLiveData = MutableLiveData<Database>().apply {
-            value = MOCKED_DB
+            value = EMPTY
         }
     }
 
     override fun save(reads: List<Read>) {
-        sleep(2000)
+        updateDatabasePost {
+            val books = mutableListOf<Read.Content.Book>()
+            val chapters = mutableListOf<Read.Content.Chapter>()
+            val versets = mutableListOf<Read.Verset>()
+            reads.forEach {
+                when (it) {
+                    is Read.Content.Book -> books.add(it)
+                    is Read.Content.Chapter -> chapters.add(it)
+                    is Read.Verset -> versets.add(it)
+                }
+            }
+            copy(books = books, chapters = chapters, versets = versets)
+
+        }
     }
 
     override fun read(): DataSource.Factory<Int, Read> =
