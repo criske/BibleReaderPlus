@@ -153,6 +153,10 @@ class DocumentRepositoryImpl : DocumentRepository {
         }
     }
 
+    override fun runTransaction(block: DocumentRepository.() -> Unit) {
+        block()
+    }
+
     override fun save(reads: List<Read>) {
         updateDatabasePost {
             val books = mutableListOf<Read.Content.Book>()

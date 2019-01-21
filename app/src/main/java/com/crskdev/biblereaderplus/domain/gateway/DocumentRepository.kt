@@ -17,6 +17,8 @@ import com.crskdev.biblereaderplus.domain.entity.Tag
  */
 interface DocumentRepository {
 
+    fun runTransaction(block: DocumentRepository.() -> Unit)
+
     fun save(reads: List<Read>)
 
     fun read(): DataSource.Factory<Int, Read>
@@ -25,7 +27,8 @@ interface DocumentRepository {
 
     fun filterContents(contains: String): List<Read.Content>
 
-    //local
+    //##############################VERSET#################################
+
     fun getVerset(id: Int): SelectedVerset?
 
     @MainThread

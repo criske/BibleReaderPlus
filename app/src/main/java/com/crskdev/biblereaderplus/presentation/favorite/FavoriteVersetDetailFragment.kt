@@ -28,8 +28,7 @@ import com.google.android.flexbox.FlexboxLayoutManager
 import com.google.android.flexbox.JustifyContent
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_favorite_verset_detail.*
-import kotlinx.android.synthetic.main.title_layout_default_content.*
-import kotlinx.android.synthetic.main.titled_layout.*
+import kotlinx.android.synthetic.main.titled_verset_content.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import javax.inject.Inject
@@ -69,10 +68,10 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
     }
 
     private fun observeVMEvents() {
-        textTitledLayoutDefault.text =
+        textTitledLayout.text =
                 FavoriteVersetDetailFragmentArgs.fromBundle(arguments ?: Bundle()).content
         viewModel.versetDetailLiveData.observe(this, Observer {
-            textTitledLayoutDefault.text = it.formattedContents
+            textTitledLayout.text = it.formattedContents
             titled_layout_text_title.text = it.title
             with(btnVersetDetailFav) {
                 colorFilter = PorterDuff.Mode.SRC_ATOP.toColorFilter(

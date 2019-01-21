@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -69,7 +68,8 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                         }.show()
                 }
                 is SetupInteractor.Response.Finished -> {
-                    btnSetupFinish.isVisible = true
+                    //btnSetupFinish.isVisible = true
+                    findNavController().navigate(SetupFragmentDirections.actionSetupFragmentToReadFragment())
                 }
                 is SetupInteractor.Response.SynchStep.NeedPermission -> {
                     context?.showSimpleYesNoDialog("Permission", "Permission to access ACCOUNTS") {

@@ -59,9 +59,6 @@ class PagesFragment : DaggerFragment() {
         fabReadActionMenuSearch.setOnClickListener {
             readViewModel.open(ReadViewModel.Open.SearchRead)
         }
-//        val snapTopSmoothScroller = object : LinearSmoothScroller(context) {
-//            override fun getVerticalSnapPreference(): Int = LinearSmoothScroller.SNAP_TO_START
-//        }
         recyclerPages.apply {
             adapter = PagesAdapter(LayoutInflater.from(context)) {
                 if (it is VersetTransitions.NavInfoExtra) {
@@ -89,7 +86,6 @@ class PagesFragment : DaggerFragment() {
             })
         pagesViewModel.scrollPositionLiveData.observe(this, Observer {
             recyclerPages.layoutManager?.cast<LinearLayoutManager>()
-                // ?.smoothScrollToPosition(snapTopSmoothScroller, it)
                 ?.scrollToPositionWithOffset(it, 0)
         })
         pagesViewModel.pagesLiveData.observe(this, Observer {

@@ -241,16 +241,18 @@ class SetupInteractorImpl @Inject constructor(
                 remoteDocumentRepository.getAllFavorites()
             }
             withContext(dispatchers.DEFAULT) {
-                //TODO do it in transaction?
-                documentRepository.tagCreate(*tagsPromise.await().toTypedArray())
+                val tags = tagsPromise.await()
                 val favorites = favoritesPromise.await()
-                documentRepository.favoriteActionBatch(true, *favorites.map { it.id }.toIntArray())
-                favorites.forEach {
-                    documentRepository.tagFavoriteVersetBatch(
-                        true,
-                        it.id,
-                        *it.tagIds.toTypedArray()
-                    )
+                documentRepository.runTransaction {
+                    tagCreate(*tags.toTypedArray())
+                    favoriteActionBatch(true, *favorites.map { it.id }.toIntArray())
+                    favorites.forEach {
+                        tagFavoriteVersetBatch(
+                            true,
+                            it.id,
+                            *it.tagIds.toTypedArray()
+                        )
+                    }
                 }
             }
             channel.send(Response.SynchStep.Done)
