@@ -9,6 +9,7 @@ import com.crskdev.biblereaderplus.domain.entity.ChapterKey
 import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.Read
 import com.crskdev.biblereaderplus.domain.entity.VersetKey
+import com.crskdev.biblereaderplus.domain.gateway.DateFormatter
 import com.crskdev.biblereaderplus.domain.gateway.DownloadDocumentService
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.storage.FirebaseStorage
@@ -24,9 +25,10 @@ import java.util.concurrent.atomic.AtomicInteger
 /**
  * Created by Cristian Pela on 07.01.2019.
  */
-class DownloadDocumentServiceImpl : DownloadDocumentService {
+class DownloadDocumentServiceImpl(private val dateFormatter: DateFormatter) :
+    DownloadDocumentService {
 
-    private val idGenererator: AtomicInteger = AtomicInteger()
+    private val idGenerator: AtomicInteger = AtomicInteger()
 
     private val firebaseStorage by lazy {
         FirebaseStorage.getInstance()
@@ -94,28 +96,34 @@ class DownloadDocumentServiceImpl : DownloadDocumentService {
     }
 
     private fun response(json: List<BookJSON>): List<Read> {
-        //todo modified at decide stat
         val reads = mutableListOf<Read>()
+        val modifiedAt = ModifiedAt(dateFormatter.getDateString())
         json.forEach { jsonBook ->
             val book =
-                Read.Content.Book(idGenererator.incrementAndGet(), jsonBook.name, jsonBook.abbrev)
+                Read.Content.Book(
+                    idGenerator.incrementAndGet(),
+                    jsonBook.name,
+                    jsonBook.abbrev,
+                    modifiedAt
+                )
             reads.add(book)
             jsonBook.chapters.forEachIndexed { index, jsonChapter ->
                 val chapter = Read.Content.Chapter(
-                    ChapterKey(idGenererator.incrementAndGet(), book.id),
-                    index + 1
+                    ChapterKey(idGenerator.incrementAndGet(), book.id),
+                    index + 1,
+                    book.name,
+                    modifiedAt
                 )
                 reads.add(chapter)
                 jsonChapter.forEachIndexed { index, jsonVerset ->
                     val verset = Read.Verset(
-                        VersetKey(idGenererator.incrementAndGet(), book.id, chapter.id, ""),
+                        VersetKey(idGenerator.incrementAndGet(), book.id, chapter.id, ""),
                         index + 1,
                         book.abbreviation,
                         chapter.number,
                         jsonVerset,
                         false,
-                        ModifiedAt("")
-
+                        modifiedAt
                     )
                     reads.add(verset)
                 }

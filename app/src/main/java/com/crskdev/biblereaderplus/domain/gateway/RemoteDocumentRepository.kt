@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.domain.gateway
 
+import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.RemoteVerset
 import com.crskdev.biblereaderplus.domain.entity.Tag
 
@@ -17,9 +18,9 @@ interface RemoteDocumentRepository {
 
     fun getAllTags(): List<Tag>
 
-    fun favoriteAction(versetId: Int, add: Boolean)
+    fun favoriteAction(versetId: Int, add: Boolean, modifiedAt: ModifiedAt)
 
-    fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String)
+    fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String, modifiedAt: ModifiedAt)
 
     fun tagDelete(id: String)
 

@@ -11,9 +11,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.graphics.toColorFilter
 import androidx.core.view.ViewCompat
 import androidx.core.view.doOnPreDraw
+import androidx.core.view.isVisible
 import androidx.lifecycle.Observer
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionSet
@@ -69,10 +71,10 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
 
     private fun observeVMEvents() {
         textTitledLayout.text =
-                FavoriteVersetDetailFragmentArgs.fromBundle(arguments ?: Bundle()).content
+            FavoriteVersetDetailFragmentArgs.fromBundle(arguments ?: Bundle()).content
         viewModel.versetDetailLiveData.observe(this, Observer {
             textTitledLayout.text = it.formattedContents
-            titled_layout_text_title.text = it.title
+            view?.findViewById<TextView>(R.id.titled_layout_text_title)?.text = it.title
             with(btnVersetDetailFav) {
                 colorFilter = PorterDuff.Mode.SRC_ATOP.toColorFilter(
                     context.getColorCompat(
@@ -84,6 +86,7 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                     )
                 )
                 tag = it.isFavorite
+                isVisible = true
             }
         })
         viewModel.versetTagsLiveData.observe(this, Observer {
@@ -138,7 +141,9 @@ class FavoriteVersetDetailFragment : DaggerFragment() {
                 justifyContent = JustifyContent.FLEX_START
             }
         }
-        btnVersetDetailFav.setOnClickListener {
+        btnVersetDetailFav.apply {
+            isVisible = tag != null
+        }.setOnClickListener {
             viewModel.addToFavorite(it.tag.castIf<Boolean>()?.not() ?: false)
         }
     }

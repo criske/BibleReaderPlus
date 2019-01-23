@@ -12,6 +12,7 @@ import com.crskdev.arch.coroutines.paging.dataSourceFactory
 import com.crskdev.biblereaderplus.common.util.cast
 import com.crskdev.biblereaderplus.common.util.pagedlist.InMemoryPagedListDataSource
 import com.crskdev.biblereaderplus.domain.entity.*
+import com.crskdev.biblereaderplus.domain.gateway.DateFormatter
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.presentation.util.arch.filter
 import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
@@ -48,12 +49,15 @@ val MOCKED_DB: DocumentRepositoryImpl.Database  by lazy {
     val versets = mutableListOf<Read.Verset>()
     var idGen = -0
 
+    val modifiedAt = ModifiedAt(DateFormatter().getDateString())
+
     for (i in 1..numberSeed) {
         val bookName = generateWord(r, wordLengths.random(), 5)
-        val book = Read.Content.Book(idGen++, bookName, bookName.substring(0, 2))
+        val book = Read.Content.Book(idGen++, bookName, bookName.substring(0, 2), modifiedAt)
         books.add(book)
         for (j in 1..r.nextInt(numberSeed) + 5) {
-            val chapter = Read.Content.Chapter(ChapterKey(idGen++, book.id), j)
+            val chapter =
+                Read.Content.Chapter(ChapterKey(idGen++, book.id), j, book.name, modifiedAt)
             chapters.add(chapter)
             for (k in 1..r.nextInt(numberSeed) + 10) {
                 val paragraphLength = r.nextInt(10) + 50
@@ -75,7 +79,7 @@ val MOCKED_DB: DocumentRepositoryImpl.Database  by lazy {
                         content,
                         //r.nextBoolean(),
                         false,
-                        ModifiedAt("")
+                        modifiedAt
                     )
                 )
             }
@@ -204,12 +208,12 @@ class DocumentRepositoryImpl : DocumentRepository {
     }
 
 
-    override fun favoriteAction(add: Boolean, id: Int) {
+    override fun favoriteAction(add: Boolean, id: Int, modifiedAt: ModifiedAt) {
         updateDatabasePost {
             copy(
                 versets = versets.map {
                     if (it.key.id == id) {
-                        it.copy(isFavorite = add)
+                        it.copy(isFavorite = add, modifiedAt = modifiedAt)
                     } else {
                         it
                     }
@@ -219,17 +223,18 @@ class DocumentRepositoryImpl : DocumentRepository {
         }
     }
 
-    override fun favoriteActionBatch(add: Boolean, vararg ids: Int) {
+    override fun favoriteActionBatch(add: Boolean, vararg ids: Pair<Int, ModifiedAt>) {
         updateDatabasePost {
             copy(
-                versets = versets.map {
-                    if (ids.contains(it.key.id)) {
-                        it.copy(isFavorite = add)
+                versets = versets.map { rv ->
+                    val contains = ids.firstOrNull { it.first == rv.id }
+                    if (contains != null) {
+                        rv.copy(isFavorite = add, modifiedAt = contains.second)
                     } else {
-                        it
+                        rv
                     }
                 },
-                versetTags = if (!add) versetTags.filter { !ids.contains(it.versetId) }.toSet() else versetTags
+                versetTags = if (!add) versetTags.filter { !ids.map { it.first }.contains(it.versetId) }.toSet() else versetTags
             )
         }
     }
@@ -301,7 +306,7 @@ class DocumentRepositoryImpl : DocumentRepository {
             Unit
         }
 
-    override fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String) {
+    override fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String, modifiedAt: ModifiedAt) {
         updateDatabasePost {
             val vt = VersetTag(versetId, tagId)
             val maybeUpdateFavDb =
@@ -309,7 +314,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                     copy(
                         versets = versets.map {
                             if (it.key.id == versetId) {
-                                it.copy(isFavorite = add)
+                                it.copy(isFavorite = add, modifiedAt = modifiedAt)
                             } else {
                                 it
                             }
@@ -320,7 +325,7 @@ class DocumentRepositoryImpl : DocumentRepository {
         }
     }
 
-    override fun tagFavoriteVersetBatch(add: Boolean, versetId: Int, vararg tagIds: String) {
+    override fun tagFavoriteVersetBatch(add: Boolean, versetId: Int, modifiedAt: ModifiedAt, vararg tagIds: String) {
         updateDatabasePost {
             var updateVersets = this.versets
             var updateVersetTags = this.versetTags
@@ -330,7 +335,7 @@ class DocumentRepositoryImpl : DocumentRepository {
                     if (updateVersets.any { it.id == versetId && !it.isFavorite }) {
                         updateVersets = updateVersets.map {
                             if (it.key.id == versetId) {
-                                it.copy(isFavorite = add)
+                                it.copy(isFavorite = add, modifiedAt = modifiedAt)
                             } else {
                                 it
                             }

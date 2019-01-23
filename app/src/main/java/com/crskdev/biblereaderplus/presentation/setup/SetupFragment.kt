@@ -22,7 +22,6 @@ import com.crskdev.biblereaderplus.presentation.awareness.IsPlatformAuthAware
 import com.crskdev.biblereaderplus.presentation.util.arch.CoroutineScopedViewModel
 import com.crskdev.biblereaderplus.presentation.util.arch.toChannel
 import com.crskdev.biblereaderplus.presentation.util.system.setMaxLines
-import com.crskdev.biblereaderplus.presentation.util.system.showSimpleYesNoDialog
 import com.google.android.material.snackbar.Snackbar
 import dagger.android.support.DaggerFragment
 import kotlinx.android.synthetic.main.fragment_setup.*
@@ -45,16 +44,21 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         setupViewModel.setupStepLiveData.observe(this, Observer {
-            txtSetup.text = it.toString()
+            txtSetup.text = when (it) {
+                is SetupInteractor.Response.DownloadStep -> "Downloading document..."
+                is SetupInteractor.Response.DownloadStep.Persist -> "Saving document..."
+                is SetupInteractor.Response.SynchStep -> "Synchronizing..."
+                is SetupInteractor.Response.SynchStep.Authenticating -> "Authenticating.."
+                is SetupInteractor.Response.Finished -> "Done!"
+                else -> "..."
+            }
             when (it) {
                 is SetupInteractor.Response.Error.Once -> {
                     val snack = Snackbar.make(
                         view,
                         it.message ?: "Unknown Error",
                         Snackbar.LENGTH_INDEFINITE
-                    ).setMaxLines(10).apply {
-
-                    }
+                    ).setMaxLines(10)
                     snack.setAction(android.R.string.ok) {
                         snack.dismiss()
                     }
@@ -72,8 +76,7 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
                     findNavController().navigate(SetupFragmentDirections.actionSetupFragmentToReadFragment())
                 }
                 is SetupInteractor.Response.SynchStep.NeedPermission -> {
-                    context?.showSimpleYesNoDialog("Permission", "Permission to access ACCOUNTS") {
-                    }
+                    txtSetup.text = "Acquire account pemission"
                 }
                 else -> {
                 }

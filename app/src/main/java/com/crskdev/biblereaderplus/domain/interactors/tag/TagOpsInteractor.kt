@@ -53,7 +53,7 @@ class TagOpsInteractorImpl(
             }
             //@formatter:off
             launch(coroutineErrHandler + dispatchers.DEFAULT) {
-                //todo: support for remote
+
                 when (tagOp) {
                     is TagOp.Delete -> {
                         launch (dispatchers.IO){
@@ -84,13 +84,15 @@ class TagOpsInteractorImpl(
 
                              val tag = Tag(UUID.randomUUID().toString(), tagOp.name)
 
+                             localRepository.tagCreate(tag)
+                             println("TagOpsInteractor: Local create for tag with name: ${tag.name} and remote id: ${tag.id}")
+
                              launch(dispatchers.IO) {
                                  remoteRepository.tagCreate(tag).first().apply {
                                       println("TagOpsInteractor: Remote create for tag with name: ${tag.name} and id: $this")
                                  }
                              }
-                             println("TagOpsInteractor: Local create for tag with name: ${tag.name} and remote id: ${tag.id}")
-                             localRepository.tagCreate(tag)
+
                          }
 
                     }

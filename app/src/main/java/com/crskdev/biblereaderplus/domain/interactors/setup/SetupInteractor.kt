@@ -86,7 +86,8 @@ class SetupInteractorImpl @Inject constructor(
     private val authService: AuthService,
     private val downloadDocumentService: DownloadDocumentService,
     private val documentRepository: DocumentRepository,
-    private val remoteDocumentRepository: RemoteDocumentRepository) : SetupInteractor {
+    private val remoteDocumentRepository: RemoteDocumentRepository,
+    private val dateFormatter: DateFormatter) : SetupInteractor {
 
     override suspend fun request(request: ReceiveChannel<Request>, response: (Response) -> Unit) =
         coroutineScope {
@@ -245,11 +246,15 @@ class SetupInteractorImpl @Inject constructor(
                 val favorites = favoritesPromise.await()
                 documentRepository.runTransaction {
                     tagCreate(*tags.toTypedArray())
-                    favoriteActionBatch(true, *favorites.map { it.id }.toIntArray())
+                    favoriteActionBatch(
+                        true,
+                        *favorites.map { it.id to it.modifiedAt }.toTypedArray()
+                    )
                     favorites.forEach {
                         tagFavoriteVersetBatch(
                             true,
                             it.id,
+                            it.modifiedAt,
                             *it.tagIds.toTypedArray()
                         )
                     }

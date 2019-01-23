@@ -5,6 +5,7 @@
 
 package com.crskdev.biblereaderplus.data
 
+import com.crskdev.biblereaderplus.domain.entity.ModifiedAt
 import com.crskdev.biblereaderplus.domain.entity.RemoteVerset
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.gateway.RemoteDocumentRepository
@@ -36,16 +37,16 @@ class RemoteDocumentRepositoryImpl : RemoteDocumentRepository {
         val ids = refVersets.child("ids")
             .getValueSync()
             .children
-            .map { it.key!! }
+            .map { it.key!! to it.value.toString() }
         val refVersetTags = refVersets.child("tags")
-        return ids.map { vId ->
+        return ids.map { v ->
             val tagIds = refVersetTags
                 .ref
                 .getValueSync()
                 .children
-                .filter { it.key?.contains("_$vId") == true }
+                .filter { it.key?.contains("_${v.first}") == true }
                 .map { it.key!!.split("_").first() }
-            RemoteVerset(vId.toInt(), tagIds)
+            RemoteVerset(v.first.toInt(), ModifiedAt(v.second), tagIds)
         }
     }
 
@@ -61,11 +62,11 @@ class RemoteDocumentRepositoryImpl : RemoteDocumentRepository {
         }
     }
 
-    override fun favoriteAction(versetId: Int, add: Boolean) {
+    override fun favoriteAction(versetId: Int, add: Boolean, modifiedAt: ModifiedAt) {
         val versetsRef = ref("versets").child("ids")
             .child(versetId.toString())
         if (add) {
-            versetsRef.setValue(true)
+            versetsRef.setValue(modifiedAt.date)
         } else {
             versetsRef.removeValue()
             //cascade on delete
@@ -81,15 +82,12 @@ class RemoteDocumentRepositoryImpl : RemoteDocumentRepository {
         }
     }
 
-    override fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String) {
+    override fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String, modifiedAt: ModifiedAt) {
         val compoundKey = "${tagId}_$versetId"
-        val versetsRef = ref("versets").child("ids").child(versetId.toString())
-        if (add && !versetsRef.getValueSync().exists()) {
-            favoriteAction(versetId, true)
-        }
         val tagVersetsRef = ref("versets").child("tags")
             .child(compoundKey)
         if (add) {
+            favoriteAction(versetId, true, modifiedAt)
             tagVersetsRef.setValue(true)
         } else {
             tagVersetsRef.removeValue()

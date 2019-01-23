@@ -10,11 +10,15 @@ package com.crskdev.biblereaderplus.domain.entity
  */
 sealed class Read(val id: Int) {
 
-    sealed class Content(id: Int) : Read(id) {
+    abstract val modifiedAt: ModifiedAt
 
-        class Book(id: Int, val name: String, val abbreviation: String) : Content(id)
+    sealed class Content(id: Int, override val modifiedAt: ModifiedAt) : Read(id) {
 
-        class Chapter(val key: ChapterKey, val number: Int) : Content(key.id) {
+        class Book(id: Int, val name: String, val abbreviation: String, modifiedAt: ModifiedAt) :
+            Content(id, modifiedAt)
+
+        class Chapter(val key: ChapterKey, val number: Int, val bookName: String, modifiedAt: ModifiedAt) :
+            Content(key.id, modifiedAt) {
             data class Key(val id: Int, val bookId: Int)
         }
 
@@ -26,7 +30,7 @@ sealed class Read(val id: Int) {
                       val chapterNumber: Int,
                       val content: CharSequence,
                       val isFavorite: Boolean,
-                      val modifiedAt: ModifiedAt) : Read(key.id) {
+                      override val modifiedAt: ModifiedAt) : Read(key.id) {
         data class Key(val id: Int, val bookId: Int, val chapterId: Int, val remoteKey: String) {
             companion object {
                 val NONE = VersetKey(-1, -1, -1, "")
@@ -35,7 +39,7 @@ sealed class Read(val id: Int) {
     }
 }
 
-class RemoteVerset(var id: Int = -1, var tagIds: List<String> = emptyList())
+class RemoteVerset(var id: Int = -1, var modifiedAt: ModifiedAt, var tagIds: List<String> = emptyList())
 
 inline class ModifiedAt(val date: String)
 

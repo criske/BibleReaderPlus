@@ -13,6 +13,8 @@ import com.crskdev.biblereaderplus.domain.gateway.SetupCheckService.Step
  */
 class SetupCheckServiceImpl : SetupCheckService {
 
+    //TODO implement me!
+
     @Volatile
     private var step: Step = Step.UNINITIALIZED
 

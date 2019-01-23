@@ -42,13 +42,15 @@ class InteractorsModule {
                                authService: AuthService,
                                downloadDocumentService: DownloadDocumentService,
                                documentRepository: DocumentRepository,
-                               remoteRepository: RemoteDocumentRepository): SetupInteractor =
+                               remoteRepository: RemoteDocumentRepository,
+                               dateFormatter: DateFormatter): SetupInteractor =
         SetupInteractorImpl(
             dispatchers,
             setupCheckService, authService,
             downloadDocumentService,
             documentRepository,
-            remoteRepository
+            remoteRepository,
+            dateFormatter
         )
 
     @Provides
@@ -69,8 +71,14 @@ class InteractorsModule {
     @Provides
     fun provideFavoriteActionVersetInteractor(dispatchers: GatewayDispatchers,
                                               localRepository: DocumentRepository,
-                                              remoteRepository: RemoteDocumentRepository): FavoriteActionsVersetInteractor =
-        FavoriteActionsVersetInteractorImpl(dispatchers, localRepository, remoteRepository)
+                                              remoteRepository: RemoteDocumentRepository,
+                                              dateFormatter: DateFormatter): FavoriteActionsVersetInteractor =
+        FavoriteActionsVersetInteractorImpl(
+            dispatchers,
+            localRepository,
+            remoteRepository,
+            dateFormatter
+        )
 
     @Provides
     fun provideFavoriteVersetInteractor(dispatchers: GatewayDispatchers,

@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2018.
+ * Copyright (c)  Pela Cristian 2019.
  */
 
 @file:Suppress("EXPERIMENTAL_API_USAGE")
@@ -30,7 +30,7 @@ class ReadInteractorImpl @Inject constructor(
 
     override suspend fun <R> request(decorator: (Read) -> R, response: (PagedList<R>) -> Unit) =
         coroutineScope {
-            launch {
+            launch(dispatchers.DEFAULT) {
                 documentRepository.read()
                     .mapByPage { list -> list.map { decorator.invoke(it) } }
                     .onPagingWithDefaultPagedListBuilder<Int, R>(dispatchers.DEFAULT, response)

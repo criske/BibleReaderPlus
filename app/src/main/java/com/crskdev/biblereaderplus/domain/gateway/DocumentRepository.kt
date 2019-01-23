@@ -7,10 +7,7 @@ package com.crskdev.biblereaderplus.domain.gateway
 
 import androidx.annotation.MainThread
 import androidx.paging.DataSource
-import com.crskdev.biblereaderplus.domain.entity.FavoriteFilter
-import com.crskdev.biblereaderplus.domain.entity.Read
-import com.crskdev.biblereaderplus.domain.entity.SelectedVerset
-import com.crskdev.biblereaderplus.domain.entity.Tag
+import com.crskdev.biblereaderplus.domain.entity.*
 
 /**
  * Created by Cristian Pela on 06.11.2018.
@@ -34,9 +31,9 @@ interface DocumentRepository {
     @MainThread
     suspend fun observeVerset(id: Int, observer: (SelectedVerset) -> Unit)
 
-    fun favoriteAction(add: Boolean, id: Int)
+    fun favoriteAction(add: Boolean, id: Int, modifiedAt: ModifiedAt)
 
-    fun favoriteActionBatch(add: Boolean, vararg ids: Int)
+    fun favoriteActionBatch(add: Boolean, vararg ids: Pair<Int, ModifiedAt>)
 
     fun favorites(filter: FavoriteFilter): DataSource.Factory<Int, Read.Verset>
 
@@ -45,9 +42,9 @@ interface DocumentRepository {
     @MainThread
     suspend fun tagsObserve(contains: String?, observer: (Set<Tag>) -> Unit)
 
-    fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String)
+    fun tagFavoriteVerset(add: Boolean, versetId: Int, tagId: String, modifiedAt: ModifiedAt)
 
-    fun tagFavoriteVersetBatch(add: Boolean, versetId: Int, vararg tagIds: String)
+    fun tagFavoriteVersetBatch(add: Boolean, versetId: Int, modifiedAt: ModifiedAt, vararg tagIds: String)
 
     fun tagDelete(id: String)
 
