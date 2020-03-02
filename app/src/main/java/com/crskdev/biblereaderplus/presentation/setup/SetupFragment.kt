@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.presentation.setup
@@ -101,8 +101,7 @@ class SetupFragment : DaggerFragment(), IsPlatformAuthAware {
 
 class SetupViewModel(private val setupInteractor: SetupInteractor) : CoroutineScopedViewModel() {
 
-    val setupStepLiveData: LiveData<SetupInteractor.Response> =
-        MutableLiveData<SetupInteractor.Response>()
+    val setupStepLiveData: LiveData<SetupInteractor.Response> = MutableLiveData()
 
     private val requestLiveData = MutableLiveData<SetupInteractor.Request>().apply {
         value = SetupInteractor.Request.Check

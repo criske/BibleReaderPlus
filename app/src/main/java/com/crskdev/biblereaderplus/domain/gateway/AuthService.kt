@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
@@ -14,6 +14,8 @@ interface AuthService {
     }
 
     fun isAuthenticated(): Boolean
+
+    fun isTokenExpired(): Boolean
 
     fun hasPermission(): Boolean
 

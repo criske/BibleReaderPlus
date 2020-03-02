@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.domain.gateway
@@ -33,7 +33,7 @@ interface SetupCheckService {
             fun next(step: Step): Step = dir(step, 1)
             fun previous(step: Step): Step = dir(step, -1)
             private fun dir(step: Step, sign: Int): Step {
-                val values = Step.values()
+                val values = values()
                 val pos = (step.ordinal + sign.sign) % values.size
                 return values[pos]
             }

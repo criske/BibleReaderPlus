@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.presentation.util.system
@@ -130,25 +130,6 @@ inline fun Context.simpleAlertDialog(title: String, msg: String, crossinline onC
 inline fun Context.showSimpleAlertDialog(title: String, msg: String, crossinline onConfirm: () -> Unit) {
     simpleAlertDialog(title, msg, onConfirm).create().show()
 }
-
-inline fun Context.simpleYesNoDialog(title: String, msg: String, crossinline onSelect: (Int) -> Unit): AlertDialog.Builder =
-    AlertDialog.Builder(this)
-        .setTitle(title)
-        .setMessage(msg)
-        .setCancelable(false)
-        .setNegativeButton(android.R.string.no) { d, which ->
-            onSelect(which)
-            d.dismiss()
-        }
-        .setPositiveButton(android.R.string.ok) { d, which ->
-            onSelect(which)
-            d.dismiss()
-        }
-
-inline fun Context.showSimpleYesNoDialog(title: String, msg: String, crossinline onSelect: (Int) -> Unit) {
-    simpleYesNoDialog(title, msg, onSelect).create().show()
-}
-
 
 fun Context.showSimpleToast(title: String, duration: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, title, duration).show()

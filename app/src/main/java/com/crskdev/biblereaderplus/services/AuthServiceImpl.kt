@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.services
@@ -40,6 +40,10 @@ class AuthServiceImpl(private val activity: Activity) : AuthService {
     }
 
     override fun isAuthenticated(): Boolean = auth.currentUser != null
+
+    override fun isTokenExpired(): Boolean {
+        TODO()
+    }
 
     override fun hasAccountPermissionGranted(): Boolean =
         GoogleSignIn.getLastSignedInAccount(activity.applicationContext) != null

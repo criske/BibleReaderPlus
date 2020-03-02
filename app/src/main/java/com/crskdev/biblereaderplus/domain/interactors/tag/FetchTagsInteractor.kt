@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.tag
@@ -9,7 +9,6 @@ import com.crskdev.biblereaderplus.common.util.switchSelectOnReceive
 import com.crskdev.biblereaderplus.domain.entity.Tag
 import com.crskdev.biblereaderplus.domain.gateway.DocumentRepository
 import com.crskdev.biblereaderplus.domain.gateway.GatewayDispatchers
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
@@ -28,13 +27,8 @@ class FetchTagsInteractorImpl(
     private val repository: DocumentRepository) : FetchTagsInteractor {
     override suspend fun request(contains: ReceiveChannel<String?>, response: (Set<Tag>) -> Unit) =
         coroutineScope {
-
             switchSelectOnReceive(contains) { job, what ->
-
-                val exHandler = CoroutineExceptionHandler { coroutineContext, throwable ->
-                    println(throwable)
-                }
-                launch(exHandler + job + dispatchers.DEFAULT) {
+                launch(job + dispatchers.DEFAULT) {
                     repository.tagsObserve(what) {
                         response(it)
                     }

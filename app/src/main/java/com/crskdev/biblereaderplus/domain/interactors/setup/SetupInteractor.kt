@@ -1,6 +1,6 @@
 /*
  * License: MIT
- * Copyright (c)  Pela Cristian 2019.
+ * Copyright (c)  Pela Cristian 2020.
  */
 
 package com.crskdev.biblereaderplus.domain.interactors.setup
@@ -23,21 +23,21 @@ import javax.inject.Inject
 interface SetupInteractor {
     suspend fun request(request: ReceiveChannel<Request>, response: (Response) -> Unit)
     sealed class Request {
-        object Check : SetupInteractor.Request()
+        object Check : Request()
         class AuthPromptSelection(val deviceAccountCredential: DeviceAccountCredential) :
-            SetupInteractor.Request()
+            Request()
 
-        object Retry : SetupInteractor.Request()
+        object Retry : Request()
     }
 
     interface StepState
     interface Step
     sealed class Response {
-        object Initialized : SetupInteractor.Response(), SetupInteractor.Step
-        sealed class DownloadStep : SetupInteractor.Response() {
-            object Prepare : SetupInteractor.Response.DownloadStep(), SetupInteractor.Step
-            object Persist : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
-            object Done : SetupInteractor.Response.DownloadStep(), SetupInteractor.StepState
+        object Initialized : Response(), Step
+        sealed class DownloadStep : Response() {
+            object Prepare : Response.DownloadStep(), Step
+            object Persist : Response.DownloadStep(), StepState
+            object Done : Response.DownloadStep(), StepState
 //            sealed class Error : SetupInteractor.Response.DownloadStep(),
 //                SetupInteractor.StepState {
 //                object Network : SetupInteractor.Response.DownloadStep.Error()
@@ -47,18 +47,18 @@ interface SetupInteractor {
 //            }
         }
 
-        sealed class SynchStep : SetupInteractor.Response() {
-            object Prepare : SetupInteractor.Response.SynchStep(), SetupInteractor.Step
-            object NeedPermission : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
-            object Authenticating : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
-            object Synchronizing : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
-            object Done : SetupInteractor.Response.SynchStep(), SetupInteractor.StepState
+        sealed class SynchStep : Response() {
+            object Prepare : Response.SynchStep(), Step
+            object NeedPermission : Response.SynchStep(), StepState
+            object Authenticating : Response.SynchStep(), StepState
+            object Synchronizing : Response.SynchStep(), StepState
+            object Done : Response.SynchStep(), StepState
 //            @Suppress("unused")
 //            class Error(val errMessage: String? = null) : SetupInteractor.Response.SynchStep(),
 //                SetupInteractor.StepState
         }
 
-        object Finished : SetupInteractor.Response(), SetupInteractor.Step
+        object Finished : Response(), Step
 
 
         sealed class Error(val message: String? = null, val code: Int = UNKNOWN_CODE) : Response() {
@@ -67,10 +67,10 @@ interface SetupInteractor {
             }
 
             class Once(message: String?, code: Int = UNKNOWN_CODE) :
-                SetupInteractor.Response.Error(message, code)
+                Response.Error(message, code)
 
             class Retryable(message: String?, code: Int = UNKNOWN_CODE) :
-                SetupInteractor.Response.Error(message, code)
+                Response.Error(message, code)
         }
 
     }
@@ -147,22 +147,35 @@ class SetupInteractorImpl @Inject constructor(
 
             when (documentResponse) {
                 is DownloadDocumentService.Response.ErrorResponse -> {
-                    val err = documentResponse.error
-                    when (err) {
+                    when (documentResponse.error) {
                         is DownloadDocumentService.Error.Http -> {
-                            val code = err.code
-                            when (code) {
-                                404 -> channel.send(Response.Error.Once(err.message, code))
-                                408 -> channel.send(Response.Error.Retryable(err.message, code))
-                                else -> channel.send(Response.Error.Once(err.message, code))
+                            when (documentResponse.error.code) {
+                                404 -> channel.send(
+                                    Response.Error.Once(
+                                        documentResponse.error.message,
+                                        documentResponse.error.code
+                                    )
+                                )
+                                408 -> channel.send(
+                                    Response.Error.Retryable(
+                                        documentResponse.error.message,
+                                        documentResponse.error.code
+                                    )
+                                )
+                                else -> channel.send(
+                                    Response.Error.Once(
+                                        documentResponse.error.message,
+                                        documentResponse.error.code
+                                    )
+                                )
                             }
                         }
                         is DownloadDocumentService.Error.Network -> {
-                            channel.send(Response.Error.Retryable(err.message))
+                            channel.send(Response.Error.Retryable(documentResponse.error.message))
                         }
                         is DownloadDocumentService.Error.Conversion,
                         is DownloadDocumentService.Error.Unexpected -> {
-                            channel.send(Response.Error.Once(err.message))
+                            channel.send(Response.Error.Once(documentResponse.error.message))
                         }
                     }
                     withContext(dispatchers.DEFAULT) {
@@ -191,25 +204,25 @@ class SetupInteractorImpl @Inject constructor(
             }
             when (deviceAccountCredential) {
                 is DeviceAccountCredential.Unauthorized -> {
-                    if (!authService.isAuthenticated()) {
+                    //if (!authService.isAuthenticated()) {
                         channel.send(Response.SynchStep.Authenticating)
                         channel.send(Response.SynchStep.NeedPermission)
                         authService.requestAuthPermission()
-                    } else {
-                        val (error, success) = withContext(dispatchers.DEFAULT) {
-                            withContext(dispatchers.IO) {
-                                authService.authenticateWithPermissionGranted()
-                            }
-                        }
-                        if (success) {
-                            nextState(SetupCheckService.Step.AUTH, channel)
-                        } else {
-                            channel.send(Response.Error.Retryable(error?.message))
-                            withContext(dispatchers.DEFAULT) {
-                                setupCheckService.save(SetupCheckService.Step.AUTH.previous())
-                            }
-                        }
-                    }
+//                    } else {
+//                        val (error, success) = withContext(dispatchers.DEFAULT) {
+//                            withContext(dispatchers.IO) {
+//                                authService.authenticateWithPermissionGranted()
+//                            }
+//                        }
+//                        if (success) {
+//                            nextState(SetupCheckService.Step.AUTH, channel)
+//                        } else {
+//                            channel.send(Response.Error.Retryable(error?.message))
+//                            withContext(dispatchers.DEFAULT) {
+//                                setupCheckService.save(SetupCheckService.Step.AUTH.previous())
+//                            }
+//                        }
+//                    }
                 }
                 is DeviceAccountCredential.AuthorizationPayload -> {
                     channel.send(Response.SynchStep.Authenticating)
@@ -228,7 +241,7 @@ class SetupInteractorImpl @Inject constructor(
             }
         }
 
-    private suspend fun resumeFromSync(channel: SendChannel<SetupInteractor.Response>) =
+    private suspend fun resumeFromSync(channel: SendChannel<Response>) =
         coroutineScope {
             channel.send(Response.SynchStep.Prepare)
             channel.send(Response.SynchStep.Synchronizing)
@@ -265,7 +278,7 @@ class SetupInteractorImpl @Inject constructor(
             Unit
         }
 
-    private suspend fun nextState(from: SetupCheckService.Step, channel: SendChannel<SetupInteractor.Response>): Unit =
+    private suspend fun nextState(from: SetupCheckService.Step, channel: SendChannel<Response>): Unit =
         coroutineScope {
             when (from) {
                 SetupCheckService.Step.INITIALIZED -> resumeFromInitialized(channel)
